@@ -1,8 +1,10 @@
 import time
 import math
+from datetime import datetime
 
 from tqdm import tqdm
 
+from matplotlib import pyplot as plt
 import random
 import numpy as np
 import torch
@@ -66,30 +68,36 @@ def welcome_message():
 def init():
     print(f"Initiating process for N={N:.2e} on the {device}...")
 
-def run(n, verbose=False, progress=True):
+def run(n, steps=1, verbose=False, progress=True):
     """
     What does it mean to run? I want to make it some sort of cli 
     or at least a nice script with some cool entrypoints or/and docs for configuration. 
     Lets start with some basic running for now, we will later have simulations and analysis and much more.
+
+
+    -- aug 14
+    well, runing now means simulating N times and capturing results every k steps so that we can plot the progress later
     """
+    results = []
     random.seed(SEED)
     count = 0
     iterator = tqdm(range(n), desc='Running...') if progress else range(n)
+    start_time = time.perf_counter()
+    segment_size = n//steps
     for i in iterator:
         res = toss()
         if res:
             count+=1
-    if verbose:
-        print(f"Finished with count: {count}")
 
-    pi_ = 2*(n/count)
-    if verbose:
-        print(f"Approximated pi as : {pi_}")
+        cycles = i+1
+        if cycles % segment_size == 0:
+            results.append({
+                'n': cycles,
+                'pi': 2*(cycles/count),
+                'elapsed_time': time.perf_counter() - start_time,
+            })
 
-        print("Running some statistics...")
-
-        print(f"The difference to the reference value: {np.abs(pi_ - pi)}")
-    return pi_
+    return results
 
 def finish_message():
     print("\nDone.")
@@ -99,18 +107,50 @@ if __name__ == '__main__':
     init()
     results = []
     steps = get_env("STEPS", 2, int)
-    for i in range(1, steps+1):
-        if i==0:
-            continue
-        n = int(N/steps)
-        start = time.perf_counter()
-        result = run(n * i)
-        time_elapsed = time.perf_counter() - start
-        results.append(result)
+    start = time.perf_counter()
+    results = run(N, steps=steps)
+    total_elapsed = time.perf_counter() - start    
 
-    print(f"Reference Value: {pi}")
-    for result in results:
-        print(result)
+    n = np.array([result['n'] for result in results])
+    estimated_pi = np.array([result['pi'] for result in results])
+    abs_error = np.abs(estimated_pi - math.pi)
+    elapsed_time = np.array([result['elapsed_time'] for result in results])
+    iterations_sec = n/elapsed_time
+    target_error = 1e-14
+
+    fig, axes = plt.subplots(3, 1, figsize=(10, 12))
+
+    ax = axes[0]
+    ax.plot(n, estimated_pi, label='Estimated pi')
+    ax.axhline(pi, linestyle='--', label='Reference pi')
+
+    ax.set_title('Estimated pi vs N')
+    ax.set_xlabel("N")
+    ax.set_ylabel("Estimated pi")
+    
+    ax.legend() # test it
+    ax.grid(True)
 
 
+    ax = axes[1]
+    ax.plot(n, abs_error)
+    ax.set_yscale('log') # In case it is difficult to see since the y set may be huge in scale varying many orders of magnitude
+    ax.axhline(y=target_error, color="red", linestyle="--", label=f"Target = {target_error:.2}")
+
+    ax.set_title("Absolute error vs N")
+    ax.set_xlabel("N")
+    ax.set_ylabel("AbsError: |Estimated pi-pi|")
+    ax.legend()
+    ax.grid(True)
+
+    ax = axes[2]
+    ax.plot(elapsed_time, n)
+    ax.set_title("N vs Elapsed Time")
+    ax.set_xlabel("Elapsed time")
+    ax.set_ylabel("N")
+    ax.grid(True)
+
+    plt.tight_layout()
+    filename = datetime.now().strftime("%d-%m-%Y-%H:%M:%S-results.png")
+    fig.savefig(filename, dpi=300, bbox_inches="tight")    
     finish_message()

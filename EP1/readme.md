@@ -175,3 +175,26 @@ Actually, I should, during simulation, only gather these data in some data struc
 Do I make it so that I can stop and an N/2 and continue to N or should the function to N itself keep track and return all the data already? I have to be careful here, what is the overhead it will add to the function? This I will solve as I code.
 
 
+The graphs I need are:
+
+1. estimatedPi vs N 
+
+2. absoluteError (estimatedPi-referencePi) vs N 
+extract the number and trace a red vertical bar on absError=10e-14 so that we can estimate what N for a given precision
+
+3. N vs time
+Here we can find the N for which we get a desired precision and estimate how much time it would take to process that
+
+The most important is graph 2 but we have a clear goal now, it is easy to save these in some timely fashion so that we can check/analyse the generated data as well as the graphs later. 
+
+For each iteration I will need:
+
+start time , currentTime, currentN, current estimatedPi
+
+From the startTime and currentTime we can get the elasped time for a given N for graph 3
+
+From the estimatedPi and the currentN I can get the abs error for a given N and plot graph 1 and 2.
+
+It seems I should be plotting only one graph for graph 1 and 2. Even 3 can come in the same graph butt perhaps thats too much.
+Well, I should try and see. 
+
