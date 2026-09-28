@@ -152,115 +152,67 @@ def radial_profile(frame):
 def draw_image(image, config):
 	angles = range(0, image.shape[1] if image.shape[1] <5 else 5)
 	angles = [6, 8, 9, 10, 14]
-	angles = [ 10, 14, 20, 24, 28, 33, 44]
 	angles = [0, 1]
 	angles = [0, 1, 2]
+	angles = [ 10, 14, 20, 24, 28, 33, 44]
 	angles = [4, 6, 8]
-	fig, axes = plt.subplots(
-		len(angles),
-		2,
-		figsize=(12,10)
-	)
-	images = []
-	radial_lines = []
+	
+	fig, axes = plt.subplots(len(angles), 2, figsize=(12,10))
+	
 	frame_list = []
+	images = []
+	
+	radial_lines = []
 	radial_list = []
 
 	for angle, (image_ax, radial_ax) in zip(angles, axes):
-
-		# IMPORTANT: keep the original data
-		raw_frames = image[:, angle].astype(np.float64)
-
-		# -------------------------------------------------
-		# LEFT: your current visualization
-		# -------------------------------------------------
-
-		vmax = raw_frames.max()
-
-		# Your current inversion
-		frames = raw_frames
-
+		frames = image[:, angle].astype(np.float64)
+		vmax = frames.max()
+		frames = frames
 		frame_list.append(frames)
-
 		im = image_ax.imshow(
 			frames[0],
 			cmap="hot",
 			vmin=0,
 			vmax=vmax
 		)
-
 		images.append(im)
-
-		# -------------------------------------------------
-		# RIGHT: raw brightness vs radius
-		# -------------------------------------------------
-
+		
 		radii = []
 		brightnesses = []
 
-		for frame in raw_frames:
+		for frame in frames:
 			r, brightness = radial_profile(frame)
 			radii.append(r)
 			brightnesses.append(brightness)
 
 		radial_list.append((radii, brightnesses))
 
-		line, = radial_ax.plot(
-			radii[0],
-			brightnesses[0]
-		)
-
+		line, = radial_ax.plot(radii[0], brightnesses[0])
 		radial_lines.append(line)
 
-		radial_ax.set_xlim(0, 1)
-		radial_ax.set_ylim(
-			0,
-			max(brightnesses[0].max(), 1)
-		)
-
-		radial_ax.set_xlabel("Projected radius")
-		radial_ax.set_ylabel("Brightness")
 		radial_ax.set_title(f"Observer imu={angle}")
-
 		radial_ax.grid(True)
 
-	# -------------------------------------------------
-	# Animation
-	# -------------------------------------------------
+		radial_ax.set_xlim(0, 1)
+		radial_ax.set_xlabel("Projected radius")
+		
+		radial_ax.set_ylim(0, max(brightnesses[0].max(), 1))
+		radial_ax.set_ylabel("Brightness")
+		
 
 	def update(frame):
 		for i, (im, frames) in enumerate(zip(images, frame_list)):
-
-			# Update image
 			im.set_data(frames[frame])
-
-			# Update radial profile
 			radii, brightnesses = radial_list[i]
-
-			radial_lines[i].set_data(
-				radii[frame],
-				brightnesses[frame]
-			)
-
+			radial_lines[i].set_data(radii[frame], brightnesses[frame])
 		return images + radial_lines
 
-	animation = FuncAnimation(
-		fig,
-		update,
-		frames=image.shape[0],
-		interval=1000 / 3
-	)
-
-	animation.save(
-		f"{datetime.now()}-"
-		f"{config['N']}, "
-		f"{config['nphi']}, "
-		f"{config['nmu']}, "
-		f"{config['ny']}, "
-		f"{config['nx']}-Star.gif",
-		writer=PillowWriter(fps=30)
-	)
-
+	animation = FuncAnimation(fig, update, frames=image.shape[0], interval=1000 / 3)
+	prefix = f"{datetime.now()}"
+	prefix+= f"-{config['N']}-{config['nphi']}-{config['nmu']}-{config['ny']}-{config['nx']}"
+	filename = prefix + "-Star.gif"
+	animation.save(filename, writer=PillowWriter(fps=30))
 	plt.show()
 
 if __name__ == '__main__':

@@ -9,7 +9,6 @@
 #include "star.h"
 
 Image get_image(unsigned int nx, unsigned int ny, unsigned int nphi, unsigned int nmu) {
-	// nphi*nmu *nx ints* ny ints
 	Image image ;
 	image.nx = nx;
 	image.ny = ny;
@@ -111,10 +110,10 @@ int get_photon_intensity(Vec3 surface_point, SurfaceSpot spots[], int spots_coun
 		bool is_inner_point = cos_angle > cos(spot.inner_radius);
 		bool is_outter_point = cos_angle > cos(spot.outter_radius);
 		
-		if (is_inner_point > 0.0){
+		if (is_inner_point){
 			return 0;
-		};
-		if (is_outter_point && generate_random_number() > 0.5){
+		}
+		else if (is_outter_point && generate_random_number() > 0.6){
 			return 0;
 		};
 	};
@@ -156,24 +155,24 @@ Vec3 compute_impact_parameter(Photon photon, Observer observer, double nmu, doub
 	double z = photon.surface_point.z;
 
 
-	// // Observer direction
-	double mu_observer =
-		-1.0 + 2.0 * ((double)observer.imu + 0.5) / nmu;
+	// // // Observer direction
+	// double mu_observer =
+	// 	-1.0 + 2.0 * ((double)observer.imu + 0.5) / nmu;
 
-	double phi_observer =
-		2.0 * M_PI * ((double)observer.iphi + 0.5) / nphi;
+	// double phi_observer =
+	// 	2.0 * M_PI * ((double)observer.iphi + 0.5) / nphi;
 
-	double sin_theta =
-		sqrt(1.0 - mu_observer * mu_observer);
+	// double sin_theta =
+	// 	sqrt(1.0 - mu_observer * mu_observer);
 
-	double u = sin_theta * cos(phi_observer);
-	double v = sin_theta * sin(phi_observer);
-	double w = mu_observer;
+	// double u = sin_theta * cos(phi_observer);
+	// double v = sin_theta * sin(phi_observer);
+	// double w = mu_observer;
 
 
-	// double u = photon.direction.x;
-	// double v = photon.direction.y;
-	// double w = photon.direction.z;
+	double u = photon.direction.x;
+	double v = photon.direction.y;
+	double w = photon.direction.z;
 
 	double raiz = sqrt(1.0 - w*w);
 	
