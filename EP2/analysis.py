@@ -1,90 +1,176 @@
+import os
 from datetime import datetime
-
+from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib import colormaps
 
-def radial_profile(frame):
-	ny, nx = frame.shape
+def save_frames(frames, output_path):
+	filepath = os.path.join(output_path, "frames.npy")
+	np.save(filepath, frames)
 
-	# Pixel-center coordinates, mapped to [-1, 1]
-	y, x = np.indices((ny, nx))
-	x = (x + 0.5) / nx * 2.0 - 1.0
-	y = (y + 0.5) / ny * 2.0 - 1.0
+def frame_to_image(frame, vmax):
+    normalized = frame / vmax
+    rgba = colormaps["hot"](normalized)
+    rgb = (rgba[:, :, :3] * 255).astype(np.uint8).copy()
+    return Image.fromarray(rgb, mode="RGB")
 
-	radius = np.sqrt(x**2 + y**2)
+def save_pics(frames, vmax, output_path):
+    for i in np.linspace(0, frames.shape[0]-1, 10, dtype=int):
+        image = frame_to_image(frames[i], vmax)
+        filepath = os.path.join(output_path, f"frame_{i:04d}.png")
+        image.save(filepath)
 
-	# Only consider pixels inside the stellar disk
-	valid = radius <= 1.0
+def save_animation(frames, vmax, output_path):
+    images = [frame_to_image(frame, vmax) for frame in frames]
+    filepath = os.path.join(output_path, "animation.gif")
+    images[0].save(
+        filepath,
+        save_all=True,
+        append_images=images[1:],
+        duration=123,  # milliseconds per frame
+        loop=0
+    )
 
-	# Radial bins
-	bins = np.linspace(0.0, 1.0, 51)
-	bin_centers = (bins[:-1] + bins[1:]) / 2
-
-	brightness = np.zeros(len(bin_centers))
-
-	for i, (r0, r1) in enumerate(zip(bins[:-1], bins[1:])):
-		mask = valid & (radius >= r0) & (radius < r1)
-
-		if np.any(mask):
-			brightness[i] = frame[mask].mean()
-
-	return bin_centers, brightness
-
-def make_analysis(image, config):
-	fig, axes = plt.subplots(config['n_observers'], 2, figsize=(12,10))
-	
-	frame_list = []
-	images = []
-	
-	radial_lines = []
-	radial_list = []
-
-	for angle, (image_ax, radial_ax) in zip(range(config['n_observers']), axes):
+def make_analysis(image, config, run_id):
+	vmax = image.max()
+	n_path = os.path.join(run_id, str(config['N']))
+	os.makedirs(n_path, exist_ok=True)
+	for angle in range(config['n_observers']):
+		angle_output_path = os.path.join(n_path, f"Observer {angle}")
+		os.makedirs(angle_output_path, exist_ok=True)
 		frames = image[:, angle].astype(np.float64)
-		vmax = frames.max()
-		frames = frames
-		frame_list.append(frames)
-		im = image_ax.imshow(
-			frames[0],
-			cmap="hot",
-			vmin=0,
-			vmax=vmax
-		)
-		images.append(im)
-		
-		radii = []
-		brightnesses = []
+		save_frames(frames, angle_output_path)
+		save_pics(frames, vmax, angle_output_path)
+		save_animation(frames, vmax, angle_output_path)
 
-		for frame in frames:
-			r, brightness = radial_profile(frame)
-			radii.append(r)
-			brightnesses.append(brightness)
+def save_time_runtime_graph(data, output_path):
+    N = np.array([point["N"] for point in data], dtype=float)
+    T = np.array([point["T"] for point in data], dtype=float)
 
-		radial_list.append((radii, brightnesses))
+    # ---------------------------------------------------------
+    # Fit T = c * N^p
+    # Use only the large-N region, where fixed overhead matters less.
+    # ---------------------------------------------------------
+    fit_mask = N >= 10**6
 
-		line, = radial_ax.plot(radii[0], brightnesses[0])
-		radial_lines.append(line)
+    log_N = np.log(N[fit_mask])
+    log_T = np.log(T[fit_mask])
 
-		radial_ax.set_title(f"Observer imu={angle}")
-		radial_ax.grid(True)
+    p, log_c = np.polyfit(log_N, log_T, 1)
+    c = np.exp(log_c)
 
-		radial_ax.set_xlim(0, 1)
-		radial_ax.set_xlabel("Projected radius")
-		
-		radial_ax.set_ylim(0, max(brightnesses[0].max(), 1))
-		radial_ax.set_ylabel("Brightness")
-		
-	def update(frame):
-		for i, (im, frames) in enumerate(zip(images, frame_list)):
-			im.set_data(frames[frame])
-			radii, brightnesses = radial_list[i]
-			radial_lines[i].set_data(radii[frame], brightnesses[frame])
-		return images + radial_lines
+    # Smooth curve for the fitted model
+    N_fit = np.logspace(
+        np.log10(N.min()),
+        np.log10(N.max()),
+        200
+    )
+    T_fit = c * N_fit**p
 
-	animation = FuncAnimation(fig, update, frames=image.shape[0], interval=1000 / 3)
-	prefix = f"{datetime.now()}"
-	prefix+= f"-{config['N']}-{config['nphi']}-{config['nmu']}-{config['ny']}-{config['nx']}"
-	filename = prefix + "-Star.gif"
-	animation.save(filename, writer=PillowWriter(fps=30))
-	print("plt.show()")
+    # =========================================================
+    # Linear plot
+    # =========================================================
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(
+        N,
+        T,
+        marker="o",
+        label="Measured runtime"
+    )
+
+    plt.plot(
+        N_fit,
+        T_fit,
+        linestyle="--",
+        label=fr"Fit: $T \propto N^{{{p:.2f}}}$"
+    )
+
+    plt.xlabel("Number of photons (N)")
+    plt.ylabel("Runtime (s)")
+    plt.title("Runtime vs Number of Photons")
+
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+
+    plt.text(
+        0.05,
+        0.95,
+        fr"Measured scaling: $T \propto N^{{{p:.3f}}}$",
+        transform=plt.gca().transAxes,
+        verticalalignment="top"
+    )
+
+    filepath = os.path.join(
+        output_path,
+        "runtime_linear.png"
+    )
+
+    plt.savefig(
+        filepath,
+        dpi=150,
+        bbox_inches="tight"
+    )
+
+    plt.close()
+
+    # =========================================================
+    # Log-log plot
+    # =========================================================
+    plt.figure(figsize=(10, 6))
+
+    plt.loglog(
+        N,
+        T,
+        marker="o",
+        label="Measured runtime"
+    )
+
+    plt.loglog(
+        N_fit,
+        T_fit,
+        linestyle="--",
+        label=fr"Power-law fit: $T \propto N^{{{p:.2f}}}$"
+    )
+
+    # Ideal O(N) reference line.
+    # Anchor it at the last measured point.
+    T_linear = T[-1] * (N_fit / N[-1])
+
+    plt.loglog(
+        N_fit,
+        T_linear,
+        linestyle=":",
+        label=r"Ideal $O(N)$"
+    )
+
+    plt.xlabel("Number of photons (N)")
+    plt.ylabel("Runtime (s)")
+    plt.title("Runtime Scaling")
+
+    plt.grid(True, which="both", alpha=0.3)
+    plt.legend()
+
+    plt.text(
+        0.05,
+        0.05,
+        fr"Measured scaling exponent: $p = {p:.3f}$",
+        transform=plt.gca().transAxes
+    )
+
+    filepath = os.path.join(
+        output_path,
+        "runtime_loglog.png"
+    )
+
+    plt.savefig(
+        filepath,
+        dpi=150,
+        bbox_inches="tight"
+    )
+
+    plt.close()
+
+    print(f"Measured scaling exponent: p = {p:.4f}")

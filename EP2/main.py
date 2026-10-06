@@ -1,3 +1,4 @@
+import copy
 import os
 import time
 from datetime import datetime
@@ -5,22 +6,22 @@ import argparse
 import subprocess
 import numpy as np
 
-from analysis import make_analysis
+from analysis import make_analysis, save_time_runtime_graph
 
 def init():
 	global ARGS
 	ARGS = parse_args()
 	# Order matters here, so, use modern python else we might have problems
 	config = {
-		"N": 10 ** 11,
-		"seed": 52,
-		"a": 1.0,
-		"nspots": 5,
-		"n_observers":5,
-		"nx": 500,
-		"ny": 500,
-		"nphi": 200,
-		"nmu": 200,
+		"N": 10 ** min(ARGS.range),
+		"seed": ARGS.seed,
+		"a": ARGS.limb_darkening,
+		"nspots": ARGS.nspots,
+		"n_observers":ARGS.n_observers,
+		"nx": ARGS.nx,
+		"ny": ARGS.ny,
+		"nphi": ARGS.nphi,
+		"nmu": ARGS.nmu,
 	}
 	return config
 
@@ -30,7 +31,7 @@ def parse_args():
 		"--range",
 		nargs=2,
 		type=int,
-		default=[4,9],
+		default=[7,10],
 		metavar=("min", "max"),
 		help="Minimum and maximum powers of 10 for N"
 	)
@@ -49,37 +50,37 @@ def parse_args():
 	parser.add_argument(
 		"--nspots",
 		type=int,
-		default=1,
+		default=2,
 		help="Number of random solar spots to be on the star."
 	)
 	parser.add_argument(
 		"--n_observers",
 		type=int,
-		default=3,
+		default=5,
 		help="Number of observers to capture photons from. We distribute the number of observers along imu."
 	)
 	parser.add_argument(
 		"--nx",
 		type=int,
-		default=1000,
+		default=200,
 		help="x axis output image resolution"
 	)
 	parser.add_argument(
 		"--ny",
 		type=int,
-		default=1000,
+		default=200,
 		help="y axis output image resolution"
 	)
 	parser.add_argument(
 		"--nphi",
 		type=int,
-		default=42,
+		default=200,
 		help="Number of divisions on the observer sphere along the longitude. Defines the resolution of the observer (sun spots look less blurred on higher resolution)"
 	)
 	parser.add_argument(
 		"--nmu",
 		type=int,
-		default=42,
+		default=200,
 		help="Number of divisions on the observer sphere along the latitude. Defines the resolution of the observer (sun spots look less blurred on higher resolution)"
 	)
 	return parser.parse_args()
@@ -129,9 +130,14 @@ def get_image_data(config):
 	image = data.reshape(config["nphi"], config["n_observers"] , config["ny"] , config["nx"])
 	return image
 
-def build_analysis(config):
+def clean_raw_data():
+	bins = [item for item in os.listdir('engine') if item.endswith('.bin')]
+	os.remove(f'engine/{bins[-1]}')
+
+def build_simulation_analysis(config, run_id):
 	image = get_image_data(config)
-	make_analysis(image, config)
+	make_analysis(image, config, run_id)
+	clean_raw_data()
 
 def finish_message():
 	print("\nDone.")
@@ -140,9 +146,19 @@ if __name__ == '__main__':
 	config = init()
 	welcome_message()
 	start = time.perf_counter()
-	
-	run_star(config)
-	total_elapsed = time.perf_counter() - start	 
-	build_analysis(config)
-	print(f"Finished in {total_elapsed}s.")
+	run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+	print(start, "start", run_id)
+	check_points = []
+	os.mkdir(f"./{run_id}")
+	for i in range(ARGS.range[0], ARGS.range[1]+1):
+		config['N'] = 10 ** i
+		run_start_at = time.perf_counter()
+		run_star(config)
+		run_time = time.perf_counter() - run_start_at
+		check_points.append({'N':config['N'],'T':run_time})
+		build_simulation_analysis(config, run_id)
+
+	save_time_runtime_graph(check_points, run_id)
+	total_elapsed = time.perf_counter() - start 
+	print(f"Finished in {total_elapsed}s. Check output in: {os.getcwd()}/{run_id}")
 	finish_message()
