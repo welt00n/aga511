@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #include <string.h>
 #include <math.h>
@@ -7,21 +7,6 @@
 
 #include "base.h"
 #include "star.h"
-
-Image get_image(unsigned int nx, unsigned int ny, unsigned int nphi, unsigned int nmu) {
-	Image image ;
-	image.nx = nx;
-	image.ny = ny;
-	image.nphi = nphi;
-	image.nmu = nmu;
-
-	size_t count = (size_t)nx*ny*nphi*nmu;
-	image.data = calloc(count, sizeof(*image.data));
-	if (image.data == NULL) {
-		printf("Allocation failed");
-	}
-	return image;  
-}
 
 Vec3 sample_surface_point() {
 	Vec3 surface_point; 
@@ -72,9 +57,9 @@ Vec3 computeGlobalCoordinatesVector(Vec3 surface_point, double mu_local, double 
 //     return direction;
 // }
 
-Vec3 sample_emission_direction(Vec3 surface_point) {
+Vec3 sample_emission_direction(double limb_darkening_coef, Vec3 surface_point) {
 
-	const double a = 1.0;
+	const double a = limb_darkening_coef;
 
 	const double sqrt_weight = 3.0 / (3.0 + 2.0 * a);
 	
@@ -98,10 +83,6 @@ Vec3 sample_emission_direction(Vec3 surface_point) {
 	return direction;
 }
 
-double vec3_dot_product(Vec3 vec1, Vec3 vec2) {
-	return vec1.x*vec2.x + vec1.y*vec2.y + vec1.z*vec2.z;
-}
-
 int get_photon_intensity(Vec3 surface_point, SurfaceSpot spots[], int spots_count) {
 	for (int i = 0; i < spots_count; i ++){
 		SurfaceSpot spot = spots[i];
@@ -120,55 +101,10 @@ int get_photon_intensity(Vec3 surface_point, SurfaceSpot spots[], int spots_coun
 	return 1;
 }
 
-Photon generate_photon(SurfaceSpot spots[], int spots_count){
-	Photon photon = {
-		.surface_point = sample_surface_point(),
-	};
-	photon.direction = sample_emission_direction(photon.surface_point),
-	photon.intensity = get_photon_intensity(photon.surface_point, spots, spots_count);
-	return photon;
-}
-
-Observer get_observer(Vec3 photon_direction, unsigned int nmu, unsigned int nphi){
-	double tmp = atan2(photon_direction.y, photon_direction.x);
-	if (tmp < 0.0) {
-		tmp+= 2 * M_PI;
-	};
-	unsigned int iphi = (unsigned int)((tmp * nphi)/(2.0 * M_PI));
-	unsigned int imu = (unsigned int)(0.5 * (photon_direction.z + 1.0) * nmu);
-	if (iphi >= nphi) {
-		iphi = nphi -1;
-	}
-	if (imu >= nmu) {
-		imu = nmu -1;
-	}
-	Observer observer = {
-		.iphi = iphi,
-		.imu = imu
-	};
-	return observer;
-}
-
-Vec3 compute_impact_parameter(Photon photon, Observer observer, double nmu, double nphi) {
+Vec3 compute_impact_parameter(Photon photon, double nmu, double nphi) {
 	double x = photon.surface_point.x;
 	double y = photon.surface_point.y;
 	double z = photon.surface_point.z;
-
-
-	// // // Observer direction
-	// double mu_observer =
-	// 	-1.0 + 2.0 * ((double)observer.imu + 0.5) / nmu;
-
-	// double phi_observer =
-	// 	2.0 * M_PI * ((double)observer.iphi + 0.5) / nphi;
-
-	// double sin_theta =
-	// 	sqrt(1.0 - mu_observer * mu_observer);
-
-	// double u = sin_theta * cos(phi_observer);
-	// double v = sin_theta * sin(phi_observer);
-	// double w = mu_observer;
-
 
 	double u = photon.direction.x;
 	double v = photon.direction.y;
@@ -195,8 +131,38 @@ Vec3 compute_impact_parameter(Photon photon, Observer observer, double nmu, doub
 	return paramater;
 }
 
-PixelCoordinates computer_pixel_coordinates(Photon photon, Observer observer, unsigned int nx, unsigned int ny,  double nmu, double nphi){
-	Vec3 impact_parameter = compute_impact_parameter(photon, observer, nmu, nphi);
+size_t get_image_pixel_index(Image image, unsigned int iphi, unsigned int observer_index, unsigned int ix, unsigned int iy) {
+	size_t index = (((size_t)iphi * image.n_observers + observer_index) * image.ny + iy) * image.nx + ix;
+	return index;
+}
+
+void incrementImagePixel(Image image, Observer observer, unsigned int observer_index, PixelCoordinates pixel_coordinates){
+	size_t index = get_image_pixel_index(image, observer.iphi, observer_index, pixel_coordinates.x, pixel_coordinates.y);
+	image.data[index]++; // *(image.data + index) += 1; this is also contigous data after all...
+}
+
+Observer get_observer(Vec3 photon_direction, unsigned int nmu, unsigned int nphi){
+	double tmp = atan2(photon_direction.y, photon_direction.x);
+	if (tmp < 0.0) {
+		tmp+= 2 * M_PI;
+	};
+	unsigned int iphi = (unsigned int)((tmp * nphi)/(2.0 * M_PI));
+	unsigned int imu = (unsigned int)(0.5 * (photon_direction.z + 1.0) * nmu);
+	if (iphi >= nphi) {
+		iphi = nphi -1;
+	}
+	if (imu >= nmu) {
+		imu = nmu -1;
+	}
+	Observer observer = {
+		.iphi = iphi,
+		.imu = imu
+	};
+	return observer;
+}
+
+PixelCoordinates compute_pixel_coordinates(Photon photon, unsigned int nx, unsigned int ny,  double nmu, double nphi){
+	Vec3 impact_parameter = compute_impact_parameter(photon, nmu, nphi);
 	double y_rate = ( impact_parameter.y + 1.0 ) / 2.0;
 	double z_rate = ( impact_parameter.z + 1.0 ) / 2.0;
 	unsigned int ix = (unsigned int)(y_rate * nx);
@@ -214,50 +180,73 @@ PixelCoordinates computer_pixel_coordinates(Photon photon, Observer observer, un
 	return pixel_coordinates;
 }
 
-size_t get_image_pixel_index(Image image, unsigned int iphi, unsigned int imu, unsigned int ix, unsigned int iy) {
-	size_t index = (((size_t)iphi * image.nmu + imu) * image.ny + iy) * image.nx + ix;
-	return index;
+Photon generate_photon(double limb_darkening_coef, SurfaceSpot spots[], int spots_count){
+	Photon photon = {
+		.surface_point = sample_surface_point(),
+	};
+	photon.direction = sample_emission_direction(limb_darkening_coef, photon.surface_point),
+	photon.intensity = get_photon_intensity(photon.surface_point, spots, spots_count);
+	return photon;
 }
 
-void incrementImagePixel(Image image, Observer observer, PixelCoordinates pixel_coordinates){
-	size_t index = get_image_pixel_index(image, observer.iphi, observer.imu, pixel_coordinates.x, pixel_coordinates.y);
-	image.data[index]++; // *(image.data + index) += 1; this is also contigous data after all...
+int find_observer_index(int imu, int observers_imus[], unsigned int n_observers){
+	for (unsigned int i = 0; i < n_observers; i++){
+		if (imu == observers_imus[i]){
+			return i;
+		}
+	}
+	return -1;
 }
 
-void sample_photon(Image image, SurfaceSpot spots[], int spots_count, unsigned int nx, unsigned int ny, double nmu, double nphi){
-	Photon photon = generate_photon(spots, spots_count);
-	if (!photon.intensity){
+void sample_photon(Image image, double a, SurfaceSpot spots[], int spots_count, unsigned int nx, unsigned int ny, unsigned int nmu, unsigned int nphi, unsigned int observers_imu[], unsigned int n_observers){
+	Photon photon = generate_photon(a, spots, spots_count);
+	if (!photon.intensity) {
 		return;
 	}
+	PixelCoordinates pixel_coordinates = compute_pixel_coordinates(photon, nx, ny, nmu, nphi);
 	Observer observer = get_observer(photon.direction, nmu, nphi);
-	PixelCoordinates pixel_coordinates = computer_pixel_coordinates(photon, observer, nx, ny, nmu, nphi);
-	incrementImagePixel(image, observer, pixel_coordinates);
+	int observer_index = find_observer_index(observer.imu, observers_imu, n_observers);
+	if (observer_index == -1){
+		return;
+	}
+	incrementImagePixel(image, observer, observer_index, pixel_coordinates);
 }
 
-void save_image_binary(Image image) {    
-	struct tm *current_time = get_now();
-	
-	char filename[128];
-	strftime(
-		filename,
-		sizeof(filename),
-		"star_%Y-%m-%d_%H-%M-%S.bin",
-		current_time
-	);
+SurfaceSpot generate_random_spot() {
+	SurfaceSpot new_spot;
+	new_spot.surface_point = sample_surface_point();
+	new_spot.inner_radius = 0.05;
+	new_spot.outter_radius = 0.10;
+	return new_spot;
+}
 
-	FILE *file_stream = fopen(filename, "wb");
-	if (file_stream == NULL) {
-		perror("Could not open image file"); // there are two ways to print an error in the same fund =-D
-		return;
+bool spots_intersect(SurfaceSpot a, SurfaceSpot b) {
+	double dot_product = vec3_dot_product(a.surface_point, b.surface_point);
+	double angular_distance = acos(dot_product);
+	return angular_distance < a.outter_radius + b.outter_radius;
+}
+
+void generate_spots(SurfaceSpot* spots, unsigned int count) {
+	for (unsigned int i=0; i<count; i++) {
+		bool valid = false;
+        while (!valid) {
+			spots[i] = generate_random_spot();
+            valid = true;
+            for (unsigned int j=0; j<i; j++) {
+				if (spots_intersect(spots[i], spots[j])){
+					valid = false;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+SurfaceSpot* get_spots(unsigned int count){
+	SurfaceSpot *spots = malloc(count * sizeof(*spots));
+	if (spots == NULL) {
+		return NULL;
 	}
-
-	size_t count = (size_t)image.nx * image.ny * image.nphi * image.nmu;
-	size_t written = fwrite(image.data, sizeof(*image.data), count, file_stream);
-	fclose(file_stream);
-
-	if (written != count) {
-		fprintf(stderr, "Error writing image data\n"); // there are two ways to print an error in the same fund =-D
-		return;
-	}
-	return;
+	generate_spots(spots, count);
+	return spots;
 }

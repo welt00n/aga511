@@ -9,95 +9,96 @@
 
 #define BATCH_SIZE 1000
 
-bool check_args(int argc, char *argv[]){
-    // if (argc < 2 || argc > 3) {
-    //     fprintf(stderr, "Parametros: N e seed.\n");
-    //     return false;
-    // }
-    if (atoll(argv[1]) <= 0) {
-        fprintf(stderr, "N must be positive.\n");
-        return false;
-    }
-    set_seed(argc, argv);
-    return true;
-}
-
 typedef struct {
-    unsigned int N;
-    unsigned int seed;
-    unsigned int nphi;
-    unsigned int nmu;
-    unsigned int nx;
-    unsigned int ny;
+	long long N;
+	double a; // 0 to 1
+	unsigned int seed;
+	unsigned int nphi;
+	unsigned int nmu;
+	unsigned int nx;
+	unsigned int ny;
+	unsigned int nspots;
+	unsigned int n_observers;
 } Config;
 
 Config load_config(int argc, char *argv[]){
-    Config config;
-    if (!check_args(argc, argv)){ // gotta improve check_args, but thats better than nothing for now.
-        return config ;
-    }
-    config.N = atoll(argv[1]);
-    config.seed = atoll(argv[2]);
-    config.nphi = atoll(argv[3]); // number of frames??
-    config.nmu = atoll(argv[4]);
-    config.nx = atoll(argv[5]);
-    config.ny = atoll(argv[6]);
-    return config;
+	// I am not validating this on purpose. I will have this vlaidated in Python, whoever is using c can understand errors these functions below might raise
+	Config config = {
+		.N = atoll(argv[1]),
+		.seed = atoi(argv[2]),
+		.a = atof(argv[3]),
+		.nspots = atoi(argv[4]),
+		.n_observers = atoi(argv[5]),
+		.nx = atoi(argv[6]),
+		.ny = atoi(argv[7]),
+		.nphi = atoi(argv[8]),
+		.nmu = atoi(argv[9]),
+	};
+	srand(config.seed);
+	return config;
+}
+
+unsigned int* load_observers_imus(Config config){
+	unsigned int* observers_imus = malloc(config.n_observers * sizeof(*observers_imus));
+	if (observers_imus == NULL) {
+		return NULL;
+	}
+
+	if (config.n_observers == 1){
+		observers_imus[0] = config.nmu / 2;
+		return observers_imus;
+	}
+	for (unsigned int i = 0; i < config.n_observers; i++){
+		observers_imus[i] = i * (config.nmu - 1) / (config.n_observers - 1);
+	}
+	return observers_imus;
+
+}
+
+void run_simulation(Image image, Config config) {
+	printf("Starting simulation with config:  N: %lld, a: %.2f, seed: %d, nphi: %d, nmu: %d, nx: %d, ny: %d, nspots: %d, n_observers: %d\n",  config.N, config.a, config.seed, config.nphi, config.nmu, config.nx, config.ny, config.nspots, config.n_observers);
+	SurfaceSpot *spots = get_spots(config.nspots);
+
+	unsigned int* observers_imus = load_observers_imus(config);
+
+	for (long long i=0;i<config.N;i++) {
+		sample_photon(image, config.a, spots, config.nspots, config.nx, config.ny, config.nmu, config.nphi, observers_imus, config.n_observers);
+	}
+
+	free(observers_imus);
+	free(spots);
+}
+
+void save_image(Image image, Config config, time_t start_timestamp) {
+	char filename[256];
+	snprintf(
+		filename,
+		sizeof(filename),
+		"star-N-%lld_seed-%u_a-%.2f_spots-%u_obs-%u_nx-%u_ny-%u_nphi-%u_nmu-%u_t-%lld.bin",
+		config.N,
+		config.seed,
+		config.a,
+		config.nspots,
+		config.n_observers,
+		config.nx,
+		config.ny,
+		config.nphi,
+		config.nmu,
+		start_timestamp
+	);
+	save_image_binary(image, filename);
 }
 
 int main(int argc, char *argv[]){
-    Config config = load_config(argc, argv);
-    
-    Image image = get_image(config.nx, config.ny, config.nphi, config.nmu);
-    int spots_count = 8;
-    SurfaceSpot spots[8] = {
-        {
-            .surface_point = {0.35, 0.5, 0.8},
-            .inner_radius = 0.05,
-            .outter_radius = 0.07
-        },
-        {
-            .surface_point = {-0.5, -0.35, -0.8},
-            .inner_radius = 0.05,
-            .outter_radius = 0.07
-        },
-        {
-            .surface_point = {0.5, -0.35, -0.8},
-            .inner_radius = 0.05,
-            .outter_radius = 0.07
-        },
-         {
-            .surface_point = {0.5, 0.35, -0.8},
-            .inner_radius = 0.05,
-            .outter_radius = 0.07
-        },
-        {
-            .surface_point = {1.0, 0.0, 0.0},
-            .inner_radius = 0.01,
-            .outter_radius = 0.05
-        },
-        {
-            .surface_point = {0.0, 0.0, 1.0},
-            .inner_radius = 0.02,
-            .outter_radius = 0.04
-        },
-        {
-            .surface_point = {-1.0, 0.0, 0.0},
-            .inner_radius = 0.01,
-            .outter_radius = 0.05
-        },
-        {
-            .surface_point = {0.0, 0.0, -1.0},
-            .inner_radius = 0.02,
-            .outter_radius = 0.04
-        }
-    };
-
-    for (long long i=0;i<config.N;i++) {
-        sample_photon(image, spots, spots_count, config.nx, config.ny, config.nmu, config.nphi);
-    }
-    save_image_binary(image);
-    
-    free(image.data);
-    return 0;
+	printf("Started!\n");
+	time_t start_timestamp = time(NULL);
+	Config config = load_config(argc, argv);
+	Image image = get_image(config.N, config.nx, config.ny, config.nphi, config.nmu, config.n_observers);
+	run_simulation(image, config);
+	printf("saving image\n");
+	save_image(image, config, start_timestamp);
+	printf("saved image\n");
+	free(image.data);
+	printf("finished\n");
+	return 0;
 }
