@@ -31,7 +31,7 @@ def parse_args():
 		"--range",
 		nargs=2,
 		type=int,
-		default=[7,10],
+		default=[6,12],
 		metavar=("min", "max"),
 		help="Minimum and maximum powers of 10 for N"
 	)
@@ -50,13 +50,13 @@ def parse_args():
 	parser.add_argument(
 		"--nspots",
 		type=int,
-		default=2,
+		default=3,
 		help="Number of random solar spots to be on the star."
 	)
 	parser.add_argument(
 		"--n_observers",
 		type=int,
-		default=5,
+		default=4,
 		help="Number of observers to capture photons from. We distribute the number of observers along imu."
 	)
 	parser.add_argument(
@@ -74,13 +74,13 @@ def parse_args():
 	parser.add_argument(
 		"--nphi",
 		type=int,
-		default=200,
+		default=150,
 		help="Number of divisions on the observer sphere along the longitude. Defines the resolution of the observer (sun spots look less blurred on higher resolution)"
 	)
 	parser.add_argument(
 		"--nmu",
 		type=int,
-		default=200,
+		default=150,
 		help="Number of divisions on the observer sphere along the latitude. Defines the resolution of the observer (sun spots look less blurred on higher resolution)"
 	)
 	return parser.parse_args()
