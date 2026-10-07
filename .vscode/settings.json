@@ -1,0 +1,12 @@
+{
+    "C_Cpp.default.compilerPath": "//wsl.localhost/Ubuntu-26.04/usr/bin/gcc",
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda",
+    "python-envs.pythonProjects": [
+        {
+            "path": "EP2/engine/tests",
+            "envManager": "ms-python.python:conda",
+            "packageManager": "ms-python.python:conda"
+        }
+    ]
+}
