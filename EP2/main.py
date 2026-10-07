@@ -156,9 +156,9 @@ if __name__ == '__main__':
 		run_star(config)
 		run_time = time.perf_counter() - run_start_at
 		check_points.append({'N':config['N'],'T':run_time})
+		save_time_runtime_graph(check_points, run_id)
 		build_simulation_analysis(config, run_id)
 
-	save_time_runtime_graph(check_points, run_id)
 	total_elapsed = time.perf_counter() - start 
 	print(f"Finished in {total_elapsed}s. Check output in: {os.getcwd()}/{run_id}")
 	finish_message()
