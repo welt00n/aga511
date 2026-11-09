@@ -17,7 +17,7 @@
 #include <curand_kernel.h>
 #include <cuda_fp16.h>
 
-// LINK_TO_COLLAB="https://colab.research.google.com/drive/1k3lFfxoS_p-HhlmDtAQS_6qJdhhLcMSy#scrollTo=Vxug-cFT6ym5"
+// LINK_TO_COLLAB="https://colab.research.google.com/drive/1IEIpwo6pjTRLXpqj3WFxqWebQK2ln2Py"
 const double PI = M_PI;
 const double L = 1.0;
 const double D = 1.0;

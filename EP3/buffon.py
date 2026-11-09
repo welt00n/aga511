@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-# LINK_TO_COLLAB="https://colab.research.google.com/drive/1k3lFfxoS_p-HhlmDtAQS_6qJdhhLcMSy#scrollTo=Vxug-cFT6ym5"
+# LINK_TO_COLLAB="https://colab.research.google.com/drive/1IEIpwo6pjTRLXpqj3WFxqWebQK2ln2Py"
 HERE = Path(__file__).resolve().parent
 ENGINE = HERE / "buffon"
 RUNS = HERE / "runs"
