@@ -1,0 +1,37 @@
+{
+  "device": "gpu",
+  "precision": 32,
+  "budget": 180.0,
+  "n": null,
+  "seed": 42,
+  "repetitions": 3,
+  "sm_counts": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    36
+  ],
+  "hardware": "NVIDIA GeForce RTX 5070 Laptop GPU",
+  "gpu": {
+    "NAME": "NVIDIA_GeForce_RTX_5070_Laptop_GPU",
+    "COMPUTE_CAPABILITY": "12.0",
+    "SMS": "36",
+    "CUDA_CORES_PER_SM": "128",
+    "FP32_PER_FP64": "64",
+    "WARP_SIZE": "32",
+    "CLOCK_MHZ": "2025",
+    "MEMORY_GB": "8.5",
+    "MAX_THREADS_PER_BLOCK": "1024",
+    "MAX_THREADS_PER_SM": "1536",
+    "MAX_BLOCKS_PER_SM": "24",
+    "REGISTERS_PER_SM": "65536",
+    "COOPERATIVE_LAUNCH": "1",
+    "THREADS_PER_BLOCK": "1024",
+    "BLOCKS_PER_SM": "1",
+    "REGISTERS_PER_THREAD": "58",
+    "SM_IDS_FOUND": "36"
+  }
+}

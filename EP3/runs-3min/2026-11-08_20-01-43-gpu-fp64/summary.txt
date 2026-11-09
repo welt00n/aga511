@@ -1,0 +1,51 @@
+GPU FP64: NVIDIA GeForce RTX 5070 Laptop GPU
+============================================
+Error vs N, free fit: RMSE ~ N^-0.494 (expected -0.5), R² = 0.9973
+Error vs N, slope fixed at -1/2: error = k/sqrt(N) with k = 2.397 measured (theory 2.374)
+Time on the whole device: T = 0.159 s + N x 1.49e-10 s
+
+Amdahl's law at N = 1.0e+09 (fixed clock):
+  SMs  T fixed (s)  T wall (s)  serial (s)  speedup  Amdahl
+    1       5.4691      5.4481      0.1569     1.00    1.00
+    2       2.8165      2.8146      0.1518     1.94    1.94
+    4       1.4787      1.4794      0.1448     3.70    3.68
+    8       0.8370      0.8357      0.1708     6.53    6.65
+   16       0.4831      0.4822      0.1497    11.32   11.15
+   32       0.3138      0.3137      0.1465    17.43   16.85
+   36       0.3150      0.3149      0.1673    17.36   17.87
+Fitted p = 0.9710 (wall clock 0.9704, needle loop only 0.9994); the speedup can never pass 1/(1-p) = 34
+p by N: 1e+04: -0.038, 3e+04: 0.026, 1e+05: -0.032, 3e+05: 0.060, 1e+06: -0.099, 3e+06: 0.068, 1e+07: 0.248, 3e+07: 0.525, 1e+08: 0.756, 3e+08: 0.918, 1e+09: 0.971
+GPU clock: 2893 MHz measured while running (used as the fixed clock); CUDA reports 2025 MHz
+
+EP1 question 3: pi with 14 decimals (error 1e-14)
+  Needles needed: 5.7e+28 = (k / 1e-14)^2 (the free fit would say 1.0e+29: its slope is off by 0.006, stretched over 20 powers of ten)
+  Speed of this GPU (all SMs): 6.72e+09 needles/s in the needle loop (3.18e+09 counting the serial part, at N = 1.0e+09)
+  Time: 8.5e+18 s = 2.7e+11 years
+  For N this large the serial part is nothing, so p -> 1 and time falls as 1/n (Amdahl):
+  in 80 years you would need 3.4e+09 GPUs like this one (1.2e+11 SMs)
+  N = 5.7e+28 does not fit in a 64-bit integer (max 9.2e18): it can only be extrapolated.
+
+Prediction check: fitted on N <= 1e+06 only, then compared with the larger N measured
+         N  error pred.  error meas.  ratio  time pred.  time meas.  ratio
+   3.2e+06     1.35e-03     1.32e-03   0.97      0.154s      0.156s   1.01
+   1.0e+07     7.61e-04     6.86e-04   0.90      0.155s      0.166s   1.07
+   3.2e+07     4.28e-04     3.72e-04   0.87      0.158s      0.159s   1.00
+   1.0e+08     2.41e-04     2.51e-04   1.04      0.168s      0.208s   1.24
+   3.2e+08     1.35e-04     1.40e-04   1.03      0.197s      0.200s   1.02
+   1.0e+09     7.61e-05     8.47e-05   1.11      0.291s      0.315s   1.08
+  On average measured/predicted = 0.99 for the error and 1.07 for the time (each measured error comes from about 20 runs, so it scatters by 15-30%)
+
+Checkpoints on this GPU (all SMs) (error 10^-d = k/sqrt(N), time = a + bN):
+  decimals    needles             time
+         3    5.7e+06            0.2 s  measured in this run
+         4    5.7e+08            0.2 s  measured in this run
+         5    5.7e+10            8.7 s  
+         6    5.7e+12           14 min  
+         7    5.7e+14           23.7 h  
+         8    5.7e+16          99 days  
+         9    5.7e+18         27 years  
+        10    5.7e+20       2708 years  N > 9.2e18: more than one run
+        11    5.7e+22    2.7e+05 years  N > 9.2e18: more than one run
+        12    5.7e+24    2.7e+07 years  N > 9.2e18: more than one run
+        13    5.7e+26    2.7e+09 years  N > 9.2e18: more than one run
+        14    5.7e+28    2.7e+11 years  N > 9.2e18: more than one run

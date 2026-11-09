@@ -1,0 +1,39 @@
+CPU FP32: Intel(R) Core(TM) Ultra 7 255HX
+=========================================
+Error vs N, free fit: RMSE ~ N^-0.492 (expected -0.5), R² = 0.9941
+Error vs N, slope fixed at -1/2: error = k/sqrt(N) with k = 2.381 measured (theory 2.374)
+Time on the whole device: T = 0.000 s + N x 1.56e-08 s; the needle loop grows as N^0.998, that is O(N)
+
+EP1 question 3: pi with 14 decimals (error 1e-14)
+  NEVER with FP32: FP32 keeps about 7 significant digits, so its needle test can never support 14 decimals. The numbers below are what it would take if the error kept falling.
+  Needles needed: 5.7e+28 = (k / 1e-14)^2 (the free fit would say 1.3e+29: its slope is off by 0.008, stretched over 20 powers of ten)
+  Speed of this CPU (one core): 6.43e+07 needles/s
+  Time: 8.8e+20 s = 2.8e+13 years
+  In 80 years you would need 3.5e+11 cores like this one
+  N = 5.7e+28 does not fit in a 64-bit integer (max 9.2e18): it can only be extrapolated.
+
+Prediction check: fitted on N <= 3e+05 only, then compared with the larger N measured
+         N  error pred.  error meas.  ratio  time pred.  time meas.  ratio
+   3.2e+05     4.25e-03     3.97e-03   0.94      0.005s      0.005s   0.98
+   1.0e+06     2.39e-03     1.95e-03   0.82      0.016s      0.016s   0.98
+   3.2e+06     1.34e-03     1.30e-03   0.97      0.050s      0.049s   0.98
+   1.0e+07     7.55e-04     8.39e-04   1.11      0.159s      0.157s   0.99
+   3.2e+07     4.25e-04     3.66e-04   0.86      0.504s      0.492s   0.98
+   1.0e+08     2.39e-04     2.47e-04   1.04      1.592s      1.561s   0.98
+   3.2e+08     1.34e-04     1.59e-04   1.19      5.035s      4.919s   0.98
+  On average measured/predicted = 0.98 for the error and 0.98 for the time (each measured error comes from about 20 runs, so it scatters by 15-30%)
+
+Checkpoints on this CPU (one core) (error 10^-d = k/sqrt(N), time = a + bN):
+  decimals    needles             time
+         3    5.7e+06            0.1 s  measured in this run
+         4    5.7e+08            8.8 s  
+         5    5.7e+10           15 min  
+         6    5.7e+12           24.5 h  
+         7    5.7e+14         102 days  never: beyond FP32
+         8    5.7e+16         28 years  never: beyond FP32
+         9    5.7e+18       2794 years  never: beyond FP32
+        10    5.7e+20    2.8e+05 years  never: beyond FP32
+        11    5.7e+22    2.8e+07 years  never: beyond FP32
+        12    5.7e+24    2.8e+09 years  never: beyond FP32
+        13    5.7e+26    2.8e+11 years  never: beyond FP32
+        14    5.7e+28    2.8e+13 years  never: beyond FP32

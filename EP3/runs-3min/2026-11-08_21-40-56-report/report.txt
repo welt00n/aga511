@@ -1,0 +1,22 @@
+Run                                                 needles/s × CPU FP64      14 decimals       p
+GPU FP64: NVIDIA GeForce RTX 5070 Laptop GPU         6.72e+09      111.9    2.7e+11 years  0.9710
+GPU FP32: NVIDIA GeForce RTX 5070 Laptop GPU         1.09e+11     1814.1            never  0.9850
+GPU FP16: NVIDIA GeForce RTX 5070 Laptop GPU         1.05e+11     1748.5            never  0.9860
+CPU FP64: Intel(R) Core(TM) Ultra 7 255HX            6.01e+07        1.0    3.0e+13 years       -
+CPU FP32: Intel(R) Core(TM) Ultra 7 255HX            6.43e+07        1.1            never       -
+CPU FP16: Intel(R) Core(TM) Ultra 7 255HX            1.82e+07        0.3            never       -
+
+Time for each number of correct decimals:
+decimals         GPU FP64         GPU FP32         GPU FP16         CPU FP64         CPU FP32         CPU FP16 
+       3            0.2 s            0.1 s            0.2 s            0.1 s            0.1 s            0.3 s 
+       4            0.2 s            0.2 s            never            9.4 s            8.8 s            never 
+       5            8.7 s            0.7 s            never           16 min           15 min            never 
+       6           14 min           52.0 s            never           26.2 h           24.5 h            never 
+       7           23.7 h            never            never         109 days            never            never 
+       8          99 days            never            never         30 years            never            never 
+       9         27 years            never            never       2991 years            never            never 
+      10       2708 years            never            never    3.0e+05 years            never            never 
+      11    2.7e+05 years            never            never    3.0e+07 years            never            never 
+      12    2.7e+07 years            never            never    3.0e+09 years            never            never 
+      13    2.7e+09 years            never            never    3.0e+11 years            never            never 
+      14    2.7e+11 years            never            never    3.0e+13 years            never            never 

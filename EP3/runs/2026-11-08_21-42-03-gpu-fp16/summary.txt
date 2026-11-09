@@ -1,0 +1,60 @@
+GPU FP16: NVIDIA GeForce RTX 5070 Laptop GPU
+============================================
+Error vs N, weighted fit: RMSE ~ N^(-0.485 ± 0.021) (expected -0.5), chi2/dof = 2.5/6
+Error vs N, slope fixed at -1/2: error = k/sqrt(N), k = 2.45 ± 0.13 from 168 runs (bootstrap: ± 0.11); theory 2.374, 0.6 sigma away
+All 3.07e+12 needles of this run together: pi = 3.1412144 ± 0.0000014; the true pi is 279.4 sigma away
+The error stopped falling: at N = 1.0e+11 the estimate is off by (3.789 ± 0.011)e-4, far more than sigma = 7.5e-06. Rounding in FP16 biases each needle's test (so the combined pi above is biased too).
+Time on the whole device: T = a + b N, a = 0.1567 ± 0.0021 s (serial part), b = (9.75 ± 0.08)e-12 s/needle; the needle loop grows as N^(0.973 ± 0.011), close to O(N) but 2.4 sigma from 1
+Systematic: on the whole GPU the clock varied by 0.7% between long loops (laptop boost and heat); speeds and predicted times carry about the same relative uncertainty
+
+Amdahl's law at N = 1.0e+11 (fixed clock = measured running clock; ± is 1 sigma from 3 repetitions per SM count):
+  SMs        T fixed (s)  T wall (s)  serial (s)          speedup  Amdahl
+    1       35.22 ± 0.06      33.965       0.171                1    1.00
+    2     17.664 ± 0.015      16.980       0.179    1.994 ± 0.004    1.99
+    4      8.925 ± 0.009       8.592       0.180    3.946 ± 0.008    3.95
+    8      4.554 ± 0.013       4.406       0.179    7.733 ± 0.026    7.76
+   16    2.3437 ± 0.0032       2.275       0.157   15.027 ± 0.035   15.02
+   32      1.261 ± 0.014       1.247       0.168     27.92 ± 0.31   28.21
+   36    1.1257 ± 0.0016       1.136       0.153     31.29 ± 0.07   31.26
+Fitted p = 0.99567 ± 0.00007 (weighted, chi2/dof = 2.9/5; bootstrap over the repetitions: ± 7.6e-05)
+Wall clock p = 0.99441 ± 0.00020, needle loop only p = 1.00005 ± 0.00004
+the speedup can never pass 1/(1-p) = 231 ± 4
+The speedups share T(1), so they are correlated; the bootstrap includes that, the weighted fit does not.
+p by N: 1e+04: 0.034 ± 0.017, 3e+04: 0.040 ± 0.021, 1e+05: -0.008 ± 0.014, 3e+05: -0.015 ± 0.011, 1e+06: 0.021 ± 0.021, 3e+06: 0.035 ± 0.015, 1e+07: 0.041 ± 0.010, 3e+07: 0.014 ± 0.013, 1e+08: 0.196 ± 0.011, 3e+08: 0.404 ± 0.006, 1e+09: 0.703 ± 0.006, 3e+09: 0.8833 ± 0.0023, 1e+10: 0.9571 ± 0.0007, 3e+10: 0.98528 ± 0.00027, 1e+11: 0.99567 ± 0.00007
+GPU clock: median 2798 MHz while running (used as the fixed clock), range 1927-2916 MHz over the long loops; CUDA reports 2025 MHz. Runs near 2025 MHz did not boost; counting cycles removes that from the speedups.
+
+EP1 question 3: pi with 14 decimals (error 1e-14)
+  NEVER with FP16: the error stopped falling (see above). The numbers below are what it would take if the error kept falling.
+  Needles needed: (6.0 ± 0.7)e28 = (k / 1e-14)^2 (the free fit would say 2.9e+29: its slope is off by 0.015, stretched over 18 powers of ten)
+  Speed of this GPU (all SMs): (1.025 ± 0.008)e11 needles/s (statistical) ± 0.7% (systematic, clock); 8.81e+10 counting the serial part, at N = 1.0e+11
+  Time: (5.9 ± 0.6)e17 s = 1.9e+10 years ± 11%
+  For N this large the serial part is nothing, so p -> 1 and time falls as 1/n (Amdahl):
+  in 80 years you would need 2.3e+08 GPUs like this one (8.4e+09 SMs)
+  N = 6.0e+28 does not fit in a 64-bit integer (max 9.2e18): it can only be extrapolated.
+
+Prediction check: fitted on N <= 1e+08 only, then compared with the larger N measured
+         N  error pred.  error meas.          ratio  time pred.  time meas.          ratio
+   3.2e+08     1.38e-04     4.18e-04      3.0 ± 0.5      0.158s      0.157s  0.997 ± 0.018
+   1.0e+09     7.76e-05     3.69e-04      4.8 ± 0.8      0.165s      0.168s  1.015 ± 0.023
+   3.2e+09     4.36e-05     3.79e-04      8.7 ± 1.4      0.189s      0.221s    1.17 ± 0.04
+   1.0e+10     2.45e-05     3.77e-04     15.4 ± 2.5      0.263s      0.267s  1.015 ± 0.023
+   3.2e+10     1.38e-05     3.78e-04         27 ± 4      0.498s      0.488s  0.981 ± 0.013
+   1.0e+11     7.76e-06     3.79e-04         49 ± 8      1.242s      1.136s  0.915 ± 0.007
+  Weighted mean of measured/predicted: 4.5 ± 0.4 for the error, 0.948 ± 0.005 for the time (1 means the prediction is right)
+  The time ratios are statistical only; the clock systematic (0.7%) also applies to them.
+  The error check fails here on purpose: the small-N fit expects the error to keep falling, but rounding stops it (the floor above).
+
+Checkpoints on this GPU (all SMs) (error 10^-d = k/sqrt(N), time = a + bN, ± 1 sigma statistical):
+  decimals                needles             time      ±
+         3          (6.0 ± 0.7)e6            0.2 s     1%  measured in this run
+         4          (6.0 ± 0.7)e8            0.2 s     1%  never: beyond the error floor
+         5         (6.0 ± 0.7)e10            0.7 s     9%  never: beyond the error floor
+         6         (6.0 ± 0.7)e12           58.9 s    11%  never: beyond the error floor
+         7         (6.0 ± 0.7)e14           98 min    11%  never: beyond the error floor
+         8         (6.0 ± 0.7)e16           7 days    11%  never: beyond the error floor
+         9         (6.0 ± 0.7)e18         679 days    11%  never: beyond the error floor
+        10         (6.0 ± 0.7)e20        186 years    11%  never: beyond the error floor
+        11         (6.0 ± 0.7)e22    1.9e+04 years    11%  never: beyond the error floor
+        12         (6.0 ± 0.7)e24    1.9e+06 years    11%  never: beyond the error floor
+        13         (6.0 ± 0.7)e26    1.9e+08 years    11%  never: beyond the error floor
+        14         (6.0 ± 0.7)e28    1.9e+10 years    11%  never: beyond the error floor
