@@ -1,37 +1,48 @@
 # EP4: the spotted star, toward the GPU
 
-The EP2 star (Monte Carlo image of a star with spots, the professor's algorithm) rebuilt so it can move to CUDA. **This first step is sequential**: no CUDA code yet. It is the EP2 physics written in the shape the GPU needs, compiled with `nvcc`.
+The EP2 star (Monte Carlo image of a star with spots, the professor's algorithm) rebuilt with CUDA. **In progress (2026-11-21):** the CPU engine is complete; the GPU engine is being built ([`../docs/roadmap.md`](../docs/roadmap.md) §0).
 
-The ideas behind every choice are in [`../docs/README.md`](../docs/README.md) and [`../docs/precision.md`](../docs/precision.md).
+The ideas behind every choice are in [`../docs/README.md`](../docs/README.md); the GPU design in [`../docs/gpu_engine.md`](../docs/gpu_engine.md) and [`../docs/hpc_architecture.md`](../docs/hpc_architecture.md).
 
 ## Requirements
 
-- CUDA toolkit (`nvcc`), used here as the compiler
+- CUDA toolkit (`nvcc`)
 - Python 3 with numpy, matplotlib, pillow (conda env `aga511`)
+
+## Building
+
+```
+python engine.py              # builds star_cpu64, star_cpu32, star_gpu64, star_gpu32 in engine/build/, printing each nvcc command
+python engine.py --arch 80    # for the A30 (SASS for compute capability 8.0 only)
+```
+
+- **No Makefile:** `engine.py` composes one `nvcc` call per binary and rebuilds only when the code hash (the engine's sources, the command, the `nvcc` version) changes. `star.py` builds what it needs by itself.
+- **`star_cpu*` link `cpu.cu`, `star_gpu*` link `gpu.cu`:** the same pass loop, two processors ([`../docs/gpu_engine.md`](../docs/gpu_engine.md)).
+- Next to each binary: `.hash` (what built it) and `.report` (the compiler's resource report for the GPU kernels).
 
 ## Engine: one run
 
 ```
-cd engine
-make                      # star (FP64) and star32 (FP32)
-./star --test-rng         # Philox against the Random123 test vectors
-./star -n 1e8 -o out      # 1e8 photons, EP2's star, 4 observers, one file per observer in out/
-./star32 -n 1e8 -o out32  # the same photons in FP32
-./star -n 1e8 --observers 1.5708,0.7854,0 --size 512 --frames 300   # inclinations in radians
-./star -n 1e8 -o out --observers-per-pass 1      # one observer per pass: 1/4 of the memory
-./star -n 1e8 -o out --memory-budget 2GB         # or as many observers per pass as fit (also 1.5GiB)
-./star -n 1e8 --memory-budget 50MB --describe    # what would run: nmu, bins, passes, bytes; runs nothing
-./star -n 1e8 --first-chunk 0 --last-chunk 48828 # part of the run
-./star -n 1e8 --no-record # the same photons, without an image
-./star -h                 # all options
+B=engine/build
+$B/star_cpu64 --test-rng         # Philox against the Random123 test vectors
+$B/star_cpu64 -n 1e8 -o out      # 1e8 photons, EP2's star, 4 observers, one file per observer in out/
+$B/star_cpu32 -n 1e8 -o out32    # the same photons in FP32
+$B/star_cpu64 -n 1e8 --observers 1.5708,0.7854,0 --size 512 --frames 300   # inclinations in radians
+$B/star_cpu64 -n 1e8 -o out --observers-per-pass 1      # one observer per pass: 1/4 of the memory
+$B/star_cpu64 -n 1e8 -o out --memory-budget 2GB         # or as many observers per pass as fit (also 1.5GiB)
+$B/star_cpu64 -n 1e8 --memory-budget 50MB --describe    # what would run: nmu, bins, passes, bytes; runs nothing
+$B/star_cpu64 -n 1e8 --first-chunk 0 --last-chunk 48828 # part of the run
+$B/star_cpu64 -n 1e8 --no-record # the same photons, without an image
+$B/star_gpu64 -n 1e8 --describe  # the GPU: PROCESSOR=GPU, its name, compute capability, SMs
+$B/star_cpu64 -h                 # all options
 ```
 
 - **`--describe`** prints a `CONFIG` line (the derived configuration, `OBSERVER_BYTES`, `IMAGE_BYTES`) and one `OBSERVER` line per observer (μ bin, bin center, its pass, its file name), then exits.
 - **Passes are balanced:** with 4 observers and `--observers-per-pass 3` the passes are 2 + 2, not 3 + 1 (the same time, less memory).
 - **Output lines,** `KEY=VALUE` after a first word that says what the line is:
   - `PROGRESS` at most every 10 s: pass, chunk, speed, elapsed, ETA;
-  - `PASS` after each pass: its observers' μ bins, photon counts, `ZERO_TIME`, `PHOTONS_TIME`, `SAVE_TIME`;
-  - `SUMMARY` last: the configuration, the counts (`PHOTONS`, `BLOCKED` by spots, `MISSED` the observers, `RECORDED`), the phase times (`SETUP_TIME`, `ZERO_TIME`, `PHOTONS_TIME`, `SAVE_TIME`, `TIME`) and `PHOTONS_PER_SECOND`.
+  - `PASS` after each pass: its observers' μ bins, photon counts, `ZERO_TIME`, `PHOTONS_TIME`, `COPY_TIME`, `SAVE_TIME`;
+  - `SUMMARY` last: the processor (`PROCESSOR`, `PROCESSOR_NAME`, `COMPUTE_CAPABILITY`, `COMPUTE_UNITS`, `UNIT`), the configuration, the counts (`PHOTONS`, `BLOCKED` by spots, `MISSED` the observers, `RECORDED`), the phase times (`SETUP_TIME`, `ZERO_TIME`, `PHOTONS_TIME`, `COPY_TIME` to the host, `SAVE_TIME`, `TIME`) and `PHOTONS_PER_SECOND`.
 - **Per observer:** `observer_mu0023_i1.5708.bin` (raw `uint32` counts, `[frame][iy][ix]`) and `observer_mu0023_i1.5708.record` (`KEY=VALUE`, one per line, written last: the "done" marker). The name carries the μ bin and the inclination of the bin center.
 - **Each file is written as `.partial`, put on the disk (`fsync`), then renamed:** a file that exists is whole, even after a power cut.
 - **SETUP touches every page of the image;** each pass's `ZERO_TIME` is then pure zeroing, the same in every pass.
@@ -42,6 +53,7 @@ make                      # star (FP64) and star32 (FP32)
 ```
 python star.py -n 1e8                       run, a gif and a still frame per observer
 python star.py -n 1e8 --precision 32        the FP32 build
+python star.py -n 1e8 --processor gpu       on the GPU (from step 3 of today's plan)
 python star.py -n 2e8 --compare-ep2         same physics as EP2? (chi2, no spots)
 python star.py -n 1e7 --check-split         two halves of the chunk range = the full run?
 python star.py -n 1e7 --check-passes        one observer per pass = all in one pass?
@@ -62,13 +74,18 @@ Each run gets a folder in `runs/`: `run.json` and the gifs for a simulation, `re
 | `engine/scene.cuh`, `scene.cu` | the `Scene`: flat and read-only (spots, limb darkening, which μ bins this pass records), ready for `__constant__` memory |
 | `engine/observers.cuh`, `observers.cu` | observers: inclination → μ bin, bin center, file name; passes |
 | `engine/photon.cuh` | the physics of one photon, from random numbers to a pixel index. Pure: it records nothing |
-| `engine/image.cuh`, `image.cu` | the image: allocate, zero, `count_photon` (`counts[i]++`, later `atomicAdd`), save one observer |
-| `engine/files.cuh` | write to `.partial`, then rename: a file that exists is always whole |
+| `engine/image.cuh`, `image.cu` | the image in host memory: allocate, zero, `count_photon`; saving a block of counts |
+| `engine/files.cuh` | write to `.partial`, `fsync`, then rename: a file that exists is always whole |
 | `engine/options.cuh`, `options.cu` | the command line, observers per pass from a memory budget |
-| `engine/run.cuh` | the types of a run's results (counts, times, progress) and the clock |
+| `engine/run.cuh` | the types of a run's results (counts, times, progress, the processor's description) and the clock |
 | `engine/report.cuh`, `report.cu` | the output lines and the observer records |
-| `engine/main.cu` | the pass loop, the chunk loop, phase timings, the RNG test |
-| `star.py`, `analysis.py` | driver: build, run, pictures, checks |
+| `engine/processor.cuh` | what the pass loop asks of a processor (open, load a pass, zero, trace, hand an observer to the host, close) |
+| `engine/cpu.cu` | the CPU as a processor: the chunk loop with our Philox copy |
+| `engine/gpu.cu` | the GPU as a processor (being built) |
+| `engine/gpu_device.cuh`, `gpu_device.cu` | the GPU itself: CUDA errors, properties, name, compute capability, SMs |
+| `engine/main.cu` | the pass loop, phase timings, the RNG test |
+| `engine.py` | building the engines (no Makefile) and talking to them: run, `--describe`, records |
+| `star.py`, `analysis.py` | the command line: runs with pictures, the checks; images and comparisons |
 
 ## What changed from EP2, and why
 

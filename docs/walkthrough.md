@@ -23,7 +23,7 @@ A guided tour of the EP4 sequential engine, one piece at a time, with the questi
 | 14 | What the engine tells: `PROGRESS`, `PASS`, `SUMMARY`, the records | `report.cu`, `run.cuh` | done |
 | 15 | The driver's side: reading records, the passes check | `star.py`, `analysis.py` | done |
 | — | **Recap of pieces 10–15: what we learned, what to change before the GPU** | | done |
-| 16 | The processor split: the pass loop stops knowing which processor traces | `processor.cuh`, `cpu.cu`, `main.cu` | |
+| 16 | The processor split: the pass loop stops knowing which processor traces | `processor.cuh`, `cpu.cu`, `main.cu` | done |
 | 17 | Random numbers on the GPU | `gpu_rng.cuh` | |
 | 18 | The star on the GPU: constant Scene, `GpuImage`, the kernel and its queue | `gpu.cu`, `gpu_image.cu` | |
 | 19 | The SM mask | `gpu_sms.cu` | |
@@ -1184,3 +1184,74 @@ image   = np.stack([load_observer_image(record["IMAGE"], record["FRAMES"], recor
 ### To change before the GPU
 
 The engine changes that the GPU engine will inherit. Cheaper to do once, now. Tracked in the [roadmap's backlog](roadmap.md#c-before-the-gpu-engine-changes-the-gpu-will-inherit).
+
+---
+
+## Piece 16: the processor split: the pass loop stops knowing which processor traces
+
+`processor.cuh`, `cpu.cu`, `gpu.cu`, `gpu_device.cu`, `main.cu`, `engine.py`. Design: [gpu_engine.md](gpu_engine.md), [hpc_architecture.md](hpc_architecture.md).
+
+### What a processor must do (`processor.cuh`)
+
+```c
+typedef struct Processor Processor;                     // opaque: each processor defines it
+
+void describe_processor(const Options *, ProcessorInfo *);   // kind, name, compute capability, compute units
+int  compare_rng_with_cpu(unsigned long long seed);          // the GPU checks cuRAND against rng.cuh (step 2)
+Processor *open_processor(const Options *);                   // allocate the image where this processor writes
+void load_pass(Processor *, const Scene *);                  // the CPU keeps a pointer; the GPU copies to constant memory
+void zero_pass_image(Processor *, unsigned int observers);
+PhotonCounts trace_pass(Processor *, const Run *, Progress *);
+const PixelCount *observer_on_host(Processor *, unsigned int slot);   // the CPU: a pointer; the GPU: a copy back
+size_t processor_image_bytes(const Processor *);
+void close_processor(Processor *);
+```
+
+- **An opaque type** (`typedef struct Processor Processor;` with no body in the header): `main.cu` can hold a `Processor *` and pass it around, but cannot look inside. `cpu.cu` defines `struct Processor { options, scene, record, Image image; }`; `gpu.cu` will define its own, with device pointers. In Python terms: an object whose attributes are private, used only through its methods.
+- **Chosen at link time:** both files define the same functions. `star_cpu64` is linked with `cpu.cu`, `star_gpu64` with `gpu.cu`; the linker connects `main.cu`'s calls to whichever is there ([cpp_for_python.md §1](cpp_for_python.md)). No `#ifdef`, no `if (gpu)` in the pass loop.
+
+### The pass loop now (`main.cu`)
+
+```
+run_pass:
+    assign_pass_observers(&scene, ...)        the Scene learns this pass's μ bins
+    load_pass(processor, &scene)
+    zero_pass_image(processor, ...)           ZERO
+    trace_pass(processor, run, &progress)     PHOTONS
+    for each observer:
+        observer_on_host(processor, slot)     COPY  (new phase; ~0 on the CPU)
+        save_counts, the record               SAVE  (shared by both processors)
+```
+
+- **`COPY` is new,** so the GPU's device → host copy is measured apart from the disk. On the CPU it is a pointer, ~0 s.
+- **Saving takes a block of counts** (`save_counts(counts, pixels, path)`, `photons_in`), not an `Image`, so the CPU's image and the GPU's host buffer are saved by the same code.
+- **`SAVE_TIME` includes the records** (measured as the whole loop minus the copies).
+
+### The processor's description in the output
+
+```
+PROCESSOR=CPU PROCESSOR_NAME=Intel(R)_Core(TM)_Ultra_7_255HX COMPUTE_CAPABILITY=none COMPUTE_UNITS=1 UNIT=core
+PROCESSOR=GPU PROCESSOR_NAME=NVIDIA_GeForce_RTX_5070_Laptop_GPU COMPUTE_CAPABILITY=12.0 COMPUTE_UNITS=36 UNIT=sm
+```
+
+- The CPU's name from `/proc/cpuinfo`; the GPU's from `cudaGetDeviceProperties`. Spaces become `_` (EP3's `replace_spaces_with_underscores`, now in `run.cuh`) so `KEY=VALUE` stays one word per value.
+- `COMPUTE_UNITS` is what `scaling.py` will read, whichever the processor.
+- `gpu_device.cu` holds `check` (stop with a message on any CUDA error), `gpu_properties`, `gpu_attribute`: EP3's helpers, same names.
+
+### The build without a Makefile (`engine.py`)
+
+```
+nvcc -O2 -std=c++17 -Xcompiler -Wall -arch=native [-DSTAR_FP32] [-Xptxas -v]
+     main.cu options.cu scene.cu observers.cu image.cu report.cu  cpu.cu | gpu.cu gpu_device.cu
+     -o build/star_<processor><precision>
+```
+
+- **One call, three steps** (preprocess, compile each `.cu`, link), as in [cpp_for_python.md §1](cpp_for_python.md).
+- **Rebuild only when needed:** the build hash (all the engine's sources + the command + `nvcc --version`) is stored in `build/<binary>.hash`. Measured: 4 s to build a CPU binary; 0.00 s when the hash matches.
+- **The hash covers every engine file,** so changing `gpu.cu` also rebuilds the CPU binaries. Simple and safe: one code hash for the whole engine, the one the records carry (`CODE_HASH`).
+- **`-Xptxas -v`** for the GPU binaries: the compiler's resource report (registers, stack, spills per kernel), kept in `build/<binary>.report`.
+- **What the GPU binary contains:** `cuobjdump --list-elf --list-ptx` shows `sm_120` cubins only, no PTX (as decided, [gpus.md](gpus.md#what-the-code-must-do-to-scale-there-unchanged)).
+
+### Checks
+
+All four CPU checks, after the split: **the same numbers as before**: split and passes bit for bit, EP2 χ²/dof = 0.9957, FP32 moves 1.2·10⁻⁴ of the photons. The refactoring changed the structure, not the results.

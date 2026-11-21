@@ -1,6 +1,5 @@
 *.bin
 
 # EP4 build outputs
-EP4/engine/star
-EP4/engine/star32
+EP4/engine/build/
 __pycache__/

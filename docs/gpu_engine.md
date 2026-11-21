@@ -1,6 +1,6 @@
 # The GPU engine (design)
 
-What we build today, as files and components, before any code. **Status: to review (2026-11-21).**
+What we build today, as files and components. **Status (2026-11-21):** step 1 built (`processor.cuh`, `cpu.cu`, `gpu.cu` without photons yet, `gpu_device.cu`, `engine.py`); the rest in progress. `star.py` takes `--processor cpu|gpu`.
 
 The rule from the code style: **the file names and function names are the documentation.** Each file holds one thing, named for what it holds; the reasoning lives here.
 
@@ -50,7 +50,7 @@ main.cu: options → scene → observers → for each pass:
 | File | New / changed | What it holds |
 |---|---|---|
 | `engine.py` | **new** (moved from `star.py`) | **building the engine** (section 3) and talking to it: which binary (`cpu`/`gpu` × 64/32), command, run, `--describe`, records, loading observers **one at a time** |
-| `star.py` | changed | the command line: a run with pictures, and the checks; `--engine cpu\|gpu`, `--sms`; new check **`--compare-gpu`** (CPU vs GPU on the same photons) |
+| `star.py` | changed | the command line: a run with pictures, and the checks; `--processor cpu\|gpu`, `--sms`; new check **`--compare-gpu`** (CPU vs GPU on the same photons) |
 | `analysis.py` | changed | pictures one observer at a time (a 1k observer is 1.3 GB) |
 | `sweeps.py` | **new** | running the scaling sweeps: `strong` (fixed N) and `weak` (N ∝ SMs) over a list of SM counts, with repeats; one result file per point, existing points skipped |
 | `scaling.py` | **new** | the analysis of the sweeps: the Amdahl fit (p), the Gustafson fit (s′), efficiency, strong and weak side by side, the serial part measured vs fitted; figures with their data |
@@ -127,8 +127,8 @@ trace_photons (one per thread, persistent):
 |---|---|---|
 | `--test-rng` on `star_gpu64` | cuRAND's first numbers of chunk 0 vs `rng.cuh` | identical |
 | `--compare-gpu` (new) | `star_cpu64` vs `star_gpu64`, same photons | counts identical or nearly; images identical or a handful of photons apart (the GPU's math library and FMA) |
-| `--check-passes`, `--check-split` with `--engine gpu` | as on the CPU | bit for bit |
-| `--compare-ep2` with `--engine gpu` | EP2 vs the GPU | χ²/dof ≈ 1 |
+| `--check-passes`, `--check-split` with `--processor gpu` | as on the CPU | bit for bit |
+| `--compare-ep2` with `--processor gpu` | EP2 vs the GPU | χ²/dof ≈ 1 |
 
 ## 7. The sweeps (today) [to review]
 
@@ -179,7 +179,7 @@ About an hour in total, running in the background while the rest of today's step
 ### How a sweep runs (the code of `sweeps.py`)
 
 ```python
-def main():                                        # python sweeps.py strong --engine gpu64
+def main():                                        # python sweeps.py strong --processor gpu --precision 64
     args = parse_args()
     binary = build_engine(args.engine)             # engine.py: nvcc, only if the code changed
     folder = new_sweep_folder(args) or the folder given to `continue`
@@ -242,9 +242,9 @@ Each figure is saved with its data (`.json` next to the `.png`), so the slides c
 ### Commands
 
 ```
-python sweeps.py strong       --engine gpu64 --repeats 3
-python sweeps.py weak         --engine gpu32 --repeats 3
-python sweeps.py problem-size --engine gpu64
+python sweeps.py strong       --processor gpu --precision 64 --repeats 3
+python sweeps.py weak         --processor gpu --precision 32 --repeats 3
+python sweeps.py problem-size --processor gpu --precision 64
 python sweeps.py devices
 python scaling.py EP4/runs/<date>-sweep-strong-gpu64 EP4/runs/<date>-sweep-weak-gpu64 ...
 ```

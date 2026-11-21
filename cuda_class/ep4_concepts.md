@@ -47,4 +47,8 @@ Running notes, filled while EP4 is built: each concept we use, where EP4 uses it
 
 | Concept | In EP4 | Measured / shown | Block |
 |---|---|---|---|
-| | | | |
+| One pass loop, two processors: an interface (`processor.cuh`), chosen at link time | `cpu.cu`, `gpu.cu`; `star_cpu64` vs `star_gpu64` | the CPU checks unchanged after the split | 3 |
+| An opaque type: hold a pointer, never look inside | `typedef struct Processor Processor;` | — | 3 |
+| What `nvcc` does: one call, preprocess + compile + link; the build is just a command | `engine.py` prints each `nvcc` command | 4 s per CPU binary; 0 s when the code hash matches | 3 |
+| SASS only: the binary carries machine code for one compute capability | `cuobjdump --list-elf --list-ptx build/star_gpu64` | `sm_120` cubins, no PTX | 1, 3 |
+| Asking the GPU about itself | `cudaGetDeviceProperties` in `gpu_device.cu` | RTX 5070 Laptop, cc 12.0, 36 SMs | 2 |

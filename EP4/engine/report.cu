@@ -41,15 +41,21 @@ void print_pass(const Run *run, const Pass *pass, const PassResult *result) {
     print_mu_bins(run, pass);
     printf("PHOTONS=%lld BLOCKED=%lld MISSED=%lld RECORDED=%lld ",
            counts->simulated, counts->blocked_by_spots, counts->missed_observers, counts->recorded);
-    printf("ZERO_TIME=%.6f PHOTONS_TIME=%.6f SAVE_TIME=%.6f\n",
-           result->times.zero, result->times.photons, result->times.save);
+    printf("ZERO_TIME=%.6f PHOTONS_TIME=%.6f COPY_TIME=%.6f SAVE_TIME=%.6f\n",
+           result->times.zero, result->times.photons, result->times.copy, result->times.save);
+}
+
+static void print_processor(const ProcessorInfo *processor) {
+    printf("PROCESSOR=%s PROCESSOR_NAME=%s COMPUTE_CAPABILITY=%s COMPUTE_UNITS=%u UNIT=%s ",
+           processor->kind, processor->name, processor->compute_capability, processor->compute_units, processor->unit);
 }
 
 static void print_configuration(const Run *run) {
     const Options *options = run->options;
     const StarConfig *star = &options->star;
-    printf("DEVICE=%s HOST=%s PRECISION=%d N=%lld SEED=%llu A=%g SPOTS=%u UMBRA_RADIUS=%g PENUMBRA_RADIUS=%g ",
-           DEVICE_NAME, run->host, PRECISION_BITS, star->photons, star->seed, star->limb_darkening, star->spots,
+    print_processor(run->processor);
+    printf("HOST=%s PRECISION=%d N=%lld SEED=%llu A=%g SPOTS=%u UMBRA_RADIUS=%g PENUMBRA_RADIUS=%g ",
+           run->host, PRECISION_BITS, star->photons, star->seed, star->limb_darkening, star->spots,
            star->umbra_radius, star->penumbra_radius);
     printf("SIZE=%u FRAMES=%u NMU=%u OBSERVERS=%u OBSERVERS_PER_PASS=%u PASSES=%u ",
            star->size, star->nphi, star->nmu, star->observer_count, options->observers_per_pass, run->passes);
@@ -83,8 +89,9 @@ void print_summary(const Run *run, const PhotonCounts *counts, const RunTimes *t
     printf("PHOTONS=%lld BLOCKED=%lld MISSED=%lld RECORDED=%lld RECORD=%d IMAGE_BYTES=%zu ",
            counts->simulated, counts->blocked_by_spots, counts->missed_observers, counts->recorded,
            options->record ? 1 : 0, image_bytes);
-    printf("SETUP_TIME=%.6f ZERO_TIME=%.6f PHOTONS_TIME=%.6f SAVE_TIME=%.6f TIME=%.6f PHOTONS_PER_SECOND=%.6e ",
-           times->setup, times->zero, times->photons, times->save, times->total,
+    printf("SETUP_TIME=%.6f ZERO_TIME=%.6f PHOTONS_TIME=%.6f COPY_TIME=%.6f SAVE_TIME=%.6f TIME=%.6f "
+           "PHOTONS_PER_SECOND=%.6e ",
+           times->setup, times->zero, times->photons, times->copy, times->save, times->total,
            times->photons > 0 ? photons_traced / times->photons : 0.0);
     printf("OUTPUT_DIR=%s\n", options->record ? options->output_dir : "none");
 }
@@ -106,7 +113,10 @@ static void write_record_lines(FILE *file, const Run *run, const Pass *pass, con
     fprintf(file, "IMAGE=%s.bin\nOBSERVER=%u\nMU_BIN=%u\nINCLINATION_REQUESTED=%.10g\nINCLINATION_BIN_CENTER=%.10g\n",
             observer->file_stem, observer->index, observer->mu_bin,
             observer->requested_inclination, observer->bin_center_inclination);
-    fprintf(file, "DEVICE=%s\nHOST=%s\nPRECISION=%d\n", DEVICE_NAME, run->host, PRECISION_BITS);
+    const ProcessorInfo *processor = run->processor;
+    fprintf(file, "PROCESSOR=%s\nPROCESSOR_NAME=%s\nCOMPUTE_CAPABILITY=%s\nCOMPUTE_UNITS=%u\nUNIT=%s\n",
+            processor->kind, processor->name, processor->compute_capability, processor->compute_units, processor->unit);
+    fprintf(file, "HOST=%s\nPRECISION=%d\n", run->host, PRECISION_BITS);
     fprintf(file, "N=%lld\nSEED=%llu\nA=%g\nSPOTS=%u\nUMBRA_RADIUS=%g\nPENUMBRA_RADIUS=%g\n",
             star->photons, star->seed, star->limb_darkening, star->spots, star->umbra_radius, star->penumbra_radius);
     fprintf(file, "SIZE=%u\nFRAMES=%u\nNMU=%u\n", star->size, star->nphi, star->nmu);
@@ -115,8 +125,8 @@ static void write_record_lines(FILE *file, const Run *run, const Pass *pass, con
     fprintf(file, "PASS=%u\nPASSES=%u\nPASS_OBSERVERS=%u\n", pass->number, run->passes, pass->observer_count);
     fprintf(file, "PHOTONS=%lld\nBLOCKED=%lld\nRECORDED=%llu\nIMAGE_BYTES=%zu\n",
             pass_result->counts.simulated, pass_result->counts.blocked_by_spots, result->recorded, result->bytes);
-    fprintf(file, "PHOTONS_TIME=%.6f\nSAVE_TIME=%.6f\nFINISHED=%s\n",
-            pass_result->times.photons, result->save_time, finished);
+    fprintf(file, "PHOTONS_TIME=%.6f\nCOPY_TIME=%.6f\nSAVE_TIME=%.6f\nFINISHED=%s\n",
+            pass_result->times.photons, result->copy_time, result->save_time, finished);
 }
 
 int write_observer_record(const Run *run, const Pass *pass, const Observer *observer,
