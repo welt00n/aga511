@@ -270,7 +270,16 @@ static void validate_options(Options *options, int argc, char *argv[]) {
         fprintf(stderr, "The chunk range must be inside [0, %lld].\n", chunks);
         exit(1);
     }
+    options->passes_chosen = options->observers_per_pass != ALL_OBSERVERS || options->memory_budget != NO_BUDGET;
     options->observers_per_pass = choose_observers_per_pass(options);
+}
+
+void fit_observers_per_pass(Options *options, size_t available_bytes) {
+    if (!options->record || options->passes_chosen || available_bytes == 0) {
+        return;
+    }
+    options->memory_budget = (double) available_bytes;
+    options->observers_per_pass = balanced(observers_within_budget(options), options->star.observer_count);
 }
 
 long long chunk_count(const Options *options) {

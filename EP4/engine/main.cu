@@ -104,6 +104,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     describe_processor(&options, &processor_info);
+    fit_observers_per_pass(&options, processor_info.hardware.memory_for_image);
     Run run = {&options, &observers, pass_count(&options), started_at, &processor_info, ""};
     read_host_name(run.host);
     if (options.describe) {

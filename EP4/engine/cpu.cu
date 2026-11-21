@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "processor.cuh"
 #include "photon.cuh"
@@ -39,12 +40,25 @@ static void read_cpu_name(char *name) {
     replace_spaces_with_underscores(name);
 }
 
+static ProcessorHardware describe_cpu_hardware(void) {
+    ProcessorHardware hardware;
+    memset(&hardware, 0, sizeof(hardware));
+    size_t page = (size_t) sysconf(_SC_PAGESIZE);
+    hardware.memory_total = (size_t) sysconf(_SC_PHYS_PAGES) * page;
+    hardware.memory_free = (size_t) sysconf(_SC_AVPHYS_PAGES) * page;
+    hardware.max_threads_per_unit = 1;
+    return hardware;
+}
+
 void describe_processor(const Options *options, ProcessorInfo *info) {
+    memset(info, 0, sizeof(*info));
     info->kind = "CPU";
     read_cpu_name(info->name);
     snprintf(info->compute_capability, COMPUTE_CAPABILITY_LENGTH, "none");
     info->compute_units = 1;
+    info->compute_units_total = (unsigned int) sysconf(_SC_NPROCESSORS_ONLN);
     info->unit = "core";
+    info->hardware = describe_cpu_hardware();
 }
 
 int compare_rng_with_cpu(unsigned long long seed) {

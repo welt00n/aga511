@@ -154,9 +154,24 @@ static PhotonCounts read_counters(const GpuCounters *gpu_counters) {
 
 // ============================================================ the processor
 
+static KernelResources describe_kernel(Launch launch, int max_threads_per_sm) {
+    cudaFuncAttributes attributes;
+    check(cudaFuncGetAttributes(&attributes, trace_photons), "reading the kernel's attributes");
+    KernelResources kernel;
+    kernel.registers_per_thread = attributes.numRegs;
+    kernel.local_bytes_per_thread = attributes.localSizeBytes;
+    kernel.constant_bytes = attributes.constSizeBytes;
+    kernel.threads_per_block = launch.threads_per_block;
+    kernel.blocks_per_unit = launch.blocks_per_sm;
+    kernel.blocks = launch.blocks;
+    kernel.occupancy = (double) launch.blocks_per_sm * launch.threads_per_block / max_threads_per_sm;
+    return kernel;
+}
+
 void describe_processor(const Options *options, ProcessorInfo *info) {
     describe_gpu(info);
     info->compute_units = resolve_sm_count(options->sms);
+    info->kernel = describe_kernel(choose_launch(), info->hardware.max_threads_per_unit);
 }
 
 Processor *open_processor(const Options *options) {

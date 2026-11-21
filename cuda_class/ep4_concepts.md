@@ -73,3 +73,9 @@ Running notes, filled while EP4 is built: each concept we use, where EP4 uses it
 | **The GPU throttles its clock under load** (power, temperature) | `CYCLES` / time | **2.88 GHz on 1 SM, 1.95 GHz on 36**: speedup 30.7× in cycles, 20.8× in seconds | 7 |
 | Measure in cycles and in seconds, and report both | `clock64()` per SM next to the host's clock | the clock ratio explains the gap exactly | 7 |
 | One SM vs one CPU core | `--sms 1` vs `star_cpu64` | FP64 1.25×, FP32 ~25× | 2, 7 |
+| **Occupancy limited by registers:** 65 536 registers per SM ÷ registers per thread | `REGISTERS_PER_THREAD`, `OCCUPANCY` | FP64: 80 → 768 threads = 0.50; FP32: 67 → 896 = 0.58; one block per SM | 3, 8 |
+| The kernel's resources from the runtime: `cudaFuncGetAttributes` | `KernelResources` | 40 B stack, 18 KB constant (the Scene) | 3, 4 |
+| Asking the GPU: free memory, L2, bandwidth, FP32:FP64, versions | `cudaMemGetInfo`, device attributes | 7.34 GB free, L2 32 MB, ~380 GB/s, 1:64, CUDA 13.3 / driver 13.5 | 2, 4 |
+| The memory budget from the hardware: passes chosen to fit | `fit_observers_per_pass` | 10 GB job → 4 + 4 observers in 2 passes | 4, 8 |
+| Device → host copy into pinned memory | `COPY_TIME` | ~24 GB/s | 4 |
+| The serial part grows with the image: the disk | 1k, 8 observers | save 20 s vs photons 0.12 s | 7 |

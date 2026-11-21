@@ -49,11 +49,36 @@ typedef struct {
 } RunTimes;
 
 typedef struct {
+    size_t memory_total;
+    size_t memory_free;
+    size_t memory_for_image;
+    size_t l2_bytes;
+    double peak_bandwidth;
+    int fp32_per_fp64;
+    int max_threads_per_unit;
+    int runtime_version;
+    int driver_version;
+} ProcessorHardware;
+
+typedef struct {
+    int registers_per_thread;
+    size_t local_bytes_per_thread;
+    size_t constant_bytes;
+    int threads_per_block;
+    int blocks_per_unit;
+    int blocks;
+    double occupancy;
+} KernelResources;
+
+typedef struct {
     const char *kind;
     char name[PROCESSOR_NAME_LENGTH];
     char compute_capability[COMPUTE_CAPABILITY_LENGTH];
     unsigned int compute_units;
+    unsigned int compute_units_total;
     const char *unit;
+    ProcessorHardware hardware;
+    KernelResources kernel;
 } ProcessorInfo;
 
 typedef struct {

@@ -45,15 +45,29 @@ void print_pass(const Run *run, const Pass *pass, const PassResult *result) {
            result->times.zero, result->times.photons, result->times.copy, result->times.save);
 }
 
-static void print_processor(const ProcessorInfo *processor) {
-    printf("PROCESSOR=%s PROCESSOR_NAME=%s COMPUTE_CAPABILITY=%s COMPUTE_UNITS=%u UNIT=%s ",
-           processor->kind, processor->name, processor->compute_capability, processor->compute_units, processor->unit);
+static void write_processor(FILE *file, const ProcessorInfo *processor, const char *separator) {
+    const ProcessorHardware *hardware = &processor->hardware;
+    const KernelResources *kernel = &processor->kernel;
+    const char *s = separator;
+    fprintf(file, "PROCESSOR=%s%sPROCESSOR_NAME=%s%sCOMPUTE_CAPABILITY=%s%s", processor->kind, s, processor->name, s,
+            processor->compute_capability, s);
+    fprintf(file, "COMPUTE_UNITS=%u%sCOMPUTE_UNITS_TOTAL=%u%sUNIT=%s%s", processor->compute_units, s,
+            processor->compute_units_total, s, processor->unit, s);
+    fprintf(file, "MEMORY_TOTAL=%zu%sMEMORY_FREE=%zu%sMEMORY_FOR_IMAGE=%zu%sL2_BYTES=%zu%s", hardware->memory_total, s,
+            hardware->memory_free, s, hardware->memory_for_image, s, hardware->l2_bytes, s);
+    fprintf(file, "PEAK_BANDWIDTH=%.4g%sFP32_PER_FP64=%d%sMAX_THREADS_PER_UNIT=%d%s", hardware->peak_bandwidth, s,
+            hardware->fp32_per_fp64, s, hardware->max_threads_per_unit, s);
+    fprintf(file, "CUDA_RUNTIME=%d%sCUDA_DRIVER=%d%s", hardware->runtime_version, s, hardware->driver_version, s);
+    fprintf(file, "REGISTERS_PER_THREAD=%d%sLOCAL_BYTES_PER_THREAD=%zu%sCONSTANT_BYTES=%zu%s",
+            kernel->registers_per_thread, s, kernel->local_bytes_per_thread, s, kernel->constant_bytes, s);
+    fprintf(file, "THREADS_PER_BLOCK=%d%sBLOCKS_PER_UNIT=%d%sBLOCKS=%d%sOCCUPANCY=%.3f%s", kernel->threads_per_block, s,
+            kernel->blocks_per_unit, s, kernel->blocks, s, kernel->occupancy, s);
 }
 
 static void print_configuration(const Run *run) {
     const Options *options = run->options;
     const StarConfig *star = &options->star;
-    print_processor(run->processor);
+    write_processor(stdout, run->processor, " ");
     printf("HOST=%s PRECISION=%d N=%lld SEED=%llu A=%g SPOTS=%u UMBRA_RADIUS=%g PENUMBRA_RADIUS=%g ",
            run->host, PRECISION_BITS, star->photons, star->seed, star->limb_darkening, star->spots,
            star->umbra_radius, star->penumbra_radius);
@@ -113,9 +127,7 @@ static void write_record_lines(FILE *file, const Run *run, const Pass *pass, con
     fprintf(file, "IMAGE=%s.bin\nOBSERVER=%u\nMU_BIN=%u\nINCLINATION_REQUESTED=%.10g\nINCLINATION_BIN_CENTER=%.10g\n",
             observer->file_stem, observer->index, observer->mu_bin,
             observer->requested_inclination, observer->bin_center_inclination);
-    const ProcessorInfo *processor = run->processor;
-    fprintf(file, "PROCESSOR=%s\nPROCESSOR_NAME=%s\nCOMPUTE_CAPABILITY=%s\nCOMPUTE_UNITS=%u\nUNIT=%s\n",
-            processor->kind, processor->name, processor->compute_capability, processor->compute_units, processor->unit);
+    write_processor(file, run->processor, "\n");
     fprintf(file, "HOST=%s\nPRECISION=%d\n", run->host, PRECISION_BITS);
     fprintf(file, "N=%lld\nSEED=%llu\nA=%g\nSPOTS=%u\nUMBRA_RADIUS=%g\nPENUMBRA_RADIUS=%g\n",
             star->photons, star->seed, star->limb_darkening, star->spots, star->umbra_radius, star->penumbra_radius);

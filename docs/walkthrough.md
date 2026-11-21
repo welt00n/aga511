@@ -27,8 +27,9 @@ A guided tour of the EP4 sequential engine, one piece at a time, with the questi
 | 17 | Random numbers on the GPU | `gpu_rng.cuh` | done |
 | 18 | The star on the GPU: constant Scene, `GpuImage`, the kernel and its queue | `gpu.cu`, `gpu_image.cu` | done |
 | 19 | The SM mask | `gpu_sms.cu` | done |
-| 19b | The CPU's cores: the same queue on another processor | `cpu_cores.cu` | |
-| 20 | Sweeps and scaling | `sweeps.py`, `scaling.py` | |
+| 19b | ~~The CPU's cores~~ (deferred) | `cpu_cores.cu` | — |
+| 20 | Memory, passes and the kernel's resources | `gpu_device.cu`, `gpu.cu`, `options.cu`, `report.cu` | done |
+| 21 | Sweeps and scaling | `sweeps.py`, `scaling.py` | |
 
 ---
 
@@ -1461,6 +1462,59 @@ SMS PASS=1 SMS_USED=36 CYCLES=251640725
 | FP32 | 3.2·10⁸ photons/s | 1.3·10⁷ | **~25** |
 
 On this laptop, one SM is worth about one CPU core in FP64 (its FP64 units run at 1:64) and ~25 cores in FP32. The GPU wins by having 36 of them.
+
+---
+
+## Piece 20: memory, passes and the kernel's resources (`gpu_device.cu`, `gpu.cu`, `options.cu`, `report.cu`)
+
+### What the processor now says about itself
+
+`ProcessorInfo` (in `run.cuh`) gained two parts, both filled by `describe_processor` and printed in `CONFIG`, `SUMMARY` and every record (one list, `write_processor`, written with spaces on a line or one key per line in a record):
+
+| Part | Keys | From (GPU) |
+|---|---|---|
+| `ProcessorHardware` | `MEMORY_TOTAL`, `MEMORY_FREE`, `MEMORY_FOR_IMAGE` (free − 256 MB of headroom), `L2_BYTES`, `PEAK_BANDWIDTH`, `FP32_PER_FP64`, `MAX_THREADS_PER_UNIT`, `CUDA_RUNTIME`, `CUDA_DRIVER` | `cudaMemGetInfo`, device attributes, `cudaRuntimeGetVersion`, `cudaDriverGetVersion` |
+| `KernelResources` | `REGISTERS_PER_THREAD`, `LOCAL_BYTES_PER_THREAD`, `CONSTANT_BYTES`, `THREADS_PER_BLOCK`, `BLOCKS_PER_UNIT`, `BLOCKS`, `OCCUPANCY` | `cudaFuncGetAttributes(trace_photons)` and the launch from the occupancy API |
+
+On the CPU: its RAM (`sysconf`), its 20 cores as `COMPUTE_UNITS_TOTAL`, and zeros where a CPU has nothing to say.
+
+### Measured on the laptop
+
+| | FP64 | FP32 |
+|---|---|---|
+| registers per thread | 80 | 67 |
+| local memory (stack) per thread | 40 B | 32 B |
+| constant memory (the Scene) | 18 048 B of 64 KB | 17 256 B |
+| threads per block (the occupancy API's choice) | 768 | 896 |
+| blocks per SM | **1** | **1** |
+| **occupancy** = resident threads / 1536 | **0.50** | **0.58** |
+
+GPU: 8.5 GB, 7.34 GB free (7.07 GB for the image), L2 32 MB, peak bandwidth ≈ 380 GB/s (2 × memory clock × bus width, as NVIDIA's `deviceQuery` computes it), `FP32_PER_FP64` = 64, CUDA runtime 13.3, driver up to 13.5.
+
+### Registers limit the occupancy
+
+- An SM has 65 536 registers. At 80 per thread there is room for 819 threads; in whole warps, 768. **Half of the SM's 1536 thread slots stay empty.** In FP32 (67 registers), 896: 58%.
+- More resident threads hide memory latency better (when one warp waits, another runs); fewer registers per thread means values spill to local memory. **Which wins is an experiment, not a rule:** step 6 caps the registers (`-maxrregcount`, `__launch_bounds__`) and measures.
+- EP3's kernel, 58 registers, was smaller; the star's physics is much bigger.
+
+### Passes chosen from the GPU's free memory
+
+- **With neither `--observers-per-pass` nor `--memory-budget`,** `main.cu` calls `fit_observers_per_pass(&options, memory_for_image)`: as many observers per pass as fit in the GPU's free memory, balanced (the CPU reports 0, so nothing changes there).
+- **Measured:** 1k, 300 frames, 8 observers = 10 GB. The engine chose **4 + 4 in 2 passes** by itself (5 would fit; balanced to 4 + 4); 16 files written.
+
+| Phase (both passes) | Time | |
+|---|---|---|
+| SETUP | 0.83 s | `cudaMalloc` of 5 GB + its first `cudaMemset`, the pinned buffer of 1.26 GB |
+| PHOTONS | 0.12 s | N = 10⁷ only |
+| COPY | 0.43 s | 8 × 1.26 GB, **~24 GB/s** device → pinned host |
+| SAVE | **20.2 s** | 10 GB with `fsync`, ~0.5 GB/s |
+
+- **At this size the disk is the serial part:** 20 s of saving against 0.12 s of photons. Amdahl's serial fraction grows with the image ([scaling_laws.md §3](scaling_laws.md#3-why-gustafson-matters-for-us)); for the showcase, N must be large enough for the photons to dominate.
+- **To check:** pass 2's kernel took 0.100 s, pass 1's 0.021 s. Most likely the GPU dropped back to its idle clock during the 12 s save and started the next kernel slowly. The `nvidia-smi` sampling (step 6) will show it.
+
+### Checks
+
+Passes and split on the GPU (FP64 and FP32), passes on the CPU, GPU = CPU at 10⁸: all **bit for bit**.
 
 - **Amdahl, already visible:** at N = 10⁸ in FP32, the photons take 0.011 s and SETUP (mostly creating the CUDA context) 0.14 s; the run is 90% serial. At 10⁷ the GPU's speed looks lower because the kernel is too short to fill and drain the GPU efficiently. The `problem-size` sweep (step 7) measures exactly this.
 - **FP32 is 14.6× faster than FP64 on this GPU** (its FP64 units run at 1:64), against 1.45× on the CPU: the same code, opposite conclusions about precision, as predicted in [gpus.md](gpus.md).
