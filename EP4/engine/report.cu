@@ -3,6 +3,7 @@
 
 #include "report.cuh"
 #include "real.cuh"
+#include "image.cuh"
 #include "files.cuh"
 
 #define PROGRESS_INTERVAL_SECONDS 10.0
@@ -44,17 +45,41 @@ void print_pass(const Run *run, const Pass *pass, const PassResult *result) {
            result->times.zero, result->times.photons, result->times.save);
 }
 
-void print_summary(const Run *run, const PhotonCounts *counts, const RunTimes *times, size_t image_bytes) {
+static void print_configuration(const Run *run) {
     const Options *options = run->options;
     const StarConfig *star = &options->star;
-    double photons_traced = (double) counts->simulated * run->passes;
-    printf("SUMMARY DEVICE=%s PRECISION=%d N=%lld SEED=%llu A=%g SPOTS=%u UMBRA_RADIUS=%g PENUMBRA_RADIUS=%g ",
-           DEVICE_NAME, PRECISION_BITS, star->photons, star->seed, star->limb_darkening, star->spots,
+    printf("DEVICE=%s HOST=%s PRECISION=%d N=%lld SEED=%llu A=%g SPOTS=%u UMBRA_RADIUS=%g PENUMBRA_RADIUS=%g ",
+           DEVICE_NAME, run->host, PRECISION_BITS, star->photons, star->seed, star->limb_darkening, star->spots,
            star->umbra_radius, star->penumbra_radius);
     printf("SIZE=%u FRAMES=%u NMU=%u OBSERVERS=%u OBSERVERS_PER_PASS=%u PASSES=%u ",
            star->size, star->nphi, star->nmu, star->observer_count, options->observers_per_pass, run->passes);
     printf("CHUNK_SIZE=%lld CHUNKS=%lld FIRST_CHUNK=%lld LAST_CHUNK=%lld ",
            options->chunk_size, chunk_count(options), options->first_chunk, options->last_chunk);
+}
+
+static void print_observer(const Observer *observer, unsigned int observers_per_pass) {
+    printf("OBSERVER OBSERVER=%u MU_BIN=%u INCLINATION_REQUESTED=%.10g INCLINATION_BIN_CENTER=%.10g PASS=%u FILE=%s\n",
+           observer->index, observer->mu_bin, observer->requested_inclination, observer->bin_center_inclination,
+           observer->index / observers_per_pass + 1, observer->file_stem);
+}
+
+void print_config(const Run *run) {
+    const Options *options = run->options;
+    size_t observer_bytes = pixels_per_observer(&options->star) * sizeof(PixelCount);
+    printf("CONFIG ");
+    print_configuration(run);
+    printf("RECORD=%d OBSERVER_BYTES=%zu IMAGE_BYTES=%zu\n", options->record ? 1 : 0, observer_bytes,
+           options->record ? observer_bytes * options->observers_per_pass : 0);
+    for (unsigned int index = 0; index < run->observers->count; index++) {
+        print_observer(&run->observers->observers[index], options->observers_per_pass);
+    }
+}
+
+void print_summary(const Run *run, const PhotonCounts *counts, const RunTimes *times, size_t image_bytes) {
+    const Options *options = run->options;
+    double photons_traced = (double) counts->simulated * run->passes;
+    printf("SUMMARY ");
+    print_configuration(run);
     printf("PHOTONS=%lld BLOCKED=%lld MISSED=%lld RECORDED=%lld RECORD=%d IMAGE_BYTES=%zu ",
            counts->simulated, counts->blocked_by_spots, counts->missed_observers, counts->recorded,
            options->record ? 1 : 0, image_bytes);
@@ -81,7 +106,7 @@ static void write_record_lines(FILE *file, const Run *run, const Pass *pass, con
     fprintf(file, "IMAGE=%s.bin\nOBSERVER=%u\nMU_BIN=%u\nINCLINATION_REQUESTED=%.10g\nINCLINATION_BIN_CENTER=%.10g\n",
             observer->file_stem, observer->index, observer->mu_bin,
             observer->requested_inclination, observer->bin_center_inclination);
-    fprintf(file, "DEVICE=%s\nPRECISION=%d\n", DEVICE_NAME, PRECISION_BITS);
+    fprintf(file, "DEVICE=%s\nHOST=%s\nPRECISION=%d\n", DEVICE_NAME, run->host, PRECISION_BITS);
     fprintf(file, "N=%lld\nSEED=%llu\nA=%g\nSPOTS=%u\nUMBRA_RADIUS=%g\nPENUMBRA_RADIUS=%g\n",
             star->photons, star->seed, star->limb_darkening, star->spots, star->umbra_radius, star->penumbra_radius);
     fprintf(file, "SIZE=%u\nFRAMES=%u\nNMU=%u\n", star->size, star->nphi, star->nmu);
@@ -105,7 +130,7 @@ int write_observer_record(const Run *run, const Pass *pass, const Observer *obse
         return -1;
     }
     write_record_lines(file, run, pass, observer, pass_result, result);
-    if (fclose(file) != 0) {
+    if (close_on_disk(file) != 0) {
         fprintf(stderr, "Could not write the record %s.\n", partial_path);
         return -1;
     }

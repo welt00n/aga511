@@ -138,7 +138,7 @@ runs/2k-f300-mu96-n2e13-s42-fp64-1a2b3c4d/      main parameters + fingerprint
 ### Code changes **[decided]**
 
 - **The code is not in the fingerprint,** because results are only invalid when the *physics* changed, and only you can judge that.
-- **A code hash is recorded instead,** in every observer's record: a hash of the engine's source files (`EP4/engine/*.cu`, `*.cuh`, `Makefile`). It is computed from the files themselves, so it also catches changes that are not committed.
+- **A code hash is recorded instead,** in every observer's record: a hash of the engine's source files (`EP4/engine/*.cu`, `*.cuh`) and the `nvcc` command that built it (the build hash, [gpu_engine.md §3](gpu_engine.md#3-building-from-python-no-makefile-decided-2026-11-21)). It is computed from the files themselves, so it also catches changes that are not committed.
 - **When it differs from the current code,** the driver prints an attention message before anything else, for example:
 
   > **Attention:** the engine code changed since these results were produced (observers mu0042, mu0098: code `3f2a91c`, now `b77e05d`). If the change affects the physics, consider rerunning them.

@@ -51,7 +51,7 @@ The broad idea: **history → foundations → programming model → Buffon → t
 
 ## Open questions
 
-- [ ] Date and length of the class (the course plan gives team presentations about 1 h).
+- [x] Date and length: **Tuesday 2026-11-24, 2 hours**, the CUDA class together with the projects (EP3 and EP4). EP4 is delivered with it.
 - [ ] Is it the team class or the individual one? Who else is in the CUDA team, and how is the time split?
 - [x] Language: the class and slides in Portuguese; all docs in English.
 - [ ] Projector, board, can we run live demos on the laptop?
@@ -68,3 +68,4 @@ The broad idea: **history → foundations → programming model → Buffon → t
 - 2026-11-20: class language set: Portuguese.
 - 2026-11-21: Buffon profiled with `nsys`; `ncu` waits for the GPU performance counters to be enabled on Windows.
 - 2026-11-21: all docs kept in English; only the class and slides will be translated.
+- 2026-11-21: date set: Tuesday 2026-11-24, 2 hours, CUDA + EP3 + EP4. The build plan up to it: [roadmap.md §0](../docs/roadmap.md#0-today-all-of-ep4-saturday-2026-11-21-to-review). EP4 is built on Saturday, the class prepared on Sunday, from [ep4_concepts.md](ep4_concepts.md).

@@ -16,6 +16,7 @@ typedef struct {
     const char *output_dir;
     const char *fingerprint;
     const char *code_hash;
+    bool describe;
     bool test_rng;
 } Options;
 

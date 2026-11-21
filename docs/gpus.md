@@ -37,7 +37,7 @@ Laptop values marked [measured] come from `EP3/buffon -i`. The A30 values are fr
    - **Two kinds of GPU code** can go into a binary:
      - **SASS** (a `cubin`): machine code for one compute capability (cc). `sm_80` SASS runs on cc 8.x, not on 9.0 or 12.0.
      - **PTX**: NVIDIA's portable assembly. The driver compiles it to SASS at the first launch (JIT, cached in `~/.nv/ComputeCache`), so it runs on newer GPUs too.
-   - **We build where we run**, so SASS for that GPU is enough: `-arch=native` on the laptop (measured: EP3's `buffon` contains `sm_120` cubins only, no PTX), `make ARCH=sm_80` on the A30 (CUDA 13.3 can build it: `nvcc --list-gpu-arch` includes `compute_80`).
+   - **We build where we run**, so SASS for that GPU is enough: `-arch=native` on the laptop (measured: EP3's `buffon` contains `sm_120` cubins only, no PTX), `--arch 80` on the A30 (`engine.py` turns it into `-gencode arch=compute_80,code=sm_80`) (CUDA 13.3 can build it: `nvcc --list-gpu-arch` includes `compute_80`).
    - **Why no PTX:**
      - A wrong build **fails at once** ("no kernel image is available"), which the preflight catches ([roadmap.md](roadmap.md#preflight-can-we-run-here-local-and-remote-asked-2026-11-21)), instead of quietly JIT-compiling.
      - **No JIT time hidden in the first launch:** it would land in the serial part of Amdahl's law, and differ between the first run and the next.
@@ -52,7 +52,7 @@ Laptop values marked [measured] come from `EP3/buffon -i`. The A30 values are fr
 - [ ] Is the A30 whole, or split with MIG? (`nvidia-smi` shows it.)
 - [ ] SSH to a workstation, or jobs on a cluster with a scheduler? Any time limit per job?
 - [ ] CUDA toolkit version and driver.
-- [x] ~~Python with numpy/matplotlib?~~ Not needed: the server only runs the engine; analysis is local ([driver.md](driver.md#remote-remote-command-host)). Needed instead: `bash`, `make`, `nvcc`, `rsync` or `git`, `setsid`/`nohup`.
+- [x] ~~Python with numpy/matplotlib?~~ Not needed: the server only runs the engine; analysis is local ([driver.md](driver.md#remote-remote-command-host)). Needed instead: `bash`, `nvcc`, `rsync` or `git`, `setsid`/`nohup` (no `make`: the build is an `nvcc` command from the driver).
 - [ ] Can we `git clone` the repo from there?
 - [ ] Are `nsys` and `ncu` installed, and are the GPU performance counters allowed?
 

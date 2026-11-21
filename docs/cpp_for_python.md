@@ -20,7 +20,7 @@ options.cu ─(paste #includes)─▶  options.o ┘
 2. **Compiler.** Each `.cu` file, *after* pasting, is a **translation unit**, compiled alone into an object file (`.o`) of machine code. When compiling `main.cu`, the compiler knows nothing about `scene.cu`, only what was pasted into `main.cu`.
 3. **Linker.** Joins the object files. When `main.o` calls `build_scene`, the linker finds its machine code in `scene.o` and connects the call.
 
-Our Makefile does all three in one `nvcc` call: `nvcc main.cu options.cu scene.cu image.cu -o star`.
+One `nvcc` call does all three: `nvcc main.cu options.cu scene.cu image.cu -o star` (phase B, from a Makefile). Since 2026-11-21 there is no Makefile: `engine.py` composes that call itself, with the sources of each binary ([gpu_engine.md §3](gpu_engine.md#3-building-from-python-no-makefile-decided-2026-11-21)).
 
 ## 2. Declaration vs definition
 
@@ -93,7 +93,7 @@ Every header starts and ends like this:
 | C/C++ | What it means | Python analogy |
 |---|---|---|
 | `#define TWO_PI ((real) 6.28...)` | text substitution before compiling, no type, no scope | a constant, but done by find-and-replace |
-| `#ifdef STAR_FP32 ... #else ... #endif` | keep or drop code **at compile time**: `make star32` passes `-DSTAR_FP32` | `if` at import time, but the dropped code does not even exist in the binary |
+| `#ifdef STAR_FP32 ... #else ... #endif` | keep or drop code **at compile time**: the `star_cpu32` build passes `-DSTAR_FP32` | `if` at import time, but the dropped code does not even exist in the binary |
 | `typedef double real;` | a new name for a type | `real = float` (a type alias) |
 | `typedef struct { real x, y, z; } Vec3;` | a record of fields, laid out contiguously in memory, no methods | a `@dataclass` without methods |
 | `Vec3 p = {1, 2, 3};` | initialize fields in order | `Vec3(1, 2, 3)` |

@@ -2,7 +2,43 @@
 
 **The one place for the plan.** Phases are lettered (A, B, C…) so they don't get mixed up with the walkthrough's pieces (1–10) or the old step lists in [jobs_and_passes.md §9](jobs_and_passes.md#9-implementation-order) and [driver.md §9](driver.md#9-implementation-order), which now point here.
 
-**The goal (TCD, due 2026-12-01):** EP2's spotted star rebuilt with CUDA; a monograph (the technique, the implementation, performance tests: Amdahl, speedup, Gustafson); a 10–15 min presentation. Separately, the CUDA class for AGA 511.
+**The goal: Tuesday 2026-11-24** *(set 2026-11-21; the course's 12-01 date does not apply)*. EP4 is delivered **with the CUDA class: one 2-hour class**, the CUDA lesson together with the projects (EP3's Buffon and EP4's star). EP4 = EP2's spotted star rebuilt with CUDA, with performance tests (speedup, Amdahl, Gustafson).
+
+## 0. Today: all of EP4 (Saturday 2026-11-21) [to review]
+
+**Saturday: EP4, all of it. Sunday: prepare the class. Tuesday: the class.**
+
+- **While building,** every CUDA (or HPC) concept we use goes into [../cuda_class/ep4_concepts.md](../cuda_class/ep4_concepts.md): what it is, where EP4 uses it, what we measured. Sunday's class prep starts from that file.
+- **Each step ends with a check** against something we already trust (the CPU engine, EP2, the laws).
+- **A short walkthrough after each step,** so every line can be explained in class.
+
+| # | Step | What | Done when | Concepts for the class |
+|---|---|---|---|---|
+| 0 | **Commit** | the before-GPU changes | committed | — |
+| 1 | **F1: the processor split, then the GPU build** | first on the CPU: the photon loop moves from `main.cu` to `cpu.cu` behind `processor.cuh`; **the Makefile goes, `engine.py` builds** (one `nvcc` call per binary, rebuilt when the code hash changes); all checks unchanged. Then `star_gpu64` (and `star_gpu32`), SASS only, with `gpu_device.cu` (`DEVICE` = the GPU's name). Files: [gpu_engine.md](gpu_engine.md) | the CPU checks still pass; `star_gpu64` builds and prints the GPU | link-time choice of an implementation, what `nvcc` does (two passes, `__CUDA_ARCH__`), SASS vs PTX, compute capability |
+| 2 | **F2: random numbers on the GPU** | cuRAND's `curand_init` + `curand` in a kernel, chunk = subsequence; `--test-rng` on the GPU | **the first numbers of chunk 0 equal `rng.cuh`'s** (`SEED_42_CHUNK_0`) | the cuRAND device API, counter-based RNGs, why our CPU copy exists |
+| 3 | **F3: the star on the GPU** | `gpu.cu`: the Scene in `__constant__` (`cudaMemcpyToSymbol`, per pass); `GpuImage` with `atomicAdd`; the kernel `trace_photons` with EP3's persistent threads and work queue, launch size from the occupancy API; each thread's tallies added once at the end; one `cudaMemcpy` per observer into a host buffer of one observer (`COPY_TIME`); the same files and records. `star.py --compare-gpu` | **GPU = CPU**: expected identical or off by a handful of photons (see note) | kernels, grids, blocks, warps, memory spaces, constant memory, atomics, the queue, occupancy, `cudaMemcpy`, synchronization |
+| 4 | **F4: the SM mask, and work per SM** | `gpu_sms.cu` (`%smid`, as EP3), cooperative launch; `--sms n`; per-SM counters (chunks, photons, recorded, cycles) → one `SM` line per SM | still equal to step 3; runs on 1…36 SMs; the `SM` lines show how the queue spreads the work | SMs, `%smid`, why the blocks must all be resident, load balance |
+| 5 | **F5: memory, passes and the kernel's resources** | `cudaMemGetInfo` (before, after the context, after the image) → `--memory-budget` default; passes (the loop stays on the host); `cudaFuncGetAttributes` (registers, local memory = spills, constant bytes), occupancy, the GPU's attributes (L2, bandwidth, FP32:FP64); build and driver versions | the passes check on the GPU: bit for bit; the resource keys in the output | device memory, registers and occupancy, host ↔ device traffic |
+| 5b | ~~The CPU's cores~~ **deferred** | the CPU stays one thread; it runs all the checks and is the one-core baseline, said so ([hpc_architecture.md §8](hpc_architecture.md#8-observability-what-we-measure-and-how)) | — | — |
+| 6 | **The map and the speed** | **the code mapped to the hardware** ([hpc_architecture.md §7](hpc_architecture.md#7-the-code-mapped-to-where-it-runs-the-gpu-one-photon)): the compiler's report and `instruction_mix.py` (FP64 vs FP32: integer, FP64, FP32, special functions, atomics, constant, spills); `nvidia-smi` sampled during runs (clocks, power, temperature, memory); CPU vs GPU, FP64 vs FP32 at a fixed N; **the `slot_of_imu` experiment** (constant vs global memory); CUDA events for the GPU-side times; **our own section timers** (`star_gpu64_sections`, cycles per piece of the photon). No Nsight needed | the map confirmed or corrected; the numbers; cycles per section, FP64 vs FP32 | where each line runs, FP64 units vs FP32 cores vs SFU vs L2 atomics, constant-cache broadcast vs serialization, divergence, clocks, measuring without a profiler, the observer effect |
+| 7 | **G1: the sweeps** | `sweeps.py`, defined in [gpu_engine.md §7](gpu_engine.md#7-the-sweeps-today-to-review): `strong` and `weak` over SMs 1–36 (FP64 and FP32), `problem-size`, `devices` (the GPU against one CPU core, stated); N calibrated; 3 repeats; ~1 h in the background | the data on disk | strong vs weak scaling, p(N) |
+| 8 | **G2: the scaling analysis** | Amdahl fit (p), Gustafson fit (s′), efficiency, strong and weak side by side, the serial part measured (SETUP + ZERO + SAVE) vs fitted | the plots | Amdahl, Gustafson, serial fraction |
+| 9 | **H: the showcase** | one big run (size, frames and N set from the measured speed and the SNR formula), gifs (and mp4 if `ffmpeg` is there); pictures made one observer at a time | the star's video | SNR ↔ N, photons per pixel, μ bins |
+| 10 | **Wrap up** | EP4 README results, the roadmap's log, commit | committed | — |
+
+**A note on "GPU = CPU" (step 3).** The random numbers will be identical (same Philox). The arithmetic may not be: the GPU's `sin`, `cos`, `atan2`, `cbrt` come from CUDA's math library, not glibc, and `nvcc` fuses multiply-adds (FMA) where `gcc` does not. Both change the last bit of some results, and a photon right on a pixel edge (or a spot edge) can then land on the other side. So:
+- expect the **counts identical or nearly**, and the images identical or differing by a few photons;
+- if they differ, count the differing photons, and try `--fmad=false` to see how much comes from FMA;
+- either way it is a result for the class: **bit-for-bit vs statistically equal**.
+
+**Order and fallbacks.** Steps 1–3 are the core: with them, EP4 runs on the GPU. If time runs short, step 4's SM mask is what the Amdahl sweep needs, so it comes before step 5; step 9 can be smaller.
+
+### Deferred (not for Tuesday)
+- **D in full** (jobs, resuming, backups, prompts, TOML): the sweep script is enough.
+- **E and the preflight** (IAG): the A30 stays a prediction in the class ([gpus.md](gpus.md)).
+- Progress lines while the GPU runs, presets, `np.memmap` analysis, Nsight Compute.
+- **The monograph,** if it is required apart from the class (to confirm).
 
 ---
 
@@ -20,7 +56,7 @@
 | **H** | The showcase: presets (512, 1k, 2k, 4k), video (mp4), the big runs at IAG | designed | [jobs_and_passes.md](jobs_and_passes.md), [gpus.md](gpus.md#how-big-can-the-image-be) |
 | **I** | The monograph and the presentation | not started | — |
 
-**The order to decide.** As designed, D and E come before F. But F is the heart of the TCD, and G (the Amdahl and Gustafson results) needs F. With the deadline on 2026-12-01, a possible order is **F → G → I**, with D and E reduced to what F and G need (running sweeps and fetching results). D and E in full can come after.
+**The order:** F → G (minimal) → the class, set by the Tuesday deadline (section 0). D and E are reduced to a sweep script; the rest is deferred.
 
 ### How we work now [decided 2026-11-21]
 
@@ -68,6 +104,17 @@
 | 2026-11-21 | Walkthrough of phase C (pieces 10–15): 9 engine changes to make before the GPU | [walkthrough.md recap](walkthrough.md#recap-of-pieces-1015-what-we-learned), [backlog C′](#c-before-the-gpu-engine-changes-the-gpu-will-inherit) |
 | 2026-11-21 | `fsync` before the rename: measured cost 0.15–0.18 s per 315 MB vs 0.08–0.16 s without | [walkthrough.md piece 13](walkthrough.md#questions-on-piece-13) |
 | 2026-11-21 | **Preflight checks**, local and remote: can this machine run the job, before running it | [backlog](#preflight-can-we-run-here-local-and-remote-asked-2026-11-21) |
+| 2026-11-21 | **Deadline: Tuesday 2026-11-24,** EP4 delivered with a 2-hour class (CUDA + the projects). Plan replanned: F → G minimal → the class | [section 0](#0-today-all-of-ep4-saturday-2026-11-21-to-review) |
+| 2026-11-21 | **EP3 review (its sessions, from the `ai-memory` store):** the queue, the launch from the occupancy API, the SM mask and the cooperative launch were tested there and are reused as is; `CYCLES` and `REGISTERS_PER_THREAD` added; EP3's adaptive chunk size deliberately not taken | [gpu_engine.md §8](gpu_engine.md#8-what-ep3-already-settled-review-of-the-ep3-sessions-2026-11-21) |
+| 2026-11-21 | **The sweeps defined:** a point = one engine process; `strong` and `weak` over 1–36 SMs (FP64 and FP32), `problem-size` (p(N)), `devices`; N calibrated so the 36-SM run lasts 5 s; 3 repeats; ~1 h in total | [gpu_engine.md §7](gpu_engine.md#7-the-sweeps-today-to-review) |
+| 2026-11-21 | **No Nsight needed:** IAG may not have it and the laptop's counters are blocked. EP4 measures itself: CUDA events, attributes, occupancy, per-SM counters, `cuobjdump`, `nvidia-smi`, and section timers with `clock64()` in a separate build (so the measuring does not change the timed binaries) | [hpc_architecture.md §8](hpc_architecture.md#no-nsight-needed-decided-2026-11-21) |
+| 2026-11-21 | **The code mapped to the hardware, and observability:** each piece of the photon → its unit and memory space; measured by the compiler's report, the instruction mix (`cuobjdump`), occupancy, per-SM counters, `cudaMemGetInfo`, `nvidia-smi` sampling, `nsys`. Suspect found: `slot_of_imu` in constant memory is read with a different index per thread. CPU cores deferred; the CPU keeps the same checks | [hpc_architecture.md §7–8](hpc_architecture.md#7-the-code-mapped-to-where-it-runs-the-gpu-one-photon) |
+| 2026-11-21 | **The hardware is the architecture (option B):** `processor.cuh`, `cpu.cu`, `gpu.cu`, `cpu_cores.cu`, `gpu_sms.cu`; levels node → processor → compute units → lanes → memory spaces, each a scaling axis; the same work queue on CPU and GPU; benchmarking after Hoefler & Belli (state every baseline) | [hpc_architecture.md](hpc_architecture.md) |
+| 2026-11-21 | **No Makefile:** `engine.py` builds with one `nvcc` call per binary; the code hash decides when to rebuild; binaries named `star_cpu64`, `star_cpu32`, `star_gpu64`, `star_gpu32` | [gpu_engine.md §3](gpu_engine.md#3-building-from-python-no-makefile-decided-2026-11-21) |
+| 2026-11-21 | **All of EP4 today (Saturday); the class prep on Sunday.** Concepts used while building go to `cuda_class/ep4_concepts.md` | [section 0](#0-today-all-of-ep4-saturday-2026-11-21-to-review) |
+| 2026-11-21 | **Before-GPU changes done:** first touch in SETUP, `fsync`, balanced passes, binary units, `HOST=`, no spaces, `--describe`; all checks pass | [backlog C′](#c-before-the-gpu-engine-changes-the-gpu-will-inherit) |
+| 2026-11-21 | **Finding:** `malloc` + `memset(0)` did not touch the pages (probably folded into `calloc` by the compiler); a `volatile` write per page does | [backlog C′](#c-before-the-gpu-engine-changes-the-gpu-will-inherit) |
+| 2026-11-21 | **Correction:** `fsync` costs 0.31–0.43 s per 315 MB in the engine (new files), not 0.15–0.18 s (the `dd` test overwrote one file) | [walkthrough.md piece 13](walkthrough.md#questions-on-piece-13) |
 | 2026-11-21 | **Builds: SASS only, no PTX, built on the machine that runs it,** for its exact compute capability. A wrong build fails loudly; no JIT time in the serial part; the toolkit matches the driver | [gpus.md](gpus.md#what-the-code-must-do-to-scale-there-unchanged) |
 | 2026-11-21 | **Finding (to confirm):** FP32 moves 1.2·10⁻⁴ of the photons now vs 5·10⁻⁴ before, probably because the pole-on observer is farther from the pole | [jobs_and_passes.md §15](jobs_and_passes.md#what-we-learned) |
 
@@ -79,17 +126,20 @@ Collected from the design docs and the walkthrough. New tasks found on the way a
 
 ### C′: before the GPU (engine changes the GPU will inherit)
 
-Found in the walkthrough of phase C ([recap](walkthrough.md#recap-of-pieces-1015-what-we-learned)). All small; done once on the CPU, the GPU engine gets them for free. In the proposed order:
+Found in the walkthrough of phase C ([recap](walkthrough.md#recap-of-pieces-1015-what-we-learned)). All small; done once on the CPU, the GPU engine gets them for free. **All done 2026-11-21:**
 
-- [ ] **Commit phase C** as it is: a safe point before changing it.
-- [ ] *(piece 13)* **Touch the pages at allocation:** zero the image once in `allocate_image` (inside SETUP), so every pass's `ZERO_TIME` is pure zeroing. On the GPU, `cudaMalloc` + `cudaMemset` behave the same way, so the two engines' phase times mean the same thing. Today pass 1's `ZERO_TIME` is 25–30× the others.
-- [ ] *(piece 13)* **`fsync` before the rename,** so a finished file survives a power cut, not only a crash. `SAVE_TIME` then becomes the real disk time (today: time to the OS's cache, ~2 GB/s). *Proposed: yes. Measured: 315 MB in 0.15–0.18 s with `fsync` vs 0.08–0.16 s without ([what fsync is](walkthrough.md#questions-on-piece-13)).*
-- [ ] *(piece 12)* **Balanced passes:** after the number of passes is known, use K′ = ⌈observers / passes⌉ (3 + 1 becomes 2 + 2: same time, less memory).
-- [ ] *(piece 12)* **Binary units** in `--memory-budget`: `GiB`, `MiB` (what `nvidia-smi` shows).
-- [ ] *(piece 14)* **`HOST=`** (from `gethostname`) in the summary and the records.
-- [ ] *(piece 14)* **Reject spaces** in `--output-dir`, `--fingerprint`, `--code-hash`, which would break `KEY=VALUE`.
-- [ ] *(piece 15)* **`--describe`:** the engine prints a `CONFIG` line (nmu, each observer's μ bin and bin center, K, passes, footprint) and exits without simulating. The driver reads the derived values instead of recomputing them (fixes "nmu derived twice"), and `plan` gets the exact numbers from the engine itself.
-- [ ] Rerun all the checks (`--check-split`, `--check-passes`, `--compare-ep2`, `--compare-precision`) after these changes.
+- [x] **Commit phase C** as it was: `5db4d99`.
+- [x] *(piece 13)* **Touch the pages at allocation** (`touch_every_page`, inside SETUP). Every pass now zeroes in the same time. 512², 300 frames, 4 passes: SETUP 0.13–0.15 s (the first touch), `ZERO_TIME` 0.011–0.016 s in every pass (pass 1 was 0.15–0.21 s).
+  - **Found on the way:** zeroing with `memset` right after `malloc` did *not* touch the pages (SETUP stayed at 0.0005 s). Most likely the compiler turned `malloc` + `memset(0)` into `calloc`, which for a big block takes fresh pages that are already zero and writes nothing. Writing one count per page through a `volatile` pointer cannot be folded away.
+- [x] *(piece 13)* **`fsync` before the rename**, and of the folder after it (`close_on_disk`, `sync_parent_folder` in `files.cuh`).
+  - **Measured in the engine: 0.31–0.43 s per 315 MB** (~0.8–1 GB/s), not the 0.15–0.18 s of the `dd` test: `dd` overwrote the same file, the engine writes new files. Small in a run of hours; in short checks SAVE is now a visible part of the serial time.
+- [x] *(piece 12)* **Balanced passes:** K′ = ⌈observers / passes⌉. `--observers-per-pass 3` with 4 observers now gives 2 + 2 (48 MB instead of 72).
+- [x] *(piece 12)* **Binary units:** `KiB`, `MiB`, `GiB`, `TiB` (`70MiB` → K = 2, as `0.07GB`).
+- [x] *(piece 14)* **`HOST=`** in the summary, the `CONFIG` line and the records.
+- [x] *(piece 14)* **Spaces rejected** in `--output-dir`, `--fingerprint`, `--code-hash`.
+- [x] *(piece 15)* **`--describe`:** a `CONFIG` line (the derived configuration, `OBSERVER_BYTES`, `IMAGE_BYTES`) and one `OBSERVER` line per observer (μ bin, bin center, its pass, its file name), then exit. `star.py` takes EP2's `nmu` from it; `ep2_nmu` is gone.
+- [x] **All checks rerun:** split and passes bit for bit (also 5 observers in passes of 3 → 3 + 2); EP4 vs EP2 χ²/dof = 0.9957; FP32 vs FP64 1.2·10⁻⁴ moved, 1.51× faster.
+- [ ] *(new, decide in G)* **Sweeps and the disk:** with `fsync`, SAVE is real disk time, part of the serial fraction. Should scaling sweeps include it (the real program), or record without saving (`--no-save`) to measure the GPU alone? Probably both, as two experiments.
 
 ### C: follow-ups that can wait
 - [ ] *(piece 15)* **Analysis one observer at a time** (`np.memmap`, frame by frame). Not needed until images reach ~1 GB per observer, so before phase H's big runs, not before the GPU.
@@ -108,7 +158,7 @@ Before any run or sweep, on the laptop or the A30, check that the machine can do
 | 5 | **Enough GPU memory, now** | `cudaMemGetInfo`: free vs the job's budget + headroom; MIG mode and slice size | another job holds the memory; a MIG slice is smaller than expected |
 | 6 | **Nobody else is using it** | `nvidia-smi --query-compute-apps`, utilization | another process on a shared A30: our timings (and Amdahl's p) would be wrong. A warning, not a stop |
 | 7 | **Room on the host** | RAM for one observer's buffer; free disk ≥ the job's output (from `plan`); the job folder is writable | a full disk halfway through a run of hours |
-| 8 | **Remote only** | SSH reaches the host (inside the IAG network); the repo path; `make`, `rsync`, `setsid`; time limits or a scheduler | not on the IAG network; a tool missing |
+| 8 | **Remote only** | SSH reaches the host (inside the IAG network); the repo path; `nvcc`, `rsync`, `setsid`; time limits or a scheduler | not on the IAG network; a tool missing |
 | 9 | **Profiling allowed** (optional) | `ncu` on a tiny kernel | `ERR_NVGPUCTRPERM`: performance counters not allowed (as on the laptop today) |
 
 - **Output:** one line per check (`CHECK NAME=… RESULT=PASS|WARN|FAIL DETAIL=…`), saved with the machine's profile in `machines/`, so the A30's last check can be read from the laptop.
@@ -135,7 +185,7 @@ Tasks:
 - [ ] `machine probe / calibrate`, local and remote.
 
 ### F: the GPU engine
-- [ ] `Makefile`: a CUDA build next to the CPU ones. **SASS only, no PTX, built on the machine that runs it** ([decided](gpus.md#what-the-code-must-do-to-scale-there-unchanged)): `-arch=native` by default, `ARCH=sm_80` for the A30, as `-gencode arch=compute_XX,code=sm_XX`.
+- [ ] The build in `engine.py` (no Makefile, [gpu_engine.md §3](gpu_engine.md#3-building-from-python-no-makefile-decided-2026-11-21)): the CUDA build next to the CPU ones. **SASS only, no PTX, built on the machine that runs it** ([decided](gpus.md#what-the-code-must-do-to-scale-there-unchanged)): `-arch=native` by default, `--arch 80` for the A30, as `-gencode arch=compute_80,code=sm_80`.
 - [ ] `BUILD_CC`, `CUDA_TOOLKIT`, `CUDA_DRIVER` (versions) in the summary and the records.
 - [ ] *(decide)* **Bit for bit across GPUs:** the same source compiled for `sm_80` and `sm_120` may fuse multiply-adds differently (FMA), so a few photons could land in other pixels. `--fmad=false` makes the arithmetic identical at some cost in speed. Measure both: the laptop vs the A30 image, with and without it.
 - [ ] The Scene in `__constant__` memory (`cudaMemcpyToSymbol`).

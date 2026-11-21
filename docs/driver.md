@@ -31,7 +31,7 @@ How the Python driver turns the design of [jobs_and_passes.md](jobs_and_passes.m
 
 | Command | What happens on the remote machine | What comes back |
 |---|---|---|
-| **`remote setup`** | checks `ssh`, `nvcc`, `nvidia-smi`, `make`, `setsid`; syncs the code; builds (`make ARCH=sm_80`) | a report of what is there and what is missing |
+| **`remote setup`** | checks `ssh`, `nvcc`, `nvidia-smi`, `setsid`; syncs the code; builds (the same `nvcc` commands as `engine.py`, with `--arch 80`) | a report of what is there and what is missing |
 | **`remote run`** `job.toml` | syncs and builds if the code changed; reads the job folder; launches the engine **detached** with the missing observers | the job's state and how to follow it |
 | **`remote status`** `[job]` | reads records, the last progress line and the pid | the same table as `status` |
 | **`remote stop`** `job` | stops the engine | — |
@@ -43,7 +43,7 @@ How the Python driver turns the design of [jobs_and_passes.md](jobs_and_passes.m
 | **`remote clean`** `[job]` | leftovers, old backups, or a job, on the server's disk | — |
 
 - **What stays local only:** `plan`, `scaling`, `pictures`, `video`, `check ep2`, `check precision`, `machine show`. They are light, need Python and matplotlib, and work on fetched files.
-- **The remote side needs no Python:** `bash`, `make`, `nvcc`, `nvidia-smi`, `rsync` or `git`, `setsid`/`nohup`. The driver talks to it over `ssh`. That removes one of the questions for IAG ([gpus.md](gpus.md#questions-for-iag)).
+- **The remote side needs no Python and no `make`:** `bash`, `nvcc`, `nvidia-smi`, `rsync` or `git`, `setsid`/`nohup`. The build is the driver's `nvcc` command, sent over SSH ([gpu_engine.md §3](gpu_engine.md#3-building-from-python-no-makefile-decided-2026-11-21)). The driver talks to it over `ssh`. That removes one of the questions for IAG ([gpus.md](gpus.md#questions-for-iag)).
 - **Hosts are SSH aliases** (`~/.ssh/config`), plus `machines/hosts.toml` for what SSH does not know: the repository path on the server, the `ARCH` to build for.
 
 **One implementation behind both:** the commands are explicit, but the job logic (state, resuming, backups, the attention message) is written once, against a small `Host` interface (`run`, `read`, `list`, `move`, `launch_detached`, `is_alive`, `stop`), with a `LocalHost` and an `SSHHost`. `run` and `remote run` differ only in the host they hand to the same function. It can be tested before IAG with an `SSHHost` pointing at `localhost`.
@@ -198,7 +198,7 @@ repeats = 3
 | `driver/engine.py` | building the engine command, parsing `KEY=VALUE` (output and records) |
 | `driver/hosts.py` | `LocalHost`, `SSHHost` |
 | `driver/remote.py` | setup, code sync, build, fetch with the duplicate check |
-| `driver/planner.py` | `Plan`: footprint, K, passes, N ↔ SNR, time from a profile |
+| `driver/planner.py` | `Plan`: footprint, K, passes, N ↔ SNR, time from a profile. The derived values (nmu, bins, K, passes, bytes) come from the engine's `--describe`, never recomputed in Python |
 | `driver/machines.py` | `MachineProfile`: probe, calibrate, load, save |
 | `driver/sweeps.py` | `SweepSpec`, its points, running the missing ones |
 | `driver/scaling.py` | Amdahl and Gustafson fits and their figures |

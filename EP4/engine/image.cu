@@ -1,12 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "image.cuh"
 #include "files.cuh"
 
 static const PixelCount *observer_block(const Image *image, unsigned int slot) {
     return image->counts + (size_t) slot * image->pixels_per_observer;
+}
+
+static void touch_every_page(Image *image) {
+    volatile PixelCount *counts = image->counts;
+    size_t counts_per_page = (size_t) sysconf(_SC_PAGESIZE) / sizeof(PixelCount);
+    size_t pixels = (size_t) image->observers * image->pixels_per_observer;
+    for (size_t pixel = 0; pixel < pixels; pixel += counts_per_page) {
+        counts[pixel] = 0;
+    }
 }
 
 int allocate_image(Image *image, size_t pixels_per_observer, unsigned int observers) {
@@ -17,6 +27,7 @@ int allocate_image(Image *image, size_t pixels_per_observer, unsigned int observ
         fprintf(stderr, "Could not allocate the image (%.2f GB).\n", image_bytes(image) / 1e9);
         return -1;
     }
+    touch_every_page(image);
     return 0;
 }
 
@@ -33,7 +44,7 @@ int save_observer(const Image *image, unsigned int slot, const char *path) {
         return -1;
     }
     size_t written = fwrite(observer_block(image, slot), sizeof(PixelCount), image->pixels_per_observer, file);
-    int closed = fclose(file);
+    int closed = close_on_disk(file);
     if (written != image->pixels_per_observer || closed != 0) {
         fprintf(stderr, "Could not write the whole image to %s.\n", partial_path);
         return -1;

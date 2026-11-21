@@ -19,17 +19,22 @@ make                      # star (FP64) and star32 (FP32)
 ./star32 -n 1e8 -o out32  # the same photons in FP32
 ./star -n 1e8 --observers 1.5708,0.7854,0 --size 512 --frames 300   # inclinations in radians
 ./star -n 1e8 -o out --observers-per-pass 1      # one observer per pass: 1/4 of the memory
-./star -n 1e8 -o out --memory-budget 2GB         # or as many observers per pass as fit
+./star -n 1e8 -o out --memory-budget 2GB         # or as many observers per pass as fit (also 1.5GiB)
+./star -n 1e8 --memory-budget 50MB --describe    # what would run: nmu, bins, passes, bytes; runs nothing
 ./star -n 1e8 --first-chunk 0 --last-chunk 48828 # part of the run
 ./star -n 1e8 --no-record # the same photons, without an image
 ./star -h                 # all options
 ```
 
+- **`--describe`** prints a `CONFIG` line (the derived configuration, `OBSERVER_BYTES`, `IMAGE_BYTES`) and one `OBSERVER` line per observer (μ bin, bin center, its pass, its file name), then exits.
+- **Passes are balanced:** with 4 observers and `--observers-per-pass 3` the passes are 2 + 2, not 3 + 1 (the same time, less memory).
 - **Output lines,** `KEY=VALUE` after a first word that says what the line is:
   - `PROGRESS` at most every 10 s: pass, chunk, speed, elapsed, ETA;
   - `PASS` after each pass: its observers' μ bins, photon counts, `ZERO_TIME`, `PHOTONS_TIME`, `SAVE_TIME`;
   - `SUMMARY` last: the configuration, the counts (`PHOTONS`, `BLOCKED` by spots, `MISSED` the observers, `RECORDED`), the phase times (`SETUP_TIME`, `ZERO_TIME`, `PHOTONS_TIME`, `SAVE_TIME`, `TIME`) and `PHOTONS_PER_SECOND`.
 - **Per observer:** `observer_mu0023_i1.5708.bin` (raw `uint32` counts, `[frame][iy][ix]`) and `observer_mu0023_i1.5708.record` (`KEY=VALUE`, one per line, written last: the "done" marker). The name carries the μ bin and the inclination of the bin center.
+- **Each file is written as `.partial`, put on the disk (`fsync`), then renamed:** a file that exists is whole, even after a power cut.
+- **SETUP touches every page of the image;** each pass's `ZERO_TIME` is then pure zeroing, the same in every pass.
 - **Passes** re-simulate the same photons, so any number of passes gives the same files, bit for bit. Design: [`../docs/jobs_and_passes.md`](../docs/jobs_and_passes.md).
 
 ## Driver

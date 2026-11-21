@@ -173,10 +173,7 @@ static void add_pass(PhotonCounts *counts, RunTimes *times, const PassResult *pa
 
 // ============================================================ main
 
-static int prepare_run(const Options *options, Image *image) {
-    if (build_scene(&options->star, &scene) != 0 || locate_observers(&options->star, &observers) != 0) {
-        return -1;
-    }
+static int prepare_image(const Options *options, Image *image) {
     if (!options->record) {
         return 0;
     }
@@ -193,14 +190,23 @@ int main(int argc, char *argv[]) {
     if (options.test_rng) {
         return test_rng();
     }
+    if (build_scene(&options.star, &scene) != 0 || locate_observers(&options.star, &observers) != 0) {
+        return 1;
+    }
+    Run run = {&options, &observers, pass_count(&options), started_at, ""};
+    read_host_name(run.host);
+    if (options.describe) {
+        print_config(&run);
+        return 0;
+    }
+
     RunTimes times = {0, 0, 0, 0, 0};
     Image image = {NULL, 0, 0};
-    if (prepare_run(&options, &image) != 0) {
+    if (prepare_image(&options, &image) != 0) {
         return 1;
     }
     times.setup = now_in_seconds() - started_at;
 
-    Run run = {&options, &observers, pass_count(&options), started_at};
     PhotonCounts counts = {0, 0, 0, 0};
     for (unsigned int index = 0; index < run.passes; index++) {
         Pass pass = make_pass(index, options.observers_per_pass, observers.count);

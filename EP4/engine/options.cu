@@ -19,7 +19,7 @@
 enum {
     OPT_SPOTS = 1000, OPT_UMBRA_RADIUS, OPT_PENUMBRA_RADIUS, OPT_OBSERVERS, OPT_SIZE, OPT_FRAMES, OPT_NMU,
     OPT_CHUNK_SIZE, OPT_FIRST_CHUNK, OPT_LAST_CHUNK, OPT_OBSERVERS_PER_PASS, OPT_MEMORY_BUDGET,
-    OPT_NO_RECORD, OPT_FINGERPRINT, OPT_CODE_HASH, OPT_TEST_RNG
+    OPT_NO_RECORD, OPT_FINGERPRINT, OPT_CODE_HASH, OPT_DESCRIBE, OPT_TEST_RNG
 };
 
 static const struct option LONG_OPTIONS[] = {
@@ -42,6 +42,7 @@ static const struct option LONG_OPTIONS[] = {
     {"output-dir", required_argument, 0, 'o'},
     {"fingerprint", required_argument, 0, OPT_FINGERPRINT},
     {"code-hash", required_argument, 0, OPT_CODE_HASH},
+    {"describe", no_argument, 0, OPT_DESCRIBE},
     {"test-rng", no_argument, 0, OPT_TEST_RNG},
     {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}
@@ -64,11 +65,12 @@ static void print_usage(const char *program) {
            "      --first-chunk A          first chunk to simulate (default 0)\n"
            "      --last-chunk B           one past the last chunk (default: all)\n"
            "      --observers-per-pass K   observers recorded per pass (default: all, one pass)\n"
-           "      --memory-budget B        or K from a budget for the image: 7GB, 7G, 7e9, 512MB\n"
+           "      --memory-budget B        or K from a budget for the image: 7GB, 7G, 7e9, 512MB, 6.5GiB\n"
            "      --no-record              simulate the photons without an image\n"
            "  -o, --output-dir DIR         where the observer files go (default .)\n"
            "      --fingerprint F          the job's fingerprint, copied into the records\n"
            "      --code-hash H            the engine's code hash, copied into the records\n"
+           "      --describe               print the derived configuration (nmu, bins, passes) and exit\n"
            "      --test-rng               check Philox against the Random123 test vectors\n"
            "  -h, --help                   this help\n",
            program, program, DEFAULT_OBSERVERS, DEFAULT_CHUNK_SIZE);
@@ -88,10 +90,18 @@ static double number_or_stop(const char *text, double smallest, double largest, 
     return value;
 }
 
+static const char *word_or_stop(const char *text, const char *message) {
+    if (*text == '\0' || strpbrk(text, " \t\n") != NULL) {
+        stop(message);
+    }
+    return text;
+}
+
 static double bytes_per_unit(const char *unit) {
     static const struct { const char *name; double bytes; } UNITS[] = {
         {"", 1}, {"B", 1}, {"K", 1e3}, {"KB", 1e3}, {"M", 1e6}, {"MB", 1e6},
         {"G", 1e9}, {"GB", 1e9}, {"T", 1e12}, {"TB", 1e12},
+        {"KiB", 1024.0}, {"MiB", 1048576.0}, {"GiB", 1073741824.0}, {"TiB", 1099511627776.0},
     };
     for (size_t i = 0; i < sizeof(UNITS) / sizeof(UNITS[0]); i++) {
         if (strcasecmp(unit, UNITS[i].name) == 0) {
@@ -106,7 +116,7 @@ static double bytes_or_stop(const char *text) {
     double value = strtod(text, &unit);
     double bytes = value * bytes_per_unit(unit);
     if (unit == text || bytes <= 0) {
-        stop("--memory-budget must be a size such as 7GB, 7G, 7e9 or 512MB.");
+        stop("--memory-budget must be a size such as 7GB, 7G, 7e9, 512MB or 6.5GiB.");
     }
     return bytes;
 }
@@ -152,6 +162,7 @@ static Options default_options(void) {
     options.output_dir = ".";
     options.fingerprint = "none";
     options.code_hash = "none";
+    options.describe = false;
     options.test_rng = false;
     return options;
 }
@@ -175,9 +186,10 @@ static void read_option(Options *options, int flag, const char *value, const cha
     case OPT_OBSERVERS_PER_PASS: options->observers_per_pass = (unsigned int) number_or_stop(value, 1, MAX_OBSERVERS, "--observers-per-pass must be 1 or more."); break;
     case OPT_MEMORY_BUDGET: options->memory_budget = bytes_or_stop(value); break;
     case OPT_NO_RECORD: options->record = false; break;
-    case 'o': options->output_dir = value; break;
-    case OPT_FINGERPRINT: options->fingerprint = value; break;
-    case OPT_CODE_HASH: options->code_hash = value; break;
+    case 'o': options->output_dir = word_or_stop(value, "--output-dir must not be empty or contain spaces."); break;
+    case OPT_FINGERPRINT: options->fingerprint = word_or_stop(value, "--fingerprint must not be empty or contain spaces."); break;
+    case OPT_CODE_HASH: options->code_hash = word_or_stop(value, "--code-hash must not be empty or contain spaces."); break;
+    case OPT_DESCRIBE: options->describe = true; break;
     case OPT_TEST_RNG: options->test_rng = true; break;
     case 'h': print_usage(program); exit(0);
     default: print_usage(program); exit(1);
@@ -205,7 +217,12 @@ static unsigned int observers_within_budget(const Options *options) {
     return fitting;
 }
 
-static unsigned int choose_observers_per_pass(const Options *options) {
+static unsigned int balanced(unsigned int observers_per_pass, unsigned int observers) {
+    unsigned int passes = (observers + observers_per_pass - 1) / observers_per_pass;
+    return (observers + passes - 1) / passes;
+}
+
+static unsigned int largest_observers_per_pass(const Options *options) {
     unsigned int all = options->star.observer_count;
     if (options->observers_per_pass != ALL_OBSERVERS && options->memory_budget != NO_BUDGET) {
         stop("Use --observers-per-pass or --memory-budget, not both.");
@@ -220,6 +237,10 @@ static unsigned int choose_observers_per_pass(const Options *options) {
         return all;
     }
     return options->observers_per_pass;
+}
+
+static unsigned int choose_observers_per_pass(const Options *options) {
+    return balanced(largest_observers_per_pass(options), options->star.observer_count);
 }
 
 static void validate_options(Options *options, int argc, char *argv[]) {

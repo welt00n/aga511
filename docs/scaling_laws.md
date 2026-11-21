@@ -72,6 +72,7 @@ They are close here because N is so large that the serial share is already tiny 
 - **Weak-scaling efficiency:** E(n) = T(1, W) / T(n, n·W), where W is the work per processor. 1 is perfect; less than 1 measures the overhead that grows with n (more SMs competing for the image's atomics, the memory, the queue).
 - **For the TCD:** plot strong and weak scaling side by side, and fit Amdahl's p and Gustafson's s′ from the same runs.
 - **For the class:** the strong-scaling curve flattens, the weak-scaling line stays flat, and the question "which one is the right measure?" depends on what you want from a bigger machine.
+- **Today's definition** (the four sweeps `strong`, `weak`, `problem-size`, `devices`, their N, repeats, cost and figures): [gpu_engine.md §7](gpu_engine.md#7-the-sweeps-today-to-review). The size and cross-machine rows above wait for after Tuesday.
 - **How they are run and analysed:** as sweeps (`sweep`, `remote sweep`) and the `scaling` command, which fits Amdahl's p and Gustafson's s′ and checks them against the serial part the engine measures directly ([driver.md §6–7](driver.md#6-sweeps-the-runs-of-a-scaling-study)).
 
 ## References

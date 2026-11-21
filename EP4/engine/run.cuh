@@ -2,12 +2,15 @@
 #define RUN_CUH
 
 #include <stddef.h>
+#include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "options.cuh"
 #include "observers.cuh"
 
 #define DEVICE_NAME "CPU"
+#define HOST_NAME_LENGTH 256
 
 typedef struct {
     long long simulated;
@@ -46,6 +49,7 @@ typedef struct {
     const ObserverList *observers;
     unsigned int passes;
     double started_at;
+    char host[HOST_NAME_LENGTH];
 } Run;
 
 typedef struct {
@@ -59,6 +63,13 @@ static inline double now_in_seconds(void) {
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
     return t.tv_sec + t.tv_nsec / 1e9;
+}
+
+static inline void read_host_name(char *host) {
+    if (gethostname(host, HOST_NAME_LENGTH) != 0) {
+        snprintf(host, HOST_NAME_LENGTH, "unknown");
+    }
+    host[HOST_NAME_LENGTH - 1] = '\0';
 }
 
 #endif

@@ -23,7 +23,12 @@ A guided tour of the EP4 sequential engine, one piece at a time, with the questi
 | 14 | What the engine tells: `PROGRESS`, `PASS`, `SUMMARY`, the records | `report.cu`, `run.cuh` | done |
 | 15 | The driver's side: reading records, the passes check | `star.py`, `analysis.py` | done |
 | — | **Recap of pieces 10–15: what we learned, what to change before the GPU** | | done |
-| 16 | Docs and the class plan | `docs/`, `cuda_class/` | |
+| 16 | The processor split: the pass loop stops knowing which processor traces | `processor.cuh`, `cpu.cu`, `main.cu` | |
+| 17 | Random numbers on the GPU | `gpu_rng.cuh` | |
+| 18 | The star on the GPU: constant Scene, `GpuImage`, the kernel and its queue | `gpu.cu`, `gpu_image.cu` | |
+| 19 | The SM mask | `gpu_sms.cu` | |
+| 19b | The CPU's cores: the same queue on another processor | `cpu_cores.cu` | |
+| 20 | Sweeps and scaling | `sweeps.py`, `scaling.py` | |
 
 ---
 
@@ -93,13 +98,13 @@ The smallest file, and every other file depends on it. Three things:
 
 ```c
 #ifdef STAR_FP32
-typedef float real;      // make star32  (-DSTAR_FP32)
+typedef float real;      // star_cpu32, star_gpu32  (built with -DSTAR_FP32)
 #else
-typedef double real;     // make star
+typedef double real;     // star_cpu64, star_gpu64
 #endif
 ```
 
-All the physics uses `real`, never `double` or `float` directly. The Makefile builds the same source twice. One copy of the physics, two precisions: the FP32 vs FP64 comparison compares exactly the same code.
+All the physics uses `real`, never `double` or `float` directly. The build compiles the same source twice (phase B: a Makefile; now `engine.py`). One copy of the physics, two precisions: the FP32 vs FP64 comparison compares exactly the same code.
 
 **2. One name per math function.**
 
@@ -708,7 +713,7 @@ The engine never knows about experiments; the driver never knows about photons.
 ### The engine, seen from Python
 
 ```python
-compile_engine()                                  # make -s in EP4/engine
+compile_engine()                                  # make -s in EP4/engine (phase B; now engine.py calls nvcc)
 result = run_engine(config, image_path, precision, chunk_range)
 image = load_and_delete_image(result)             # numpy array [iphi][observer][iy][ix]
 ```
@@ -1032,6 +1037,7 @@ Measured on the laptop (315 MB, `dd`, two runs):
 | with `fsync` (to the disk) | 0.184 s (1.8 GB/s) | 0.146 s (2.3 GB/s) |
 
 - **The cost is small here:** a fast NVMe disk; tens of milliseconds per 315 MB. In a run of hours, nothing.
+- **Correction, measured in the engine after adding `fsync`:** 0.31–0.43 s per 315 MB (~0.8–1 GB/s). The `dd` test overwrote the same file each time; the engine writes new files, which costs more on WSL's virtual disk. Still small in a run of hours, but visible in short checks.
 - **`SAVE_TIME` without `fsync` measures the cache, not the disk,** so it varies with how busy the cache is (0.08 vs 0.16 s above). With `fsync` it measures the real save.
 - **To be complete,** the folder itself is `fsync`ed after the rename, so the new name is on the disk too.
 

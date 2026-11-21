@@ -20,6 +20,8 @@ Status tags: **[decided]** a choice made for EP4 · **[measured]** checked on th
 | Amdahl (strong scaling) and Gustafson (weak scaling), and the EP4 scaling experiments | [scaling_laws.md](scaling_laws.md) |
 | Jobs, observers and passes: fitting any image in any machine's memory, resuming over days | [jobs_and_passes.md](jobs_and_passes.md) |
 | The driver: commands, job files and prompts, remote runs, the engine's records, sweeps and the Amdahl/Gustafson analysis | [driver.md](driver.md) |
+| EP4 as an HPC project: the hardware as the architecture (node, processor, compute units, lanes, memory spaces), benchmarking rules | [hpc_architecture.md](hpc_architecture.md) |
+| The GPU engine: files, the processor interface, a pass on the GPU, the kernel, the sweeps | [gpu_engine.md](gpu_engine.md) |
 | The laptop and the IAG A30, predictions, questions for IAG | [gpus.md](gpus.md) |
 | Nsight: how it works, Buffon's profile, the permission error | [../cuda_class/nsight.md](../cuda_class/nsight.md) |
 | The class plan | [../cuda_class/class_plan.md](../cuda_class/class_plan.md) |

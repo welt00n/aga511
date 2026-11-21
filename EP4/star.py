@@ -102,12 +102,21 @@ def engine_command(config, output_dir, precision, chunk_range):
     return [str(item) for item in command]
 
 
-def run_engine(config, output_dir, precision=64, chunk_range=None):
-    command = engine_command(config, output_dir, precision, chunk_range)
+def engine_output(command):
     result = subprocess.run(command, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"Error running the engine:\n{' '.join(command)}\n{result.stderr}")
-    return lines_of_kind(result.stdout, "SUMMARY")[0]
+    return result.stdout
+
+
+def run_engine(config, output_dir, precision=64, chunk_range=None):
+    output = engine_output(engine_command(config, output_dir, precision, chunk_range))
+    return lines_of_kind(output, "SUMMARY")[0]
+
+
+def describe_engine(config, precision=64):
+    output = engine_output(engine_command(config, ".", precision, None) + ["--describe"])
+    return lines_of_kind(output, "CONFIG")[0], lines_of_kind(output, "OBSERVER")
 
 
 def read_record(path):
@@ -127,10 +136,6 @@ def load_and_delete_observers(output_dir):
     records, image = load_observers(output_dir)
     shutil.rmtree(output_dir)
     return records, image
-
-
-def ep2_nmu(config):
-    return config["nmu"] if config["nmu"] is not None else 2 * round((config["frames"] / math.pi - 1) / 2) + 1
 
 
 def ep2_observer_inclinations(count, nmu):
@@ -212,7 +217,7 @@ def simulate_star(args):
 
 
 def compare_with_ep2(args):
-    nmu = ep2_nmu(star_config(args))
+    nmu = describe_engine(star_config(args), args.precision)[0]["NMU"]
     config = star_config(args, spots=0, nmu=nmu, observers=ep2_observer_inclinations(len(args.observers), nmu))
     folder = new_run_folder(f"compare-ep2-fp{args.precision}")
     ep4 = run_engine(config, os.path.join(folder, "ep4"), args.precision)
