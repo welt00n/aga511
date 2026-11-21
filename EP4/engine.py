@@ -20,16 +20,31 @@ PROCESSOR_SOURCES = {"cpu": ["cpu.cu"],
 PROCESSORS = ("cpu", "gpu")
 PRECISIONS = (64, 32)
 FLAGS = ["-O2", "-std=c++17", "-Xcompiler", "-Wall"]
+GPU_VARIANTS = {
+    "sections": ["-DSTAR_SECTION_TIMERS"],
+    "scene_in_global": ["-DSTAR_SCENE_IN_GLOBAL"],
+    "registers_64": ["-maxrregcount=64"],
+    "registers_40": ["-maxrregcount=40"],
+    "no_fma": ["--fmad=false"],
+}
 
 
 # ============================================================ building
 
-def binary_name(processor, precision):
-    return f"star_{processor}{precision}"
+def binary_name(processor, precision, variant=None):
+    return f"star_{processor}{precision}" + (f"_{variant}" if variant else "")
 
 
-def binary_path(processor, precision):
-    return os.path.join(BUILD_FOLDER, binary_name(processor, precision))
+def binary_path(processor, precision, variant=None):
+    return os.path.join(BUILD_FOLDER, binary_name(processor, precision, variant))
+
+
+def variant_flags(processor, variant):
+    if variant is None:
+        return []
+    if processor != "gpu" or variant not in GPU_VARIANTS:
+        raise ValueError(f"no {processor} variant called {variant}; GPU variants: {', '.join(GPU_VARIANTS)}")
+    return GPU_VARIANTS[variant]
 
 
 def architecture_flags(architecture):
@@ -38,12 +53,12 @@ def architecture_flags(architecture):
     return ["-gencode", f"arch=compute_{architecture},code=sm_{architecture}"]
 
 
-def nvcc_command(processor, precision, architecture="native"):
+def nvcc_command(processor, precision, architecture="native", variant=None):
     precision_flags = ["-DSTAR_FP32"] if precision == 32 else []
     report_flags = ["-Xptxas", "-v"] if processor == "gpu" else []
     sources = SHARED_SOURCES + PROCESSOR_SOURCES[processor]
-    return [NVCC, *FLAGS, *architecture_flags(architecture), *precision_flags, *report_flags,
-            *sources, "-o", binary_path(processor, precision)]
+    return [NVCC, *FLAGS, *architecture_flags(architecture), *precision_flags, *variant_flags(processor, variant),
+            *report_flags, *sources, "-o", binary_path(processor, precision, variant)]
 
 
 def engine_sources():
@@ -86,9 +101,9 @@ def write_text(path, text):
 
 
 @functools.cache
-def build_engine(processor="cpu", precision=64, architecture="native", verbose=False):
-    command = nvcc_command(processor, precision, architecture)
-    binary = binary_path(processor, precision)
+def build_engine(processor="cpu", precision=64, architecture="native", verbose=False, variant=None):
+    command = nvcc_command(processor, precision, architecture, variant)
+    binary = binary_path(processor, precision, variant)
     wanted_hash = build_hash(command)
     if os.path.exists(binary) and read_text(binary + ".hash") == wanted_hash:
         return binary
@@ -97,7 +112,7 @@ def build_engine(processor="cpu", precision=64, architecture="native", verbose=F
         print(" ".join(command))
     result = subprocess.run(command, cwd=ENGINE_FOLDER, capture_output=True, text=True)
     if result.returncode != 0:
-        raise RuntimeError(f"Error building {binary_name(processor, precision)}:\n{result.stdout}{result.stderr}")
+        raise RuntimeError(f"Error building {os.path.basename(binary)}:\n{result.stdout}{result.stderr}")
     write_text(binary + ".report", result.stderr)
     write_text(binary + ".hash", wanted_hash)
     return binary
@@ -125,7 +140,8 @@ def lines_of_kind(output, kind):
 
 
 def engine_command(config, output_dir, processor, precision, chunk_range):
-    command = [build_engine(processor, precision), "-n", config["photons"], "-s", config["seed"],
+    binary = build_engine(processor, precision, variant=config.get("variant"))
+    command = [binary, "-n", config["photons"], "-s", config["seed"],
                "-a", config["limb"], "--spots", config["spots"],
                "--observers", ",".join(f"{i:.17g}" for i in config["observers"]),
                "--size", config["size"], "--frames", config["frames"],
@@ -148,9 +164,12 @@ def engine_output(command):
     return result.stdout
 
 
+def run_engine_output(config, output_dir, processor="cpu", precision=64, chunk_range=None):
+    return engine_output(engine_command(config, output_dir, processor, precision, chunk_range))
+
+
 def run_engine(config, output_dir, processor="cpu", precision=64, chunk_range=None):
-    output = engine_output(engine_command(config, output_dir, processor, precision, chunk_range))
-    return lines_of_kind(output, "SUMMARY")[0]
+    return lines_of_kind(run_engine_output(config, output_dir, processor, precision, chunk_range), "SUMMARY")[0]
 
 
 def describe_engine(config, processor="cpu", precision=64):

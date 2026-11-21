@@ -79,3 +79,10 @@ Running notes, filled while EP4 is built: each concept we use, where EP4 uses it
 | The memory budget from the hardware: passes chosen to fit | `fit_observers_per_pass` | 10 GB job → 4 + 4 observers in 2 passes | 4, 8 |
 | Device → host copy into pinned memory | `COPY_TIME` | ~24 GB/s | 4 |
 | The serial part grows with the image: the disk | 1k, 8 observers | save 20 s vs photons 0.12 s | 7 |
+| **What the kernel is made of:** integer work is the largest instruction class (Philox, indices) | `instruction_mix.py` | FP64 kernel: 660 integer, 278 FP64, 73 FP32, 13 MUFU, 2 atomic sites | 3, 8 |
+| **Compute-bound vs memory-bound, measured:** constant vs global memory makes no difference | `scene_in_global` variant | 1.002× (FP64), 0.984× (FP32) | 4, 8 |
+| **Occupancy is not a goal in itself:** capping registers fills the SM but spills | `registers_64`, `registers_40` | occupancy 1.0 → 9% slower (FP64) | 3, 8 |
+| Where the cycles go, per piece of the photon | `sections` variant | direction 33–41%, surface 20–28%, atan2 22% (FP64), atomics 13–15% | 8, 9 |
+| Amdahl inside the kernel: only the FP64 part slows down | FP64 vs FP32 per photon | 17×, not 64× | 7, 9 |
+| The clock depends on the work (power limit) | `gpu_monitor.py` | FP32 2310 MHz at 72 W, FP64 2812 MHz at 55 W | 7 |
+| FMA: faster and (in FP32) a different last bit | `no_fma` variant | FP64 +7% speed, identical images; FP32 30 689 pixels differ at 5·10⁹ | 7, 9 |

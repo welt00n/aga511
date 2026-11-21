@@ -109,7 +109,9 @@ Which hardware runs each piece, and where its data lives. "Unit" is the part of 
 | `observer_on_host`: `cudaMemcpy` device → host | the GPU's **copy engine** (DMA), over PCIe |
 | `save_counts`, the record | the CPU, the disk |
 
-**What the map already predicts, to measure:**
+**Measured (2026-11-21, [walkthrough.md piece 21](walkthrough.md#piece-21-the-code-mapped-to-the-hardware-measured-instruction_mixpy-kernel_experimentspy-gpu_monitorpy)):** the kernel is limited by arithmetic (direction 33–41%, surface 20–28%, `atan2` 22% in FP64); the Scene in global memory runs at the same speed as in constant memory (row 7's suspect cleared); the image's atomics are 13–15% of the time; more occupancy (capped registers) is slower; FP64 is 17× slower than FP32 per photon, not 64×, because integer work (Philox, indices) is the largest instruction class.
+
+**What the map predicted (before measuring):**
 - **FP64 vs FP32 on the laptop:** pieces 2–8 run on FP64 units at 1/64 of the FP32 rate, so the FP64 kernel should be limited by arithmetic; the FP32 kernel by something else (atomics, divergence, the constant-cache serialization). On the A30 (1:2) the gap should almost close.
 - **Row 7 is a suspect:** a constant-memory table read with a different index per thread is the slow case of constant memory. **Experiment:** the same table in global memory (read through the L1 cache) vs constant memory; compare `PHOTONS_TIME`.
 - **Row 9:** ~8% of the photons are recorded, so the atomics are a minority of the work, but each is a trip to L2.

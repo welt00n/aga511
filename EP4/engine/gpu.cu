@@ -7,6 +7,7 @@
 #include "gpu_image.cuh"
 #include "gpu_rng.cuh"
 #include "gpu_sms.cuh"
+#include "gpu_sections.cuh"
 
 typedef struct {
     unsigned long long seed;
@@ -27,6 +28,7 @@ typedef struct {
 typedef struct {
     PhotonCounts tallies;
     unsigned long long chunks;
+    KernelLaps laps;
 } ThreadWork;
 
 typedef struct {
@@ -43,10 +45,17 @@ struct Processor {
     PixelCount *host_counts;
     GpuCounters *counters;
     SmWork *sm_work;
+    unsigned long long *section_cycles;
     Launch launch;
 };
 
+#ifdef STAR_SCENE_IN_GLOBAL
+__device__ Scene gpu_scene;
+static const char *SCENE_MEMORY = "global";
+#else
 __constant__ Scene gpu_scene;
+static const char *SCENE_MEMORY = "constant";
+#endif
 
 
 // ============================================================ the kernel
@@ -59,32 +68,39 @@ __device__ long long take_next_chunk(const PhotonWork work, GpuCounters *counter
     return work.first_chunk + (long long) atomicAdd(&counters->next_chunk, 1ULL);
 }
 
-__device__ void trace_chunk(long long chunk, const PhotonWork work, PixelCount *image, PhotonCounts *tallies) {
+__device__ void tally_photon(long long pixel, PixelCount *image, PhotonCounts *tallies) {
+    if (pixel == PHOTON_BLOCKED_BY_SPOT) {
+        tallies->blocked_by_spots++;
+    } else if (pixel == PHOTON_MISSES_OBSERVERS) {
+        tallies->missed_observers++;
+    } else {
+        tallies->recorded++;
+        if (image != NULL) {
+            count_photon_atomic(image, (unsigned long long) pixel);
+        }
+    }
+}
+
+__device__ void trace_chunk(long long chunk, const PhotonWork work, PixelCount *image, ThreadWork *done) {
     GpuRng rng;
     curand_init(work.seed, (unsigned long long) chunk, 0, &rng);
+    done->laps.lap(SECTION_CHUNK);
     long long first_photon = chunk * work.chunk_size;
     long long end_photon = smaller(first_photon + work.chunk_size, work.photons);
     for (long long photon = first_photon; photon < end_photon; photon++) {
-        long long pixel = trace_photon(&gpu_scene, &rng);
-        if (pixel == PHOTON_BLOCKED_BY_SPOT) {
-            tallies->blocked_by_spots++;
-        } else if (pixel == PHOTON_MISSES_OBSERVERS) {
-            tallies->missed_observers++;
-        } else {
-            tallies->recorded++;
-            if (image != NULL) {
-                count_photon_atomic(image, (unsigned long long) pixel);
-            }
-        }
+        long long pixel = trace_photon(&gpu_scene, &rng, &done->laps);
+        tally_photon(pixel, image, &done->tallies);
+        done->laps.lap(SECTION_RECORD);
     }
-    tallies->simulated += end_photon - first_photon;
+    done->tallies.simulated += end_photon - first_photon;
 }
 
 __device__ ThreadWork take_chunks_until_none_left(const PhotonWork work, PixelCount *image, GpuCounters *counters) {
-    ThreadWork done = {{0, 0, 0, 0}, 0};
+    ThreadWork done = {};
+    done.laps.start();
     long long chunk = take_next_chunk(work, counters);
     while (chunk < work.last_chunk) {
-        trace_chunk(chunk, work, image, &done.tallies);
+        trace_chunk(chunk, work, image, &done);
         done.chunks++;
         chunk = take_next_chunk(work, counters);
     }
@@ -98,7 +114,8 @@ __device__ void add_tallies(GpuCounters *counters, PhotonCounts tallies) {
     atomicAdd(&counters->recorded, (unsigned long long) tallies.recorded);
 }
 
-__global__ void trace_photons(const PhotonWork work, PixelCount *image, GpuCounters *counters, SmWork *sm_work) {
+__global__ void trace_photons(const PhotonWork work, PixelCount *image, GpuCounters *counters, SmWork *sm_work,
+                              unsigned long long *section_cycles) {
     long long started_at = clock64();
     unsigned int sm = sm_id();
     if (!is_allowed(sm, sm_work)) {
@@ -108,6 +125,7 @@ __global__ void trace_photons(const PhotonWork work, PixelCount *image, GpuCount
     add_tallies(counters, done.tallies);
     add_sm_work(sm_work, sm, done.chunks, (unsigned long long) done.tallies.simulated,
                 (unsigned long long) done.tallies.recorded, (unsigned long long) (clock64() - started_at));
+    done.laps.add_to(section_cycles);
 }
 
 
@@ -126,7 +144,11 @@ static Launch choose_launch(void) {
     return launch;
 }
 
-static void run_kernel(const void *kernel, Launch launch, void **arguments) {
+static double run_kernel(const void *kernel, Launch launch, void **arguments) {
+    cudaEvent_t started, finished;
+    check(cudaEventCreate(&started), "creating an event");
+    check(cudaEventCreate(&finished), "creating an event");
+    check(cudaEventRecord(started), "recording the kernel's start");
     if (launch.cooperative) {
         check(cudaLaunchCooperativeKernel(kernel, launch.blocks, launch.threads_per_block, arguments, 0, 0),
               "launching the kernel");
@@ -134,7 +156,13 @@ static void run_kernel(const void *kernel, Launch launch, void **arguments) {
         check(cudaLaunchKernel(kernel, launch.blocks, launch.threads_per_block, arguments, 0, 0),
               "launching the kernel");
     }
-    check(cudaDeviceSynchronize(), "waiting for the kernel");
+    check(cudaEventRecord(finished), "recording the kernel's end");
+    check(cudaEventSynchronize(finished), "waiting for the kernel");
+    float milliseconds = 0;
+    check(cudaEventElapsedTime(&milliseconds, started, finished), "timing the kernel");
+    cudaEventDestroy(started);
+    cudaEventDestroy(finished);
+    return milliseconds / 1e3;
 }
 
 static PhotonWork photon_work(const Options *options) {
@@ -188,11 +216,14 @@ Processor *open_processor(const Options *options) {
     processor->launch = choose_launch();
     processor->sm_work = create_sm_work(resolve_sm_count(options->sms), processor->launch.blocks,
                                         processor->launch.threads_per_block);
+    if (SECTION_TIMERS) {
+        check(cudaMalloc(&processor->section_cycles, SECTIONS * sizeof(unsigned long long)), "allocating the timers");
+    }
     return processor;
 }
 
 void load_pass(Processor *processor, const Scene *scene) {
-    check(cudaMemcpyToSymbol(gpu_scene, scene, sizeof(Scene)), "copying the scene to constant memory");
+    check(cudaMemcpyToSymbol(gpu_scene, scene, sizeof(Scene)), "copying the scene to the GPU");
 }
 
 void zero_pass_image(Processor *processor, unsigned int observers) {
@@ -204,11 +235,19 @@ void zero_pass_image(Processor *processor, unsigned int observers) {
 PhotonCounts trace_pass(Processor *processor, const Run *run, Progress *progress) {
     PhotonWork work = photon_work(run->options);
     PixelCount *image = processor->record ? processor->image.counts : NULL;
-    void *arguments[] = {&work, &image, &processor->counters, &processor->sm_work};
+    void *arguments[] = {&work, &image, &processor->counters, &processor->sm_work, &processor->section_cycles};
     check(cudaMemset(processor->counters, 0, sizeof(GpuCounters)), "resetting the counters");
     reset_sm_work(processor->sm_work);
-    run_kernel((const void *) trace_photons, processor->launch, arguments);
+    if (SECTION_TIMERS) {
+        check(cudaMemset(processor->section_cycles, 0, SECTIONS * sizeof(unsigned long long)), "resetting the timers");
+    }
+    double kernel_time = run_kernel((const void *) trace_photons, processor->launch, arguments);
+    printf("KERNEL PASS=%u KERNEL_TIME=%.6f SCENE_MEMORY=%s SECTION_TIMERS=%d\n", progress->pass, kernel_time,
+           SCENE_MEMORY, SECTION_TIMERS ? 1 : 0);
     print_sm_work(processor->sm_work, progress->pass);
+    if (SECTION_TIMERS) {
+        print_sections(processor->section_cycles, progress->pass);
+    }
     return read_counters(processor->counters);
 }
 
@@ -227,6 +266,7 @@ void close_processor(Processor *processor) {
         cudaFreeHost(processor->host_counts);
     }
     cudaFree(processor->counters);
+    cudaFree(processor->section_cycles);
     free_sm_work(processor->sm_work);
     free(processor);
 }

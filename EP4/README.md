@@ -92,6 +92,10 @@ Each run gets a folder in `runs/`: `run.json` and the gifs for a simulation, `re
 | `engine/gpu_rng.cuh` | cuRAND's Philox as the physics' generator on the GPU |
 | `engine.py` | building the engines (no Makefile) and talking to them: run, `--describe`, records |
 | `star.py`, `analysis.py` | the command line: runs with pictures, the checks; images and comparisons |
+| `engine/gpu_sections.cuh` | the section timers (laps with `clock64()`), only in the `sections` build variant |
+| `gpu_monitor.py` | `nvidia-smi` sampled during a run: clocks, power, temperature, utilization, memory |
+| `instruction_mix.py` | the GPU kernel's compiled instructions counted by hardware unit (`python instruction_mix.py`) |
+| `kernel_experiments.py` | the kernel's variants (Scene in global memory, capped registers, no FMA, section timers) timed and compared (`python kernel_experiments.py`) |
 
 ## What changed from EP2, and why
 

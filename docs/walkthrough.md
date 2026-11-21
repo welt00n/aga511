@@ -29,7 +29,8 @@ A guided tour of the EP4 sequential engine, one piece at a time, with the questi
 | 19 | The SM mask | `gpu_sms.cu` | done |
 | 19b | ~~The CPU's cores~~ (deferred) | `cpu_cores.cu` | — |
 | 20 | Memory, passes and the kernel's resources | `gpu_device.cu`, `gpu.cu`, `options.cu`, `report.cu` | done |
-| 21 | Sweeps and scaling | `sweeps.py`, `scaling.py` | |
+| 21 | The code mapped to the hardware, measured | `instruction_mix.py`, `kernel_experiments.py`, `gpu_monitor.py`, `gpu_sections.cuh` | done |
+| 22 | Sweeps and scaling | `sweeps.py`, `scaling.py` | |
 
 ---
 
@@ -1515,6 +1516,80 @@ GPU: 8.5 GB, 7.34 GB free (7.07 GB for the image), L2 32 MB, peak bandwidth ≈ 
 ### Checks
 
 Passes and split on the GPU (FP64 and FP32), passes on the CPU, GPU = CPU at 10⁸: all **bit for bit**.
+
+---
+
+## Piece 21: the code mapped to the hardware, measured (`instruction_mix.py`, `kernel_experiments.py`, `gpu_monitor.py`)
+
+The map of [hpc_architecture.md §7](hpc_architecture.md#7-the-code-mapped-to-where-it-runs-the-gpu-one-photon) made predictions; this piece measures them, without Nsight.
+
+### The tools
+
+| Tool | Does |
+|---|---|
+| **Build variants** (`engine.py`, `GPU_VARIANTS`) | the same sources with one flag, as their own binary: `sections` (`-DSTAR_SECTION_TIMERS`), `scene_in_global` (the Scene in global instead of constant memory), `registers_64`, `registers_40` (`-maxrregcount`), `no_fma` (`--fmad=false`). Never used for the normal runs |
+| **Laps** (`photon.cuh`, `gpu_sections.cuh`) | `trace_photon(scene, rng, laps)`: `laps->lap(SECTION_…)` between its five pieces. The normal build passes `NoLaps`/`SilentLaps`, empty functions the compiler removes; the `sections` build passes `ClockLaps`, which reads `clock64()` and adds the cycles per section. One physics, instrumented only on request |
+| **Kernel time** (`run_kernel`) | CUDA events around the launch: the GPU's own `KERNEL_TIME`, in a `KERNEL` line with `SCENE_MEMORY` |
+| **`gpu_monitor.py`** | `nvidia-smi` sampled every 200 ms during a run: SM and memory clocks, power, temperature, utilization, memory used (min/median/max) |
+| **`instruction_mix.py`** | `cuobjdump -sass` of `trace_photons`, each instruction counted by the hardware unit it uses |
+| **`kernel_experiments.py`** | every variant × FP64/FP32, 3 repeats, with the monitor; compares the images with the baseline |
+
+### The instruction mix (static: instructions in the code, not how often they run)
+
+| Unit | FP64 kernel | FP32 kernel |
+|---|---|---|
+| FP64 units | 278 (152 `DFMA`, 68 `DMUL`) | 4 |
+| FP32 cores | 73 | 247 (97 `FFMA`, 55 `FMUL`) |
+| special function unit (`MUFU`) | 13 | 12 |
+| integer units | **660** | **624** |
+| atomics (L2) | 2 | 2 |
+| constant loads; Scene operands (`c[0x3]`) | 46; 16 | 49; 18 |
+| local memory (stack) | 5 | 20 |
+| control flow (incl. `NOP` padding) | 1261 | 296 |
+| total | 2744 | 1520 |
+
+- **Integer work is the largest class in both:** Philox (multiply-high, XOR: `IMAD`, `LOP3`) and the index arithmetic. It does not get cheaper in FP32.
+- **Two atomic sites:** the image (`count_photon_atomic`) and the queue; the tallies' and the SM counters' atomics run once per thread.
+- **The Scene is read straight from the constant bank** as instruction operands (`c[0x3]`): 16–18 places.
+- **To explain:** 4 FP64 instructions remain in the FP32 kernel; and the FP64 kernel's 1063 `NOP`s (probably padding around its long software math routines).
+
+### The experiments (the whole GPU, N = 5·10⁸ FP64 / 5·10⁹ FP32, 3 repeats, spread < 1%)
+
+| Variant | registers | spills | occupancy | FP64 vs baseline | registers | spills | occupancy | FP32 vs baseline |
+|---|---|---|---|---|---|---|---|---|
+| baseline | 80 | 0 | 0.50 | 1 (6.46·10⁸ photons/s) | 67 | 0 | 0.58 | 1 (1.11·10¹⁰ photons/s) |
+| Scene in global memory | 88 | 0 | 0.42 | 1.002 | 68 | 0 | 0.58 | 0.984 |
+| registers ≤ 64 | 64 | 24 B | 0.67 | 0.989 | 55 | 0 | 0.75 | 0.965 |
+| registers ≤ 40 | 40 | 344 B | 1.00 | **0.911** | 40 | 80 B | 1.00 | 0.952 |
+| no FMA | 80 | 0 | 0.50 | **0.927** | 67 | 0 | 0.58 | 0.980 |
+| section timers | 112 | 0 | 0.33 | 1.006 | 69 | 0 | 0.58 | **0.922** |
+
+- **Constant memory is not the bottleneck:** the Scene in global memory runs at the same speed. The `slot_of_imu` suspect (a different index per thread) is cleared: one table read per photon, against hundreds of arithmetic instructions.
+- **More occupancy does not help; spills hurt.** Capping the registers raises occupancy to 0.67–1.0 and is slower in both precisions. The occupancy API's choice is the right one for this kernel: there is enough arithmetic per thread to keep the SM busy with half its thread slots.
+- **FMA matters in FP64:** 7% faster with it. In FP64 the images are identical with and without it (0 pixels); in FP32, 30 689 pixels differ at N = 5·10⁹ (as in piece 18).
+- **The observer effect:** the timers cost nothing in FP64 (even with 112 registers) and 8% in FP32.
+- **All images equal the baseline,** except `no_fma` in FP32: capping registers, moving the Scene, timing sections change speed, not results.
+
+### Where the cycles go (the `sections` variant)
+
+| Section | FP64 | FP32 | What it does |
+|---|---|---|---|
+| direction | 33% | **41%** | μ (`sqrt` or `cbrt`), the local azimuth (`cos`, `sin`) |
+| surface | 20% | 28% | z, φ, `cos`, `sin`, `sine_from_cosine` |
+| bin | **22%** | 8% | `atan2` (expensive in FP64), the slot table |
+| record | 15% | 13% | the tally, and the image's atomic for the 8% recorded |
+| spots | 8% | 9% | 3 chord tests, sometimes a random number |
+| pixel | 1.4% | 0.9% | the projection, for the 8% that reach an observer |
+| chunk | 0.0% | 0.0% | taking a chunk, `curand_init` (once per 1024 photons) |
+
+(Cycles as each thread sees them, stalls included; the shares compare pieces of the same kernel.)
+
+### What this says about the kernel
+
+1. **It is limited by arithmetic** (roots, trigonometry), not by memory: constant vs global makes no difference, and the image's atomics are 13–15% of the time.
+2. **FP64 is 17× slower than FP32 per photon, not 64×,** on a GPU whose FP64 units run at 1:64: a large part of the work is integer and control (Philox, indices, branches), which costs the same in both. Amdahl's law inside the kernel: only the FP64 fraction slows down.
+3. **The clock depends on the work:** the FP32 kernel ran at a median 2310 MHz drawing ~72 W, the FP64 one at 2812 MHz drawing ~55 W. FP32 keeps more units busy, so it hits the power limit sooner (medians of a few 200 ms samples: indicative).
+4. **Still open:** pass 2 of piece 20 ran 5× slower after a 12 s save (idle clock?). The sweeps' warm-up run and clock sampling will show it.
 
 - **Amdahl, already visible:** at N = 10⁸ in FP32, the photons take 0.011 s and SETUP (mostly creating the CUDA context) 0.14 s; the run is 90% serial. At 10⁷ the GPU's speed looks lower because the kernel is too short to fill and drain the GPU efficiently. The `problem-size` sweep (step 7) measures exactly this.
 - **FP32 is 14.6× faster than FP64 on this GPU** (its FP64 units run at 1:64), against 1.45× on the CPU: the same code, opposite conclusions about precision, as predicted in [gpus.md](gpus.md).

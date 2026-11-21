@@ -19,6 +19,14 @@ typedef struct {
     unsigned int imu, iphi;
 } ObserverBin;
 
+typedef enum {
+    SECTION_SURFACE, SECTION_DIRECTION, SECTION_SPOTS, SECTION_BIN, SECTION_PIXEL, PHOTON_SECTIONS
+} PhotonSection;
+
+struct NoLaps {
+    HD void lap(int section) {}
+};
+
 template <typename Rng>
 static inline HD SurfacePoint sample_surface_point(Rng *rng) {
     real z = 2 * uniform(rng) - 1;
@@ -109,19 +117,32 @@ static inline HD unsigned long long pixel_index(const Scene *scene, Vec3 positio
     return (frame * scene->size + iy) * scene->size + ix;
 }
 
-template <typename Rng>
-static inline HD long long trace_photon(const Scene *scene, Rng *rng) {
+template <typename Rng, typename Laps>
+static inline HD long long trace_photon(const Scene *scene, Rng *rng, Laps *laps) {
     SurfacePoint point = sample_surface_point(rng);
+    laps->lap(SECTION_SURFACE);
     Vec3 direction = sample_emission_direction(scene, point, rng);
-    if (!escapes_spots(scene, point.position, rng)) {
+    laps->lap(SECTION_DIRECTION);
+    bool escaped = escapes_spots(scene, point.position, rng);
+    laps->lap(SECTION_SPOTS);
+    if (!escaped) {
         return PHOTON_BLOCKED_BY_SPOT;
     }
     ObserverBin bin = observer_bin(scene, direction);
     int slot = scene->slot_of_imu[bin.imu];
+    laps->lap(SECTION_BIN);
     if (slot == NOT_IN_PASS) {
         return PHOTON_MISSES_OBSERVERS;
     }
-    return (long long) pixel_index(scene, point.position, direction, bin, slot);
+    long long pixel = (long long) pixel_index(scene, point.position, direction, bin, slot);
+    laps->lap(SECTION_PIXEL);
+    return pixel;
+}
+
+template <typename Rng>
+static inline HD long long trace_photon(const Scene *scene, Rng *rng) {
+    NoLaps no_laps;
+    return trace_photon(scene, rng, &no_laps);
 }
 
 #endif
