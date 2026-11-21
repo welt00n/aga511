@@ -6,9 +6,25 @@ This file is the **index**: every topic gets a short description, what caught ou
 
 Status tags: **[decided]** a choice made for EP4 · **[measured]** checked on this machine · **[to explore]** not done yet.
 
+**Where each topic is:**
+
+| Topic | Where |
+|---|---|
+| The EP4 engine, piece by piece, with the questions asked | [walkthrough.md](walkthrough.md) |
+| Piece 1: one run, the phases, the cost of counters and logging | [walkthrough.md](walkthrough.md#piece-1-one-run-from-start-to-finish) |
+| Piece 2: `real.cuh`, `HD`, overloading, `sine_from_cosine` | [walkthrough.md](walkthrough.md#piece-2-realcuh-the-precision-switch), [precision.md §8](precision.md#8-deep-dive-sine_from_cosine-and-the-fp32-correction) |
+| Piece 3: Philox (counter, key, rounds, a stream per chunk, the cuRAND copy) | [walkthrough.md](walkthrough.md#piece-3-random-numbers-philox-rngcuh) |
+| C++ for a Python programmer: the build, headers, `static inline`, include guards, templates with `HD`, the syntax | [cpp_for_python.md](cpp_for_python.md) |
+| FP64/FP32/FP16, random bits, the sine deep dive | [precision.md](precision.md) |
+| The laptop and the IAG A30, predictions, questions for IAG | [gpus.md](gpus.md) |
+| Nsight: how it works, Buffon's profile, the permission error | [../cuda_class/nsight.md](../cuda_class/nsight.md) |
+| The class plan | [../cuda_class/class_plan.md](../cuda_class/class_plan.md) |
+| Everything else (memory, atomics, the queue, chunks, Amdahl, containers, tools, libraries) | the sections below |
+
 **Documents in this folder:**
 
 - [walkthrough.md](walkthrough.md): the EP4 engine, piece by piece, with the questions asked along the way.
+- [cpp_for_python.md](cpp_for_python.md): C/C++ for a Python programmer: the build, headers with whole functions, how EP4's files are organized, the new syntax.
 - [precision.md](precision.md): FP64, FP32, FP16, random bits, and the deep dive on `sine_from_cosine`.
 - [gpus.md](gpus.md): the laptop GPU and the IAG A30 side by side, predictions, questions for IAG.
 - [experiments/](experiments/) and [figures/](figures/): small scripts behind the measurements, and their plots.

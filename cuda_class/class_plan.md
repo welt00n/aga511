@@ -1,68 +1,70 @@
-# Aula de CUDA: plano
+# CUDA class: plan
 
-Plano de trabalho da aula de CUDA. Ele muda conforme aprendemos; os conceitos estão reunidos em [`../docs/README.md`](../docs/README.md).
+Working plan for the CUDA class. It changes as we learn; the concepts are collected in [`../docs/README.md`](../docs/README.md).
 
-**Idioma: aula e slides em português.**
+**Language: all docs, including this plan, are in English. Only the class itself and its slides will be in Portuguese.**
 
 ---
 
-## Contexto
+## Context
 
-- **Quem dá a aula:** estudante de física da USP, na equipe de CUDA da AGA 511. Cinco anos de experiência dando aulas de inglês: à vontade na lousa e com a turma, iniciante em apresentações com slides.
-- **Quem assiste:** a turma da AGA 511 (Métodos Computacionais em Astronomia, IAG/USP, 2º semestre de 2026) e o **Prof. Alex Carciofi**, que trabalha com HPC em astronomia (transporte radiativo por Monte Carlo). A turma já conhece a lei de Amdahl, o método de Monte Carlo e a agulha de Buffon (EP1, EP3); as outras equipes cobrem MPI, OpenMP e OpenACC.
-- **Nível:** alto nível, mas preciso. Há um professor de HPC na sala, então toda afirmação precisa ter respaldo na documentação do CUDA ou numa medida feita na nossa própria GPU.
-- **O que é:** **uma aula, não uma apresentação.** A lousa carrega o raciocínio (diagramas, deduções, previsões); os slides só carregam o que não dá para desenhar bem (código, gráficos, linhas do tempo, fotos).
-- **Nosso material:**
-  - EP3: Buffon na GPU, com estudo de Amdahl variando os SMs.
-  - EP4: a estrela, em andamento.
-  - O hardware: uma RTX 5070 Laptop GPU, 36 SMs, CUDA 13.3.
-  - Os profilers: Nsight Systems e Nsight Compute.
+- **Who teaches:** a physics student at USP, in the CUDA team of AGA 511. Five years teaching English: comfortable at the board and with a room, new to slide presentations.
+- **Who listens:** the AGA 511 class (Métodos Computacionais em Astronomia, IAG/USP, 2nd semester 2026) and **Prof. Alex Carciofi**, who works in HPC for astronomy (Monte Carlo radiative transfer). The students already know Amdahl's law, Monte Carlo and Buffon's needle (EP1, EP3); the other teams cover MPI, OpenMP and OpenACC.
+- **Level:** high-level but precise. A professor of HPC is in the room, so every claim must be backed by the CUDA documentation or a measurement on our own GPU.
+- **What it is:** **a class, not a presentation.** The board carries the reasoning (diagrams, derivations, predictions); slides only carry what cannot be drawn well (code, plots, timelines, photos).
+- **Our material:**
+  - EP3: Buffon on the GPU, with an Amdahl study over SMs.
+  - EP4: the star, in progress.
+  - The hardware: an RTX 5070 Laptop GPU, 36 SMs, CUDA 13.3.
+  - The profilers: Nsight Systems and Nsight Compute.
 
-## O roteiro (primeiro rascunho)
+## The arc (first draft)
 
-A ideia geral: **história → fundamentos → modelo de programação → Buffon → a estrela**, com as ferramentas (Nsight) como fio condutor. A ordem e o peso de cada parte vão mudar.
+The broad idea: **history → foundations → programming model → Buffon → the star**, with the tools (Nsight) as a thread through all of it. The order and weights will change.
 
-| # | Bloco | Ideia principal | Lousa | Slides / demo |
+| # | Block | Main idea | Board | Slides / demo |
 |---|---|---|---|---|
-| 0 | **Pergunta de abertura** | "π com 14 casas decimais: 2,7·10¹¹ anos nesta GPU. Por que tanto tempo, e por que a GPU ainda é 100× mais rápida que a CPU?" | a pergunta | um número |
-| 1 | **História** | Das placas de vídeo à computação de uso geral. GPGPU via shaders, depois CUDA (2007), FP64 e caches, depois tensor cores, depois GPUs nos supercomputadores de hoje | uma linha do tempo | fotos das placas, um gráfico do Top500 |
-| 2 | **Fundamentos** | Latência vs vazão: a CPU gasta seus transistores em cache e controle, a GPU em muitas ULAs simples. Por que isso combina com Monte Carlo | o esboço do chip CPU vs GPU | - |
-| 3 | **O modelo de programação** (Programming Guide) | host/device, kernels, grid → blocos → threads → warps → SMs, SIMT | a hierarquia de threads, desenhada | um kernel mínimo |
-| 4 | **Memória** | dois espaços de endereçamento, `cudaMalloc`/`cudaMemcpy`, registradores / shared / global / constant | a hierarquia de memória, desenhada | - |
-| 5 | **Trabalhando juntas** | condições de corrida, operações atômicas, a fila de trabalho | a corrida, à mão | - |
-| 6 | **Buffon** | tudo isso num programa: threads persistentes, a fila, streams Philox por chunk, seleção de SMs | - | trechos de código |
-| 7 | **Medindo Buffon** | Amdahl com n = SMs, p depende de N, FP64 vs FP32 | **a turma prevê antes**, depois mostramos | gráficos do EP3, **nsys / ncu ao vivo** |
-| 8 | **A estrela: problemas novos** | uma imagem de 1,5 GB, atômicas em muitos endereços, memória constante, a verificação do RNG entre CPU e GPU | por que cache não ajuda aqui | - |
-| 9 | **A estrela: resultados** | o que estiver pronto: o vídeo, os speedups, o perfil | - | o vídeo, gráficos |
-| 10 | **Fechamento** | para que a GPU serve, para que não serve, o que aprendemos | as três lições | - |
+| 0 | **Opening question** | "π with 14 decimals: 2.7·10¹¹ years on this GPU. Why so long, and why is the GPU still 100× faster than the CPU?" | the question | one number |
+| 1 | **History** | From graphics cards to general-purpose computing. GPGPU through shaders, then CUDA (2007), FP64 and caches, then tensor cores, then GPUs in today's supercomputers | a timeline | photos of the cards, a Top500 chart |
+| 2 | **Foundations** | Latency vs throughput: the CPU spends its transistors on caches and control, the GPU on many simple ALUs. Why that suits Monte Carlo | the CPU vs GPU chip sketch | - |
+| 3 | **The programming model** (Programming Guide) | host/device, kernels, grid → blocks → threads → warps → SMs, SIMT | the thread hierarchy, drawn | a minimal kernel |
+| 4 | **Memory** | two address spaces, `cudaMalloc`/`cudaMemcpy`, registers / shared / global / constant | the memory hierarchy, drawn | - |
+| 5 | **Working together** | races, atomics, the work queue | the race, by hand | - |
+| 6 | **Buffon** | everything above in one program: persistent threads, the queue, Philox streams per chunk, SM masking | - | code excerpts |
+| 7 | **Measuring Buffon** | Amdahl with n = SMs, p depends on N, FP64 vs FP32 | **the class predicts first**, then we show | plots from EP3, **live nsys / ncu** |
+| 8 | **The star: new problems** | a 1.5 GB image, atomics on many addresses, constant memory, the RNG check between CPU and GPU | why caching does not help here | - |
+| 9 | **The star: results** | whatever is ready: the video, the speedups, the profile | - | the video, plots |
+| 10 | **Closing** | what the GPU is good for, what it is not, what we learned | the three takeaways | - |
 
-## Material pronto
+## Ready material
 
-- [`nsight.md`](nsight.md): como o `nsys` e o `ncu` funcionam, e o Buffon perfilado (linha do tempo em [`profiling/`](profiling/)). Para o bloco 7, ao vivo. Achado principal: a parte serial do Buffon (~0,15 s) é a criação do contexto CUDA.
+- [`nsight.md`](nsight.md): how `nsys` and `ncu` work, and Buffon profiled (timeline in [`profiling/`](profiling/)). For block 7, live. Main finding: Buffon's serial part (~0.15 s) is CUDA context creation.
+- [`../docs/precision.md`](../docs/precision.md) and [`../docs/gpus.md`](../docs/gpus.md): FP32 vs FP64, and the laptop vs the IAG A30 (the precision trade-off flips between them). For blocks 7 and 9.
 
-## Técnicas de ensino
+## Teaching techniques
 
-- **Prever, depois medir.** Antes de cada resultado, a turma chuta (o speedup em 36 SMs? FP32 vs FP64?). Depois, a medida. Mantém a sala pensando, e os nossos dados são reais.
-- **Construir na lousa.** Desenhar a hierarquia de threads e os espaços de memória passo a passo, em vez de mostrar um diagrama pronto.
-- **Uma ideia por slide.** A maioria dos slides: um gráfico ou um trecho de código, com um título que afirma a conclusão.
-- **Ferramentas ao vivo.** Uma linha do tempo curta do `nsys` e a seção Speed Of Light do `ncu` no Buffon, rodadas na frente da turma (com capturas de tela como plano B).
-- **Pontos de checagem.** Uma pergunta para a turma no fim de cada bloco.
+- **Predict, then measure.** Before each result, the class guesses (the speedup on 36 SMs? FP32 vs FP64?). Then the measurement. It keeps the room thinking, and our data is real.
+- **Build at the board.** Draw the thread hierarchy and the memory spaces step by step rather than showing a finished diagram.
+- **One idea per slide.** Most slides: one plot or one code excerpt, with a title that states the conclusion.
+- **Live tools.** A short `nsys` timeline and an `ncu` Speed Of Light section on Buffon, run in front of the class (with screenshots as a backup).
+- **Checkpoints.** A question to the room at the end of each block.
 
-## Questões em aberto
+## Open questions
 
-- [ ] Data e duração da aula (o plano do curso dá cerca de 1 h para as apresentações das equipes).
-- [ ] É a aula da equipe ou a individual? Quem mais está na equipe de CUDA, e como o tempo é dividido?
-- [x] Idioma: português (aula e slides).
-- [ ] Projetor, lousa, dá para rodar demos ao vivo no laptop?
-- [ ] Quanto da estrela vai estar pronto até lá?
+- [ ] Date and length of the class (the course plan gives team presentations about 1 h).
+- [ ] Is it the team class or the individual one? Who else is in the CUDA team, and how is the time split?
+- [x] Language: the class and slides in Portuguese; all docs in English.
+- [ ] Projector, board, can we run live demos on the laptop?
+- [ ] How much of the star will be ready by then?
 
 ## Slides
 
-- Ferramenta: a decidir (arquivo PowerPoint, ou um deck feito aqui que exporta para .pptx/PDF).
-- Primeiro passo: fechar o roteiro, depois rascunhar slide por slide a partir deste plano.
+- Tool: to decide (a PowerPoint file, or a deck made here that exports to .pptx/PDF).
+- First step: settle the arc, then draft slide by slide from this plan, translating to Portuguese at that point.
 
-## Registro
+## Log
 
-- 2026-11-20: plano criado. Roteiro a partir da primeira ideia: história, fundamentos, Programming Guide, conceitos do Buffon, Buffon, conceitos da estrela, estrela.
-- 2026-11-20: idioma definido: português.
-- 2026-11-21: Buffon perfilado com `nsys`; `ncu` aguarda liberar os contadores de desempenho no Windows.
+- 2026-11-20: plan created. Arc from the first idea: history, foundations, Programming Guide, Buffon concepts, Buffon, star concepts, star.
+- 2026-11-20: class language set: Portuguese.
+- 2026-11-21: Buffon profiled with `nsys`; `ncu` waits for the GPU performance counters to be enabled on Windows.
+- 2026-11-21: all docs kept in English; only the class and slides will be translated.
