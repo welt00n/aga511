@@ -52,3 +52,8 @@ Running notes, filled while EP4 is built: each concept we use, where EP4 uses it
 | What `nvcc` does: one call, preprocess + compile + link; the build is just a command | `engine.py` prints each `nvcc` command | 4 s per CPU binary; 0 s when the code hash matches | 3 |
 | SASS only: the binary carries machine code for one compute capability | `cuobjdump --list-elf --list-ptx build/star_gpu64` | `sm_120` cubins, no PTX | 1, 3 |
 | Asking the GPU about itself | `cudaGetDeviceProperties` in `gpu_device.cu` | RTX 5070 Laptop, cc 12.0, 36 SMs | 2 |
+| cuRAND's device API: `curand_init(seed, subsequence, offset)`, `curand`, `curand_uniform(_double)`; header-only, device-only | `gpu_rng.cuh` | — | 6, 8 |
+| The same random numbers on CPU and GPU, bit for bit (counter-based RNG) | `--test-rng` on `star_gpu64` | identical for chunks 0, 1, 10⁶ + 3, 2³² + 5, FP64 and FP32 | 6, 8 |
+| Overloading + templates: one physics, two generators | `uniform(PhiloxState *)` vs `uniform(GpuRng *)` | — | 3 |
+| A first kernel launch: `<<<1, 4>>>`, `cudaMalloc`, `cudaMemcpy`, `cudaGetLastError` | `draw_first_numbers` | 19 registers | 3, 4 |
+| Name collisions from copying a library (macros are global) | `PHILOX_W32_0` vs cuRAND's | a compiler warning, renamed | (aside) |

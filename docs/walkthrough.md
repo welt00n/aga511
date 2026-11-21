@@ -24,7 +24,7 @@ A guided tour of the EP4 sequential engine, one piece at a time, with the questi
 | 15 | The driver's side: reading records, the passes check | `star.py`, `analysis.py` | done |
 | — | **Recap of pieces 10–15: what we learned, what to change before the GPU** | | done |
 | 16 | The processor split: the pass loop stops knowing which processor traces | `processor.cuh`, `cpu.cu`, `main.cu` | done |
-| 17 | Random numbers on the GPU | `gpu_rng.cuh` | |
+| 17 | Random numbers on the GPU | `gpu_rng.cuh` | done |
 | 18 | The star on the GPU: constant Scene, `GpuImage`, the kernel and its queue | `gpu.cu`, `gpu_image.cu` | |
 | 19 | The SM mask | `gpu_sms.cu` | |
 | 19b | The CPU's cores: the same queue on another processor | `cpu_cores.cu` | |
@@ -186,8 +186,8 @@ A pure function: the same counter and key always give the same four numbers. Any
 ```c
 static inline HD PhiloxCounter philox_round(PhiloxCounter counter, PhiloxKey key) {
     unsigned int high_0, high_1;
-    unsigned int low_0 = multiply_high_low(PHILOX_M4x32_0, counter.x, &high_0);
-    unsigned int low_1 = multiply_high_low(PHILOX_M4x32_1, counter.z, &high_1);
+    unsigned int low_0 = multiply_high_low(PHILOX_ROUND_MULTIPLIER_0, counter.x, &high_0);
+    unsigned int low_1 = multiply_high_low(PHILOX_ROUND_MULTIPLIER_1, counter.z, &high_1);
     PhiloxCounter mixed = {high_1 ^ counter.y ^ key.x, low_1, high_0 ^ counter.w ^ key.y, low_0};
     return mixed;
 }
@@ -232,7 +232,7 @@ Chunk 17 lives in its own region of counter space, `(anything, 17)`.
 
 ### A copy of cuRAND, checked
 
-- **Every detail matches the CUDA 13.3 headers:** the constants, the round, the counter layout, the quirky carry in `philox_skip_blocks`, the conversion to a uniform number. That is why `PHILOX_M4x32_0`, ... keep cuRAND's names.
+- **Every detail matches the CUDA 13.3 headers:** the constants, the round, the counter layout, the quirky carry in `philox_skip_blocks`, the conversion to a uniform number. The constants first kept cuRAND's names (`PHILOX_W32_0`, `PHILOX_M4x32_0`, …); in step 2 of the GPU, where `gpu.cu` includes both `rng.cuh` and `curand_kernel.h`, ours silently redefined cuRAND's macros (the compiler warned). They were renamed for what they are: `PHILOX_KEY_WEYL_0/1` (the key's increment per round: the golden ratio and √3 − 1 in 32 bits, a Weyl sequence) and `PHILOX_ROUND_MULTIPLIER_0/1`.
 - **Checked now:** `./star --test-rng` against the Random123 known answers (3/3 pass).
 - **To do, in the GPU step:** draw with real cuRAND on the GPU and compare with this copy, bit for bit.
 
@@ -1255,3 +1255,55 @@ nvcc -O2 -std=c++17 -Xcompiler -Wall -arch=native [-DSTAR_FP32] [-Xptxas -v]
 ### Checks
 
 All four CPU checks, after the split: **the same numbers as before**: split and passes bit for bit, EP2 χ²/dof = 0.9957, FP32 moves 1.2·10⁻⁴ of the photons. The refactoring changed the structure, not the results.
+
+---
+
+## Piece 17: random numbers on the GPU (`gpu_rng.cuh`, `gpu.cu`)
+
+### The generator the physics sees
+
+```c
+typedef curandStatePhilox4_32_10_t GpuRng;
+
+static inline __device__ real uniform(GpuRng *state) {
+#ifdef STAR_FP32
+    return curand_uniform(state);            // x · 2⁻³² + 2⁻³³
+#else
+    return curand_uniform_double(state);     // x · 2⁻³² + 2⁻³²  (one 32-bit draw, for Philox)
+#endif
+}
+```
+
+- **The second `uniform`:** `rng.cuh` has `uniform(PhiloxState *)` for the CPU; `gpu_rng.cuh` adds `uniform(GpuRng *)` for the GPU. `trace_photon` is a template on the generator type (piece 6), so the compiler picks the right `uniform` for each: the same physics, two generators.
+- **`__device__` only:** cuRAND's device API cannot run on the host, which is why our CPU copy exists (piece 3).
+- **Header-only:** `curand_kernel.h` brings the generator's code into our file; nothing to link.
+
+### The check: the same numbers on both, bit for bit
+
+`--test-rng` on `star_gpu64` / `star_gpu32` launches a tiny kernel, `draw_first_numbers`, one thread per chunk checked:
+
+```
+curand_init(seed, chunk, 0, &rng)       chunk = subsequence, as on the CPU
+16 × curand(&rng)                       the raw 32-bit numbers
+curand_init again; 16 × uniform(&rng)   the numbers the physics uses (FP64 or FP32)
+```
+
+and compares each with `rng.cuh` on the host (the uniforms with `memcmp`, so bit for bit, not "close"):
+
+```
+GPU_SEED_42_CHUNK_0=9ceaf053,77f5493b,12bf50ad,5742b3d7,fcdb2127,53ba6cfd,838f5a6e,744e06fb
+GPU_RNG_CHUNK=0 BITS=SAME_AS_CPU UNIFORMS=SAME_AS_CPU
+GPU_RNG_CHUNK=1 BITS=SAME_AS_CPU UNIFORMS=SAME_AS_CPU
+GPU_RNG_CHUNK=1000003 BITS=SAME_AS_CPU UNIFORMS=SAME_AS_CPU
+GPU_RNG_CHUNK=4294967301 BITS=SAME_AS_CPU UNIFORMS=SAME_AS_CPU
+```
+
+- **Chunk 4 294 967 301 = 2³² + 5:** the subsequence no longer fits one 32-bit word of the counter, so it spills into the next one (`philox_skip_subsequences`). The same on both: the copy matches cuRAND even there.
+- **The GPU's chunk 0 = `SEED_42_CHUNK_0` printed by the CPU** since phase B: the number we wrote down then is now confirmed on the hardware.
+- **This is what makes "GPU = CPU" possible** (step 3): any difference left will come from the arithmetic, not from the random numbers.
+
+### Found on the way
+
+- **A macro collision:** our constants kept cuRAND's names; with both headers in `gpu.cu`, ours redefined cuRAND's (the compiler warned). Renamed `PHILOX_KEY_WEYL_0/1` and `PHILOX_ROUND_MULTIPLIER_0/1` (piece 3 updated).
+- **218 048 bytes of global memory** in the compiler's report for `gpu.cu`: most likely cuRAND's precomputed tables for its *other* generators (XORWOW, MRG32k3a), which `curand_kernel.h` brings in even though Philox needs none. Philox is counter-based: it skips ahead by arithmetic, not with tables.
+- **The test kernel:** 19 registers, no stack, no spills.

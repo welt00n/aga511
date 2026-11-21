@@ -1,0 +1,6 @@
+4 observers in 1 pass vs 4 passes of 1 observer
+  N = 1e+07, 200x200 pixels, 150 frames, nmu = odd nearest frames/pi, observers at 1.5708, 1.0472, 0.5236, 0 rad, 3 spots
+  1 pass:   CPU 64-bit, 1e+07 photons, 1 pass(es), in 1.176 s (8.51e+06 photons/s); setup 0.032 s, zero 0.003 s, copy 0.000 s, save 0.172 s; recorded 843339 (8.43%), blocked by spots 41308
+  4 passes: CPU 64-bit, 1e+07 photons, 4 pass(es), in 3.900 s (1.03e+07 photons/s); setup 0.008 s, zero 0.003 s, copy 0.000 s, save 0.128 s; recorded 843339 (8.43%), blocked by spots 41308
+  counts: the same
+  images: IDENTICAL, bit for bit

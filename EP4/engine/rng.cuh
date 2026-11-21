@@ -3,10 +3,10 @@
 
 #include "real.cuh"
 
-#define PHILOX_W32_0   (0x9E3779B9u)
-#define PHILOX_W32_1   (0xBB67AE85u)
-#define PHILOX_M4x32_0 (0xD2511F53u)
-#define PHILOX_M4x32_1 (0xCD9E8D57u)
+#define PHILOX_KEY_WEYL_0         (0x9E3779B9u)
+#define PHILOX_KEY_WEYL_1         (0xBB67AE85u)
+#define PHILOX_ROUND_MULTIPLIER_0 (0xD2511F53u)
+#define PHILOX_ROUND_MULTIPLIER_1 (0xCD9E8D57u)
 
 #define TWO_POW_MINUS_32_FLOAT  (2.3283064e-10f)
 #define TWO_POW_MINUS_32_DOUBLE (2.3283064365386963e-10)
@@ -29,8 +29,8 @@ static inline HD unsigned int multiply_high_low(unsigned int a, unsigned int b, 
 
 static inline HD PhiloxCounter philox_round(PhiloxCounter counter, PhiloxKey key) {
     unsigned int high_0, high_1;
-    unsigned int low_0 = multiply_high_low(PHILOX_M4x32_0, counter.x, &high_0);
-    unsigned int low_1 = multiply_high_low(PHILOX_M4x32_1, counter.z, &high_1);
+    unsigned int low_0 = multiply_high_low(PHILOX_ROUND_MULTIPLIER_0, counter.x, &high_0);
+    unsigned int low_1 = multiply_high_low(PHILOX_ROUND_MULTIPLIER_1, counter.z, &high_1);
     PhiloxCounter mixed = {high_1 ^ counter.y ^ key.x, low_1, high_0 ^ counter.w ^ key.y, low_0};
     return mixed;
 }
@@ -38,8 +38,8 @@ static inline HD PhiloxCounter philox_round(PhiloxCounter counter, PhiloxKey key
 static inline HD PhiloxCounter philox4x32_10(PhiloxCounter counter, PhiloxKey key) {
     for (int round = 0; round < 9; round++) {
         counter = philox_round(counter, key);
-        key.x += PHILOX_W32_0;
-        key.y += PHILOX_W32_1;
+        key.x += PHILOX_KEY_WEYL_0;
+        key.y += PHILOX_KEY_WEYL_1;
     }
     return philox_round(counter, key);
 }

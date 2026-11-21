@@ -4,7 +4,6 @@
 #include "real.cuh"
 #include "geometry.cuh"
 #include "scene.cuh"
-#include "rng.cuh"
 
 #define PHOTON_BLOCKED_BY_SPOT (-1LL)
 #define PHOTON_MISSES_OBSERVERS (-2LL)

@@ -1,4 +1,5 @@
 import argparse
+import functools
 import glob
 import hashlib
 import os
@@ -13,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ENGINE_FOLDER = os.path.join(HERE, "engine")
 BUILD_FOLDER = os.path.join(ENGINE_FOLDER, "build")
 NVCC = "/usr/local/cuda/bin/nvcc"
-SHARED_SOURCES = ["main.cu", "options.cu", "scene.cu", "observers.cu", "image.cu", "report.cu"]
+SHARED_SOURCES = ["main.cu", "options.cu", "scene.cu", "observers.cu", "image.cu", "report.cu", "rng_test.cu"]
 PROCESSOR_SOURCES = {"cpu": ["cpu.cu"], "gpu": ["gpu.cu", "gpu_device.cu"]}
 PROCESSORS = ("cpu", "gpu")
 PRECISIONS = (64, 32)
@@ -48,6 +49,7 @@ def engine_sources():
     return sorted(glob.glob(os.path.join(ENGINE_FOLDER, "*.cu")) + glob.glob(os.path.join(ENGINE_FOLDER, "*.cuh")))
 
 
+@functools.cache
 def code_hash():
     digest = hashlib.sha256()
     for path in engine_sources():
@@ -57,6 +59,7 @@ def code_hash():
     return digest.hexdigest()[:12]
 
 
+@functools.cache
 def nvcc_version():
     return subprocess.run([NVCC, "--version"], capture_output=True, text=True).stdout
 
@@ -81,6 +84,7 @@ def write_text(path, text):
         file.write(text + "\n")
 
 
+@functools.cache
 def build_engine(processor="cpu", precision=64, architecture="native", verbose=False):
     command = nvcc_command(processor, precision, architecture)
     binary = binary_path(processor, precision)

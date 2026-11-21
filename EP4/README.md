@@ -83,7 +83,9 @@ Each run gets a folder in `runs/`: `run.json` and the gifs for a simulation, `re
 | `engine/cpu.cu` | the CPU as a processor: the chunk loop with our Philox copy |
 | `engine/gpu.cu` | the GPU as a processor (being built) |
 | `engine/gpu_device.cuh`, `gpu_device.cu` | the GPU itself: CUDA errors, properties, name, compute capability, SMs |
-| `engine/main.cu` | the pass loop, phase timings, the RNG test |
+| `engine/main.cu` | the pass loop and its phase timings |
+| `engine/rng_test.cuh`, `rng_test.cu` | `--test-rng`: Random123's known answers, and on the GPU cuRAND vs our copy |
+| `engine/gpu_rng.cuh` | cuRAND's Philox as the physics' generator on the GPU |
 | `engine.py` | building the engines (no Makefile) and talking to them: run, `--describe`, records |
 | `star.py`, `analysis.py` | the command line: runs with pictures, the checks; images and comparisons |
 

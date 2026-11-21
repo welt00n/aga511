@@ -29,17 +29,18 @@ main.cu: options → scene → observers → for each pass:
 
 | File | New / changed | What it holds |
 |---|---|---|
-| `processor.cuh` | **new** | the interface of a processor: `open_processor`, `load_pass`, `zero_pass_image`, `trace_pass`, `observer_on_host`, `describe_device`, `compare_device_rng`, `close_processor`. `Processor` is opaque (each implementation defines it) |
+| `processor.cuh` | **new** | the interface of a processor: `open_processor`, `load_pass`, `zero_pass_image`, `trace_pass`, `observer_on_host`, `processor_image_bytes`, `describe_processor` (fills a `ProcessorInfo`), `compare_rng_with_cpu`, `close_processor`. `Processor` is opaque (each implementation defines it) |
 | `cpu.cu` | **new** (moved from `main.cu`) | the CPU as a processor: `Image`, `PhiloxState`, `simulate_chunk`, `simulate_chunks`, progress. Today's loop, moved, not rewritten |
 | `cpu_cores.cu` | **new** (step 5b) | the CPU's cores: one thread per allowed core, taking chunks from the same queue as the GPU ([hpc_architecture.md §3](hpc_architecture.md#3-one-design-at-every-level-the-work-queue)) |
 | `gpu.cu` | **new** | the GPU as a processor: the Scene in `__constant__` memory, the kernel `trace_photons`, the queue (`take_next_chunk`, `take_chunks_until_none_left`), `choose_launch`, `run_kernel`, `GpuCounters` |
 | `gpu_image.cuh`, `gpu_image.cu` | **new** | `GpuImage` in device memory: `allocate_gpu_image`, `zero_gpu_image` (`cudaMemset`), `copy_observer_to_host` (`cudaMemcpy` into a host buffer of one observer), `free_gpu_image`; `count_photon_atomic` (`atomicAdd`) |
 | `gpu_rng.cuh` | **new** | cuRAND's Philox as `trace_photon`'s generator: `uniform(curandStatePhilox4_32_10_t *)`, the GPU twin of `rng.cuh`'s `uniform(PhiloxState *)` |
 | `gpu_sms.cuh`, `gpu_sms.cu` | **new** | choosing the SMs, as EP3: `sm_id` (`%smid`), `list_sm_ids`, `allow_first_sms`, `resolve_sm_count`, `is_allowed` |
-| `gpu_device.cuh`, `gpu_device.cu` | **new** | the GPU itself: `check` (CUDA errors), properties, name (spaces → `_`), compute capability, free memory, runtime and driver versions → a `DeviceInfo` |
-| `main.cu` | changed | the pass loop calls the processor; `--test-rng` adds `compare_device_rng` |
-| `run.cuh` | changed | `DeviceInfo` (the device's name, compute capability, SMs, launch, versions, memory) replaces the `DEVICE_NAME` constant; `PassTimes` gains `copy` |
-| `report.cu` | changed | prints the `DeviceInfo` keys and `COPY_TIME` |
+| `gpu_device.cuh`, `gpu_device.cu` | **new** | the GPU itself: `check` (CUDA errors), properties, name (spaces → `_`), compute capability, free memory, runtime and driver versions → a `ProcessorInfo` |
+| `main.cu` | changed | only the pass loop, calling the processor |
+| `rng_test.cuh`, `rng_test.cu` | **new** (moved from `main.cu`) | `--test-rng`: the Random123 known answers, chunk 0's first numbers, and the processor's `compare_rng_with_cpu` |
+| `run.cuh` | changed | `ProcessorInfo` (kind, name, compute capability, compute units, unit; more in steps 4–5) replaces the `DEVICE_NAME` constant; `PassTimes` gains `copy` |
+| `report.cu` | changed | prints the `ProcessorInfo` keys and `COPY_TIME` |
 | `options.cu` | changed | `--sms N` (GPU) and `--cores N` (CPU): the compute units allowed; each processor refuses the other's |
 | `image.cuh`, `image.cu` | changed | saving takes a block of counts (`save_counts`, `photons_in`), so the GPU's host buffer and the CPU's image are saved by the same code |
 | `Makefile` | **removed** | the build moves to `engine.py` (section 3) |
@@ -70,7 +71,7 @@ This is the first slice of the driver of [driver.md §8](driver.md#8-modules): `
 | `star_gpu64_sections`, `star_gpu32_sections` | the same | `-DSTAR_SECTION_TIMERS`: cycles per piece of the photon ([hpc_architecture.md §8](hpc_architecture.md#no-nsight-needed-decided-2026-11-21)); never used for timing the sweeps |
 
 ```
-shared  = main.cu options.cu scene.cu observers.cu image.cu report.cu
+shared  = main.cu options.cu scene.cu observers.cu image.cu report.cu rng_test.cu
 command = nvcc -O2 -std=c++17 -Xcompiler -Wall <architecture> [-DSTAR_FP32] <sources> -o build/<binary>
 ```
 
@@ -116,7 +117,7 @@ trace_photons (one per thread, persistent):
 
 ## 5. The output, new keys
 
-- `DEVICE` = the GPU's name with `_` for spaces (`NVIDIA_GeForce_RTX_5070_Laptop_GPU`), or `CPU`.
+- `PROCESSOR` = `CPU` or `GPU`; `PROCESSOR_NAME` = its name with `_` for spaces (`NVIDIA_GeForce_RTX_5070_Laptop_GPU`); `COMPUTE_UNITS` and `UNIT` (`core` or `sm`). *(built in step 1)*
 - `COMPUTE_CAPABILITY`, `SMS` (allowed), `SMS_USED` (seen by the kernel), `SM_COUNT`, `BLOCKS`, `THREADS_PER_BLOCK`, `REGISTERS_PER_THREAD`, `CYCLES` (the slowest block, as EP3), `CUDA_RUNTIME`, `CUDA_DRIVER`, `GPU_FREE_BYTES` (`none` or 0 on the CPU).
 - `COPY_TIME` per pass and in the summary (0 on the CPU).
 - In the records too, so a GPU result says which GPU made it.
