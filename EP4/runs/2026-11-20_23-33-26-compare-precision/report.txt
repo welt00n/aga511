@@ -1,0 +1,7 @@
+FP32 vs FP64, same seed: the same random numbers, so the same photons
+  N = 1e+08, 200x200 pixels, nphi = 150, nmu = 150, 4 observers, 3 spots
+  FP64: 1e+08 photons in 10.030 s (9.97e+06 photons/s); setup 0.039 s, save 0.042 s; recorded 2652017 (2.65%), blocked by spots 411940
+  FP32: 1e+08 photons in 6.346 s (1.58e+07 photons/s); setup 0.040 s, save 0.045 s; recorded 2652017 (2.65%), blocked by spots 411941
+  speed FP32 / FP64: 1.58
+  photons that land in another pixel in FP32: 5.01e-04
+  Poisson noise per lit pixel (frames summed): 2.19e-01
