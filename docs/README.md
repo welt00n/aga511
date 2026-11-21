@@ -6,6 +6,14 @@ This file is the **index**: every topic gets a short description, what caught ou
 
 Status tags: **[decided]** a choice made for EP4 · **[measured]** checked on this machine · **[to explore]** not done yet.
 
+**Documents in this folder:**
+
+- [walkthrough.md](walkthrough.md): the EP4 engine, piece by piece, with the questions asked along the way.
+- [precision.md](precision.md): FP64, FP32, FP16, random bits, and the deep dive on `sine_from_cosine`.
+- [gpus.md](gpus.md): the laptop GPU and the IAG A30 side by side, predictions, questions for IAG.
+- [experiments/](experiments/) and [figures/](figures/): small scripts behind the measurements, and their plots.
+- For the class: [../cuda_class/class_plan.md](../cuda_class/class_plan.md), [../cuda_class/nsight.md](../cuda_class/nsight.md).
+
 ---
 
 ## 1. The course and the deliverable
@@ -114,6 +122,11 @@ Status tags: **[decided]** a choice made for EP4 · **[measured]** checked on th
   - GPU performance counters need permission on Windows (NVIDIA Control Panel / App → Developer → Manage GPU Performance Counters → allow all users), otherwise `ERR_NVGPUCTRPERM`.
   - Some nsys system-level features are limited under WSL.
   - The Windows GUIs open the report files.
+- **First profile: EP3's Buffon in `nsys`.** **[measured]** Full notes for the class: [`../cuda_class/nsight.md`](../cuda_class/nsight.md).
+  - The kernel took 1.4794 s on the GPU's clock vs 1.4795 s on EP3's own timer: the cheap timer is right.
+  - The serial part (~0.15 s) is CUDA context creation: 154 ms between the first CUDA call and the first `cudaMalloc`, ~400 `ioctl` calls into the driver. Allocations, copies and launches together take ~3 ms.
+  - `nsys` added ~0.4 s at start-up but did not change the kernel time.
+  - `ncu` failed with `ERR_NVGPUCTRPERM`: the counters must be enabled on Windows first. **[to do]**
 - **"Don't record" switch.** Run the same photons without writing the image, to measure what recording costs. **[decided]**
 
 ## 10. Libraries
@@ -142,6 +155,11 @@ Full notes: [precision.md](precision.md).
 - **FP16 cannot represent the image geometry.** Its spacing is ~10⁻³ vs a 2·10⁻³ pixel.
 - **EP4.** The physics is written on a `real` type (FP64 by default, FP32 with `-DSTAR_FP32`), with FP64 as the reference. FP32-friendly formulas are used from the start. FP32 vs FP64 is to be measured (χ² per pixel and speed). **[decided]**
 - **Prediction.** The FP64/FP32 speed gap will be bigger for the star than for Buffon (closer to 64×), because the star uses more FP64 math functions. **[to measure]**
+- **`sine_from_cosine`.** **[measured]** Details in [precision.md §8](precision.md#8-deep-dive-sine_from_cosine-and-the-fp32-correction).
+  - `(1 − c)(1 + c)` vs `1 − c²` in FP32: worst case 1.0·10⁻⁷ vs 4.3·10⁻⁵.
+  - In the star the two give the same images.
+  - The real FP32 hot spot is the projection at the pole observers (~30× more photons change pixel), a coordinate singularity.
+- **On the IAG A30, FP64 costs only ~2× FP32** (vs 64× on the laptop). The precision trade-off flips between GPUs. See [gpus.md](gpus.md). **[to measure]**
 - **First measurement, CPU, N = 10⁸.** **[measured]**
   - Same photons in FP32 and FP64; 5·10⁻⁴ of them land in a different pixel or bin.
   - The Poisson noise per lit pixel is 0.22, hundreds of times larger.

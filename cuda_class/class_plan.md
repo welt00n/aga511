@@ -36,6 +36,10 @@ A ideia geral: **história → fundamentos → modelo de programação → Buffo
 | 9 | **A estrela: resultados** | o que estiver pronto: o vídeo, os speedups, o perfil | - | o vídeo, gráficos |
 | 10 | **Fechamento** | para que a GPU serve, para que não serve, o que aprendemos | as três lições | - |
 
+## Material pronto
+
+- [`nsight.md`](nsight.md): como o `nsys` e o `ncu` funcionam, e o Buffon perfilado (linha do tempo em [`profiling/`](profiling/)). Para o bloco 7, ao vivo. Achado principal: a parte serial do Buffon (~0,15 s) é a criação do contexto CUDA.
+
 ## Técnicas de ensino
 
 - **Prever, depois medir.** Antes de cada resultado, a turma chuta (o speedup em 36 SMs? FP32 vs FP64?). Depois, a medida. Mantém a sala pensando, e os nossos dados são reais.
@@ -61,3 +65,4 @@ A ideia geral: **história → fundamentos → modelo de programação → Buffo
 
 - 2026-11-20: plano criado. Roteiro a partir da primeira ideia: história, fundamentos, Programming Guide, conceitos do Buffon, Buffon, conceitos da estrela, estrela.
 - 2026-11-20: idioma definido: português.
+- 2026-11-21: Buffon perfilado com `nsys`; `ncu` aguarda liberar os contadores de desempenho no Windows.
