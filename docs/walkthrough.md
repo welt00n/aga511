@@ -2,18 +2,28 @@
 
 A guided tour of the EP4 sequential engine, one piece at a time, with the questions that came up on the way. Code: [`../EP4/engine/`](../EP4/engine/).
 
+- **Pieces 1–9** describe the engine of phase B (commit `d945e97`).
+- **Pieces 10–15** describe what phase C added or changed: passes, observers in radians, one file per observer ([roadmap.md](roadmap.md)). Where they change pieces 7–9, they say so.
+
 | # | Piece | File(s) | Status |
 |---|---|---|---|
 | 1 | One run from start to finish | `main.cu` | done |
 | 2 | The `real` type and `HD` | `real.cuh` | done |
 | 3 | Random numbers: Philox | `rng.cuh` | done (the *how* of the rounds: to revisit); C++ syntax and headers in [cpp_for_python.md](cpp_for_python.md) |
 | 4 | Chunks: dividing the work | `main.cu` | done |
-| 5 | The Scene: the star, prepared once | `scene.cuh`, `scene.cu` | |
-| 6 | One photon: the physics | `photon.cuh` | |
-| 7 | The image and the timings | `image.cu`, `main.cu` | |
-| 8 | The command line | `options.cu` | |
-| 9 | The driver and the three checks | `star.py`, `analysis.py` | |
-| 10 | Docs and the class plan | `docs/`, `cuda_class/` | |
+| 5 | The Scene: the star, prepared once | `scene.cuh`, `scene.cu` | done |
+| 6 | One photon: the physics | `photon.cuh` | done |
+| 7 | The image and the timings | `image.cu`, `main.cu` | done |
+| 8 | The command line | `options.cu` | done |
+| 9 | The driver and the three checks | `star.py`, `analysis.py` | done |
+| 10 | A run with passes, from start to finish | `main.cu` | done |
+| 11 | Observers: inclination → μ bin → file name; why `nmu` is odd | `observers.cu`, `options.cu` | done |
+| 12 | Choosing K: observers per pass and the memory budget | `options.cu` | done |
+| 13 | The image per pass: layout, zeroing, saving one observer, `.partial` then rename | `image.cu`, `files.cuh`, `photon.cuh` | done |
+| 14 | What the engine tells: `PROGRESS`, `PASS`, `SUMMARY`, the records | `report.cu`, `run.cuh` | done |
+| 15 | The driver's side: reading records, the passes check | `star.py`, `analysis.py` | done |
+| — | **Recap of pieces 10–15: what we learned, what to change before the GPU** | | done |
+| 16 | Docs and the class plan | `docs/`, `cuda_class/` | |
 
 ---
 
@@ -328,3 +338,843 @@ The order of chunks does not matter because every chunk is self-contained and th
   - Laptop: ~55 000 threads, so N ≳ 6·10⁷ to give each one a chunk.
   - A30: ~115 000 threads, so N ≳ 10⁸.
 - **It must stay fixed** across runs we compare: a different chunk size means different photons.
+
+### Questions on piece 4
+
+**Will `count_photon` handle both the host image and the device image?**
+
+No. Today it is host-only (`counts[pixel]++` on RAM). We chose to keep the physics shared and give each side its own recording:
+
+- **CPU:** `Image` + `count_photon`.
+- **GPU:** `DeviceImage` + `count_photon_atomic` (`atomicAdd`), allocated with `cudaMalloc` and copied back at the end.
+
+Separate types make the compiler reject a RAM image passed to the kernel; a single `HD` function branching on `__CUDA_ARCH__` would hide the atomic and allow that mistake. Details in [README §3](README.md#3-memory).
+
+---
+
+## Piece 5: the Scene, the star prepared once (`scene.cuh`, `scene.cu`)
+
+### What it holds
+
+```c
+typedef struct {
+    real linear_branch_probability;      // limb darkening: 3 / (3 + 2a)
+    unsigned int spot_count;
+    Vec3 spot_centers[MAX_SPOTS];        // unit vectors
+    real umbra_chord_squared;            // spot core:   2 (1 - cos r_umbra)
+    real penumbra_chord_squared;         // spot edge:   2 (1 - cos r_penumbra)
+    real penumbra_escape_probability;    // 0.6, as in EP2
+    unsigned int nx, ny, nphi, nmu, observers;
+    int observer_of_imu[MAX_NMU];        // imu → observer, or NOT_AN_OBSERVER
+} Scene;
+```
+
+Everything a photon needs to read, and nothing it writes.
+
+- **No pointers, fixed size** (arrays sized by `MAX_SPOTS = 64` and `MAX_NMU = 4096`, ~17 KB).
+  - On the GPU it is copied in one `cudaMemcpyToSymbol` into **constant memory** (64 KB, cached, broadcast when every thread of a warp reads the same address, which is what happens here).
+  - A struct with pointers inside would need each pointed-to array copied separately, with GPU addresses fixed up by hand.
+- **`StarConfig` vs `Scene`:** `StarConfig` is what the user asked for (radii in radians, `a`, counts); `Scene` is what the photon loop needs, already transformed (chords, probabilities, a lookup table).
+
+### Computed once instead of once per photon
+
+| EP2, per photon | EP4, once in `build_scene` |
+|---|---|
+| `cos(spot.inner_radius)`, `cos(spot.outter_radius)` for each spot | `umbra_chord_squared`, `penumbra_chord_squared` |
+| `3.0 / (3.0 + 2.0 * a)` | `linear_branch_probability` |
+| a loop searching the observer list for `imu` | `observer_of_imu[imu]`, one lookup |
+
+### Spots by squared chord
+
+For two unit vectors p and c at angle α: |p − c|² = 2(1 − cos α). So "angle < r" is the same as "|p − c|² < 2(1 − cos r)".
+
+- **The threshold** 2(1 − cos r) is computed once.
+- **Per photon** it is three subtractions, three multiplications, two additions: no `cos`, no `acos`.
+- **Accurate in FP32:** the difference of two nearby vectors keeps its digits, while comparing two cosines near 1 loses them ([precision.md §4](precision.md#4-where-precision-actually-bites)).
+
+### Placing the spots
+
+```c
+static int place_spots(const StarConfig *config, Scene *scene) {
+    PhiloxState rng;
+    philox_init(config->seed, SPOTS_SUBSEQUENCE, 0, &rng);
+    for (unsigned int placed = 0; placed < config->spots; placed++) {
+        ...
+        do {
+            candidate = random_point_on_sphere(&rng);
+        } while (overlaps_placed_spots(candidate, scene, placed, config->penumbra_radius));
+        scene->spot_centers[placed] = candidate;
+    }
+}
+```
+
+- **Their own random stream:** subsequence `SPOTS_SUBSEQUENCE = 2⁶⁴ − 1`, which no photon chunk ever reaches. Every run with the same seed, whatever its chunk range, places the same spots. That is what makes partial runs add up to the same star.
+- **Rejection sampling:** draw a point, retry while it overlaps a placed spot (centers closer than twice the penumbra radius, as in EP2). A limit of 100 000 attempts stops impossible requests (too many or too large spots) with an error instead of looping forever.
+- **In FP64 always**, even in the FP32 build: it runs once, on the CPU, so there is no reason to lose precision.
+
+### The observer table
+
+```c
+observer_imu(observer) = observer * (nmu - 1) / (observers - 1)   // as in EP2: spread over imu
+observer_of_imu[imu]   = observer, or NOT_AN_OBSERVER (-1)
+```
+
+- With 4 observers and nmu = 150: imu = 0, 49, 99, 149. Observers 0 and 3 are the poles (within ~9° of the axis), 1 and 2 at intermediate latitudes.
+- **An error instead of a silent loss:** if two observers fall in the same μ bin (more observers than bins), EP2 silently gave one of them no photons; EP4 stops with a message.
+
+### Validation
+
+`validate_config` checks limits before anything is built: at most 64 spots, nmu ≤ 4096, 1 ≤ observers ≤ nmu, umbra ≤ penumbra. Functions return `0` or `-1` (the C convention), print why, and `main` exits with status 1.
+
+---
+
+## Piece 6: one photon, the physics (`photon.cuh`)
+
+`trace_photon` is the professor's algorithm, step by step, each step a small function:
+
+```c
+template <typename Rng>
+static inline HD long long trace_photon(const Scene *scene, Rng *rng) {
+    SurfacePoint point = sample_surface_point(rng);                    // 1. where
+    Vec3 direction = sample_emission_direction(scene, point, rng);     // 2. which way
+    if (!escapes_spots(scene, point.position, rng)) {                  // 3. spots
+        return PHOTON_BLOCKED_BY_SPOT;
+    }
+    ObserverBin bin = observer_bin(scene, direction);                  // 4. who sees it
+    int observer = scene->observer_of_imu[bin.imu];
+    if (observer == NOT_AN_OBSERVER) {
+        return PHOTON_MISSES_OBSERVERS;
+    }
+    return (long long) pixel_index(scene, point.position, direction, bin, observer);   // 5. where on the image
+}
+```
+
+Random draws, in order (the same order as EP2): z, φ, ξ_μ, ξ_branch, φ_local, and one more only inside a penumbra.
+
+### 1. A point on the surface: `sample_surface_point`
+
+```c
+real z = 2 * uniform(rng) - 1;
+real phi = TWO_PI * uniform(rng);
+point.ring_radius = sine_from_cosine(z);     // r = sqrt(1 - z²)
+point.position = (r cos φ, r sin φ, z)
+```
+
+- **Why z uniform and not the latitude.** On a sphere, equal steps in z cover equal areas (Archimedes: a sphere and its circumscribed cylinder have the same area between two heights). Drawing the latitude uniformly would crowd points at the poles.
+- **`cos φ`, `sin φ` and `r` are kept** in `SurfacePoint`: step 2 needs them, and EP2 recomputed them (with an `atan2`) for every photon.
+
+### 2. The emission direction: `sample_emission_mu` + `sample_emission_direction`
+
+**μ = cos θ, the angle between the photon and the surface normal.**
+
+- **The intensity** is I(μ) = I₀(1 + aμ) (limb darkening).
+- **The flux through the surface** has one more factor μ (projected area), so p(μ) ∝ μ + aμ² on [0, 1].
+- **The professor's slides** suggest inverting the cumulative distribution (a quadratic-cubic equation), or rejection. EP2 found a simpler way: p(μ) is a **mixture** of two densities that are easy to sample by inversion:
+
+| Density | Normalized | Cumulative | Inversion | Weight |
+|---|---|---|---|---|
+| ∝ μ | 2μ | μ² | μ = √ξ | (1/2) / (1/2 + a/3) = 3 / (3 + 2a) |
+| ∝ aμ² | 3μ² | μ³ | μ = ∛ξ | the rest |
+
+```c
+return xi_branch < scene->linear_branch_probability ? real_sqrt(xi_mu) : real_cbrt(xi_mu);
+```
+
+One uniform number picks the branch, another is inverted. With a = 1: 60% √ξ, 40% ∛ξ. Both are exact samples, no rejection.
+
+**φ_local**, the azimuth around the normal, is uniform in [0, 2π].
+
+**From the local frame to the star's frame.** (μ, φ_local) are angles relative to the surface normal at the point; the direction (u, v, w) must be in the star's (x, y, z). The rotation is EP2's (written out by hand, not a matrix):
+
+```c
+radial = sin θ · z · cos φ_local + μ · r
+u = −sin θ · sin φ · sin φ_local + cos φ · radial
+v =  sin θ · cos φ · sin φ_local + sin φ · radial
+w =  μ · z − r · sin θ · cos φ_local
+```
+
+Check: with sin θ = 0 (emitted along the normal), (u, v, w) = μ(r cos φ, r sin φ, z) = the position, which is the outward normal of a unit sphere.
+
+### 3. Spots: `escapes_spots`
+
+```c
+real distance = distance_squared(position, scene->spot_centers[i]);
+if (distance < scene->umbra_chord_squared)    return false;                                   // core: no photon
+if (distance < scene->penumbra_chord_squared) return uniform(rng) <= penumbra_escape_probability;  // edge: 60% escape
+```
+
+- Spots do not overlap, so at most one contains the point; the first match decides.
+- The penumbra is a **probability**, not a dimmer intensity: each photon has a 60% chance to escape. Over many photons, the penumbra looks 60% as bright.
+
+### 4. Who sees it: `observer_bin`
+
+```c
+azimuth = atan2(v, u), moved into [0, 2π)
+iphi = bin_index(azimuth / 2π, nphi)
+imu  = bin_index((w + 1) / 2, nmu)
+```
+
+- **Two binnings of the direction:** azimuth into nphi bins (the frames of the rotation video), μ = w into nmu bins (latitudes, equal solid angles).
+- **`bin_index` is safe at the edges.**
+  - A value just below 0 (rounding) or exactly 1 is clamped into the first or last bin, never out of the array.
+  - `!(fraction > 0)` also catches NaN.
+- **Checked before the pixel:** ~97% of photons fly toward no observer, so the expensive projection is skipped for them.
+
+### 5. Where on the image: `pixel_index`
+
+The professor's projection: rotate the star's frame about z by the observer's azimuth, then tilt it so x'' points at the observer. y'' and z'' are then the coordinates on the observer's sky (the impact parameter).
+
+```c
+root = sine_from_cosine(w)          // the professor's "raiz"
+if (root == 0) { zpp = −x; ypp = y; }                 // looking straight down a pole
+else {
+    cf = u / root;  sf = v / root;                    // cos and sin of the observer's azimuth
+    ypp = −sf·x + cf·y
+    zpp = −(cf·x + sf·y)·w + z·root
+}
+ix = bin_index((ypp + 1) / 2, nx);   iy = bin_index((zpp + 1) / 2, ny);
+pixel = ((iphi · observers + observer) · ny + iy) · nx + ix      // layout [iphi][observer][iy][ix]
+```
+
+- **The sky plane** of a unit star spans [−1, 1] in both axes, mapped to [0, 1) and then to pixels.
+- **Near the poles,** `root` is small and dividing by it amplifies rounding. That is the FP32 hot spot we measured ([precision.md §8.5](precision.md#85-inside-the-star-does-it-matter)).
+- **The layout:** all frames of one observer are interleaved by `iphi`, and each frame is one contiguous `ny × nx` picture.
+
+### The return value
+
+One `long long` carries everything:
+
+- **≥ 0:** the pixel index;
+- **`PHOTON_BLOCKED_BY_SPOT` (−1)** or **`PHOTON_MISSES_OBSERVERS` (−2)** otherwise.
+
+The caller counts and records. `trace_photon` writes nothing, so the GPU can change how photons are recorded without touching the physics.
+
+### Questions on piece 6
+
+**What does "chord" mean in `umbra_chord_squared`?**
+
+- **A chord** is the straight segment between two points on a circle or sphere, cutting through the inside, as opposed to the **arc**, which goes along the surface. The word comes from Greek *chordē*, a string, like a string stretched between two points on a bow.
+- **For the spots:** the arc between the photon's point p and the spot center c is the angle α (on a unit sphere, arc length = angle). The chord is the straight distance |p − c|.
+- **Arc and chord grow together,** so "angle < r" is the same test as "chord < chord of r", and the chord is much cheaper.
+- **Chord squared, by the law of cosines** (two sides of length 1, angle α between them):
+
+  |p − c|² = |p|² + |c|² − 2 p·c = 1 + 1 − 2 cos α = **2(1 − cos α)** = 4 sin²(α/2)
+
+  So `umbra_chord_squared = 2(1 − cos r_umbra)` is the squared straight-line distance from a spot's center to the edge of its core.
+- **Why squared:** it skips a square root per photon, and comparing squares gives the same answer as comparing distances (both are positive).
+
+---
+
+## Piece 7: the image and the timings (`image.cuh`, `image.cu`, `main.cu`)
+
+### The image
+
+```c
+typedef struct {
+    unsigned int *counts;    // one uint32 per pixel, in RAM
+    size_t pixels;           // nx · ny · nphi · observers
+} Image;
+```
+
+- **One flat array, not a 4D one.** C has no built-in multidimensional dynamic arrays. The four indices are folded into one by hand in `pixel_index`: `((iphi · observers + observer) · ny + iy) · nx + ix`. NumPy does the same internally, so `reshape(nphi, observers, ny, nx)` in Python reads the file back as 4D for free.
+- **`size_t`:** the unsigned integer type for sizes and memory offsets (64 bits here). Sizes in bytes pass the 32-bit limit quickly: the Max image (1024², 360 frames, 4 observers) is 6 GB, more than a 32-bit `int` (2.1·10⁹) can hold.
+- **`uint32` per pixel:** a pixel would need 4·10⁹ photons to overflow. EP2's default image is 96 MB; HD is 1.5 GB.
+
+### Allocating: `malloc` + `memset`, not `calloc`
+
+```c
+image->counts = (unsigned int *) malloc(image_bytes(image));
+memset(image->counts, 0, image_bytes(image));  // not calloc: zero every page now, inside the timed setup
+```
+
+- **`malloc(bytes)`** reserves memory without initializing it; `memset` fills it with zeros.
+- **`calloc` would do both in one call**, and for big blocks it looks free. The operating system hands out pages that are only mapped and zeroed **the first time they are touched**.
+  - So the real cost would move into the photon loop, as page faults the first time each page is written.
+  - It would be counted as parallel time.
+- **`memset` touches every page during setup,** where the cost belongs: serial time, for Amdahl's law.
+- The one comment left in this file is there because this decision is invisible otherwise.
+
+### Recording, saving, freeing
+
+- **`count_photon(image, pixel)`:** `counts[pixel]++`. Inline in the header because it runs once per recorded photon. The GPU gets its own `count_photon_atomic` ([decision](README.md#3-memory)).
+- **`save_image`:** `fwrite` of the raw array, no header and no format: just `pixels × 4` bytes. The configuration that gives it meaning goes in the `KEY=VALUE` line and in the driver's `run.json`. `fclose` is checked too, because buffered data is only flushed to disk there and a full disk shows up as an error at that point.
+- **`free_image`:** gives the memory back and sets the pointer to `NULL`, so a second free or a late use fails clearly instead of silently.
+
+### The timings
+
+```c
+static double now_in_seconds(void) {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return t.tv_sec + t.tv_nsec / 1e9;
+}
+```
+
+- **`CLOCK_MONOTONIC`, not the wall clock (`CLOCK_REALTIME`):** it never jumps backwards or forwards when the system adjusts its time (NTP, daylight saving). It is made for measuring intervals.
+- **Read 6 times per run**, never per photon.
+
+| Phase | Includes | Amdahl |
+|---|---|---|
+| `SETUP_TIME` | `build_scene` (spots, table) + allocating and zeroing the image | serial |
+| `PHOTONS_TIME` | the chunk loop | parallel |
+| `SAVE_TIME` | writing the image to disk | serial |
+| `TIME` | everything from the start of `main`, including option parsing and freeing | total |
+
+- **`PHOTONS_PER_SECOND` = photons / `PHOTONS_TIME`:** the throughput of the physics alone, the number to compare between EP2, the CPU, FP32/FP64 and the GPUs.
+- **On the GPU, setup and save will grow:**
+  - setup gains CUDA context creation (~0.15 s, measured with `nsys` on Buffon), `cudaMalloc` + `cudaMemset` of the image, and copying the Scene to constant memory;
+  - save gains copying the image back (up to 1.5 GB for HD).
+  - Those are exactly the serial terms the TCD's Amdahl analysis needs, already separated.
+
+### `--no-record`
+
+- `image` is `NULL`: no allocation, no `count_photon`, no file; `IMAGE=none`, `IMAGE_BYTES=0`.
+- The same photons and the same counts, so **`PHOTONS_TIME` with and without `--no-record` measures what recording costs**.
+- On the GPU, that is the experiment that answers whether the atomics matter. **[to run]**
+
+---
+
+## Piece 8: the command line (`options.cuh`, `options.cu`)
+
+**The interface: one function.** `main` sees only:
+
+```c
+Options load_options(int argc, char *argv[]);
+long long chunk_count(const Options *options);
+```
+
+Everything else in `options.cu` is `static`: private to the file. `main` does not know how parsing works, only what comes out of it.
+
+### `argc` and `argv`
+
+`int main(int argc, char *argv[])`: the program receives its command line as an array of C strings.
+
+- `./star -n 1e8 --spots 0` gives `argc = 5` and `argv = {"./star", "-n", "1e8", "--spots", "0"}`.
+- It is Python's `sys.argv`, with its length passed separately.
+
+### `getopt_long`: the standard C parser
+
+```c
+while ((flag = getopt_long(argc, argv, "n:s:a:o:h", LONG_OPTIONS, NULL)) != -1) {
+    read_option(&options, flag, optarg, argv[0]);
+}
+```
+
+- **`"n:s:a:o:h"`:** the short options. A `:` after a letter means "takes a value" (`-n 1e8`); `h` takes none.
+- **`LONG_OPTIONS`:** the `--long` names, each mapped to a code: a letter for the ones that also have a short form (`'n'`), or an `enum` value from 1000 up for long-only options (`OPT_SPOTS`, ...), so they never collide with letters.
+- **Each call returns the next option's code,** with its value in the global `optarg`. It returns `-1` when there are no more options; `optind` is then the index of the first leftover argument (we reject leftovers).
+- **Python equivalent:** `argparse`, but you write the loop and the `switch` yourself.
+
+### Reading numbers: `number_or_stop`
+
+```c
+double value = strtod(text, &end);
+if (end == text || *end != '\0' || value < smallest || value > largest) stop(message);
+```
+
+- **`strtod`** parses a double and sets `end` to the first character it did not use.
+  - `end == text`: nothing was a number.
+  - `*end != '\0'`: junk after the number (`"1e8x"`).
+- **Parsing as a double** is what makes `-n 1e8` work, as in EP3. The cost: integers above ~9·10¹⁵ cannot be exact in a double, hence the limit on `-s`.
+- **Every option has a range** and a message that says it. A bad value stops the program before anything runs.
+
+### Defaults, and checks that need several options
+
+- **`default_options()`** holds EP2's star: a = 1, 3 spots of 0.05 / 0.10 rad, 4 observers, 200×200, 150 × 150 bins, chunks of 1024, seed 42, output `star.bin`.
+- **`validate_options`** runs after all options are read, for checks that combine them:
+  - `-n` is required (except with `--test-rng`);
+  - `--last-chunk` defaults to "all chunks" (`ALL_CHUNKS = -1` until N is known);
+  - the chunk range must fit inside `[0, chunk_count]`.
+- **Checks that need the star itself** (umbra ≤ penumbra, observers ≤ nmu, ...) are in `validate_config` in `scene.cu` (piece 5).
+
+### `StarConfig` vs `Options`
+
+- **`StarConfig`:** what the star *is* (N, seed, limb darkening, spots, observers, resolution). It goes to `build_scene`.
+- **`Options` wraps it** with how to *run*: chunk size and range, record or not, output file, test mode.
+
+---
+
+## Piece 9: the driver and the three checks (`star.py`, `analysis.py`)
+
+### The split: C computes, Python orchestrates and analyses
+
+Same idea as EP1–EP3:
+
+- **The engine** does one run and prints one `KEY=VALUE` line.
+- **Python** compiles it, runs it as many times as an experiment needs, reads the images, and makes the pictures and reports.
+
+The engine never knows about experiments; the driver never knows about photons.
+
+### The engine, seen from Python
+
+```python
+compile_engine()                                  # make -s in EP4/engine
+result = run_engine(config, image_path, precision, chunk_range)
+image = load_and_delete_image(result)             # numpy array [iphi][observer][iy][ix]
+```
+
+- **`run_engine`** builds the command line from a `config` dict, runs it with `subprocess.run`, and turns the last output line into a dict with `parse_key_values`. Each value is tried as `int`, then `float`, then kept as text.
+- **`load_and_delete_image`** reads the raw `uint32` file with `np.fromfile`, reshapes it to 4D, and deletes it: images are large (96 MB here, 1.5 GB in HD); the pictures and reports stay.
+- **Each experiment gets a folder** `runs/<date>_<time>-<name>/`.
+
+### The four modes
+
+`python star.py -n N [star options] [one or more checks]`. With no check, it simulates the star:
+
+| Mode | What it runs | What it proves |
+|---|---|---|
+| *(default)* `simulate_star` | one run | a gif and a still frame per observer, plus `run.json` |
+| `--check-split` | the full run, then the two halves of the chunk range | **the chunk range works:** halves add up to the full image, bit for bit |
+| `--compare-ep2` | EP4 and EP2's own engine (compiled from `EP2/engine`), both without spots | **the physics is EP2's:** χ² between the images |
+| `--compare-precision` | `star` (FP64) and `star32` (FP32), same seed | **how much FP32 changes:** the fraction of photons that land elsewhere, and the speed ratio |
+
+### `--check-split`: exact equality
+
+```python
+halves = load_and_delete_image(first).astype(np.uint64) + load_and_delete_image(second)
+identical = np.array_equal(halves, load_and_delete_image(full))
+```
+
+- No statistics: the same seed and chunks give the same photons, so the sum must be **exactly** the full image.
+- The program exits with status 1 if it is not.
+
+### `--compare-ep2`: two independent images of the same star
+
+EP2 draws with `rand()`, so its photons are different ones; the images can only agree **statistically**.
+
+- **No spots:** each engine would place its spots with its own random numbers, so the stars would differ.
+- **Frames summed:** without spots, every frame shows the same star, so summing them gives 150× more counts per pixel.
+- **The χ² for two Poisson counts a and b with the same mean:** (a − b)²/(a + b) averages ~1 per pixel. Only pixels with a + b ≥ 20 are used, where the approximation holds.
+  - χ²/dof close to 1 means the same physics; "sigma from 1" = (χ² − dof)/√(2·dof) says how close.
+  - Result: χ²/dof = 1.0047 over 126 008 pixels, +1.2σ.
+- **`comparison.png`:**
+  - both images;
+  - the residuals (a − b)/√(a + b), which should look like noise;
+  - their histogram against a standard normal.
+
+### `--compare-precision`: the same photons in two precisions
+
+Same seed, so FP32 and FP64 draw the same random numbers; any difference is rounding moving a photon across an edge.
+
+- **`fraction_of_photons_moved`:** half the sum of |a − b| (each moved photon changes two pixels by 1), over the photons recorded. Result: 5·10⁻⁴.
+- **Against the noise:** the relative Poisson noise per lit pixel, 1/√(mean count). Result: 0.22, hundreds of times larger.
+- **A χ² is not used here:** it assumes independent images, and these share their photons.
+
+### Pictures
+
+- **`frame_to_picture`:**
+  - scales counts to [0, 1] with the 99.9th percentile as white, so a few hot pixels do not wash out the rest;
+  - applies the `hot` colormap;
+  - flips rows so y points up.
+- **`save_rotation_gif`:** all `nphi` frames of one observer, 80 ms each: the rotation video.
+
+### Questions on piece 9
+
+**Why does the driver delete the image?**
+
+- **`load_and_delete_image`** reads the raw `.bin` into NumPy, then removes the file.
+- **The images are large:** 96 MB at EP2's settings, 1.5 GB in HD, 6 GB at 1024². A sweep of dozens of runs would fill the disk with files the reports no longer need.
+- **What stays** is what the image was for: the gifs and still frames, `run.json`, the reports and the comparison plots.
+- `.gitignore` also excludes `*.bin`, so raw images never reach git.
+- If a run's raw image is ever worth keeping (to re-analyse it later), the driver would need a `--keep-image` option. **[not needed yet]**
+
+**How big can the image be, on the laptop and on the A30? How do we set the maximum?**
+
+There is no maximum in the code; the real limits are GPU memory (to fit), photons and time (to fill). Full answer, with the numbers: [gpus.md, "How big can the image be?"](gpus.md#how-big-can-the-image-be). In short:
+
+- **Laptop:** ~7 GB of GPU memory, largest ~1100² at 360 frames and 4 observers.
+- **A30:** ~22 GB, largest ~1950².
+- **Filling them takes 6·10¹² to 2·10¹³ photons,** hours at 10⁹ photons/s. Time, not memory, is the practical limit.
+
+---
+
+## Piece 10: a run with passes, from start to finish (`main.cu`)
+
+Phase C's version of piece 1. The design is in [jobs_and_passes.md](jobs_and_passes.md); this is the code. Example: 4 observers, 2 per pass.
+
+```
+./star -n 1e7 --observers 1.5708,1.0472,0.5236,0 --observers-per-pass 2 -o out
+```
+
+```
+main
+ ├─ load_options          → K = 2 (or from --memory-budget), nmu = 47 from 150 frames
+ ├─ prepare_run           SETUP
+ │    ├─ build_scene        the star: spots, limb darkening (no observers yet)
+ │    ├─ locate_observers   each inclination → μ bin → file name; duplicates are an error
+ │    └─ allocate_image     room for K = 2 observers, not 4
+ │
+ ├─ for each pass (2 of them)
+ │    run_pass
+ │     ├─ assign_pass_observers   the Scene learns "this pass records bins 23 and 35"
+ │     ├─ zero_image              ZERO
+ │     ├─ simulate_chunks         PHOTONS: all 10⁷ photons, the same ones in every pass
+ │     ├─ save_pass_observers     SAVE: per observer, the .bin and then its .record
+ │     └─ print_pass              the PASS line
+ │    add_pass                    adds this pass's counts and times to the run's totals
+ │
+ └─ print_summary         the SUMMARY line
+```
+
+### The Scene changes between passes, nothing else does
+
+- `build_scene` makes the star once.
+- Before each pass, `assign_pass_observers` fills `slot_of_imu`: for each μ bin, the slot of the image it is recorded in, or `NOT_IN_PASS`.
+
+  | | bin 23 | bin 35 | bin 43 | bin 46 | every other bin |
+  |---|---|---|---|---|---|
+  | pass 1 | slot 0 | slot 1 | not in pass | not in pass | not in pass |
+  | pass 2 | not in pass | not in pass | slot 0 | slot 1 | not in pass |
+
+- **The photon loop is phase B's, unchanged.** A photon toward bin 43 in pass 1 is just `MISSED`.
+- *Changes piece 5:* the Scene's `observer_of_imu` became `slot_of_imu`, filled per pass instead of once.
+
+### The image is a set of slots, reused
+
+- Allocated once, for **K observers** (`--observers-per-pass`, or as many as fit in `--memory-budget`).
+- Each pass zeroes it and records its observers into the same slots. Memory stays K × footprint whatever the number of observers.
+- An uneven split is fine: 4 observers with K = 3 gives a pass of 3 and a pass of 1. The last pass uses one slot.
+
+### `add_pass`: a summary that does not depend on K
+
+- Every pass traces the same photons, so `PHOTONS` and `BLOCKED` are the same each time: **copied, not added**.
+- Each observer is recorded in exactly one pass, so `RECORDED` **adds up**.
+- `MISSED` = photons − blocked − recorded.
+- One pass or four, the `SUMMARY` counts are the same; only the times differ.
+
+### A new phase: ZERO
+
+- The image is zeroed at the start of **each pass** (`ZERO_TIME`), not once in SETUP as in phase B.
+- SETUP is now the scene, the observers and the allocation (plus reading the options).
+- *Changes piece 7:* the serial part of a run is `SETUP + ZERO + SAVE`; zero and save are paid once per pass.
+
+---
+
+## Piece 11: observers, from inclination to μ bin to file name (`observers.cu`, `options.cu`)
+
+*Changes piece 5 and piece 8:* observers were a count spread over the μ bins (`observer · (nmu − 1)/(observers − 1)`); now they are a list of inclinations in radians.
+
+### Reading the list (`read_inclinations`)
+
+- `--observers 1.5708,1.0472,0.5236,0` is read number by number with `strtod`, the same function `number_or_stop` uses.
+- Each value must be in [0, π]. The check allows up to 3.1416 so a typed π passes, then clamps to π.
+- The list keeps its order: observer 0 is the first one typed. That index goes into the record (`OBSERVER`).
+
+### Inclination → μ bin (`mu_bin_of`)
+
+```
+μ = cos i          fraction = (μ + 1) / 2          bin = ⌊fraction · nmu⌋   (clamped to nmu − 1)
+```
+
+- **The same formula as the photon's** (`observer_bin`, piece 6): a photon with direction z falls in bin ⌊(z + 1)/2 · nmu⌋. An observer at inclination i collects the photons whose z = cos i falls in its bin.
+- **The clamp is for i = 0:** μ = 1 gives a fraction of 1, so bin `nmu`, one past the end. It becomes `nmu − 1`.
+- **Why bins in μ, not in i:** equal widths in μ = cos i are equal solid angles (dΩ = dμ dφ), so every observer gets the same share of photons whatever its inclination. Archimedes' hat-box theorem again, the fact behind choosing z uniformly in `sample_surface_point`.
+
+### The bin center and the file name (`describe_observer`)
+
+```
+μ_center = −1 + (bin + ½) · 2/nmu          i_center = acos(μ_center)
+file stem: observer_mu0035_i1.0349
+```
+
+The default observers with nmu = 47 (computed):
+
+| Requested i | fraction · nmu | Bin | Center i | Bin spans i |
+|---|---|---|---|---|
+| 1.5708 | 23.500 | 23 | **1.5708** | 1.5495 … 1.5921 |
+| 1.0472 | 35.250 | 35 | 1.0349 | 1.0099 … 1.0594 |
+| 0.5236 | 43.852 | 43 | 0.5528 | 0.5108 … 0.5921 |
+| 0 | 47.000 | 46 | 0.2067 | 0 … 0.2928 |
+
+- **An observer's image is an average over its whole bin,** not the view from exactly the typed inclination: 60° (1.0472) is a bin centered at 59.3° (1.0349).
+- **The name carries the bin center,** so 1.0472 and 1.04 give the same bin and the same file. The typed value is kept in the record (`INCLINATION_REQUESTED`).
+- **Two observers in one bin are an error:** `locate_observers` keeps `observer_in_bin`, and 1.5708 with 1.58 gives "fall in the same mu bin (23)". They would be the same image twice.
+
+### Why `nmu` became odd (`nmu_from_frames`)
+
+The same observers with nmu = 48 (frames/π rounded, the first rule):
+
+| Requested i | fraction · nmu | Bin | Center i | Bin spans i |
+|---|---|---|---|---|
+| 1.5708 | **24.000** | 23 | 1.5916 | 1.5708 … 1.6125 |
+| 1.0472 | **36.000** | 35 | 1.0711 | 1.0472 … 1.0947 |
+
+- **With an even `nmu`, the equator (μ = 0) is an edge** between bins 23 and 24. 1.5708 is a hair above π/2, so μ is a hair below 0 and lands in the bin below, centered 1.2° off equator-on, with the observer at the very edge of its bin.
+- **The same happens to any inclination on an edge:** 60° is one whenever 0.75 · nmu is a whole number (48 is).
+- **With an odd `nmu`,** the middle bin (nmu − 1)/2 is centered on μ = 0: the equator-on observer is exactly equator-on. Rule: `nearest_odd(frames/π)`: 150 → 47, 300 → 95, 360 → 115.
+- **The poles are always edges** (μ = ±1): a pole-on observer's bin center is at i ≈ √(2/nmu), 0.21 rad with nmu = 47. Near the pole a bin is narrow in μ but wide in angle.
+
+---
+
+## Piece 12: choosing K, the observers per pass (`options.cu`)
+
+K is decided once, at the end of `validate_options`, by `choose_observers_per_pass`. The image size and the number of passes follow from it.
+
+### The rules, in order
+
+```
+both --observers-per-pass and --memory-budget  → error: use one, not both
+--no-record                                    → K = all (no image, nothing to split)
+--memory-budget B                              → K = ⌊B / footprint⌋, at most all; 0 is an error
+--observers-per-pass K                         → K, at most all
+neither                                        → K = all: one pass, as in phase B
+```
+
+- `pass_count` = ⌈observers / K⌉.
+- **The footprint** is one observer's image: `pixels_per_observer` × 4 bytes = size² × frames × 4. 24 MB at the defaults (200², 150 frames).
+
+### Measured, with the default 4 observers
+
+| Options | K | Passes | Image allocated |
+|---|---|---|---|
+| (none) | 4 | 1 | 96 MB |
+| `--observers-per-pass 3` | 3 | 2 | 72 MB |
+| `--observers-per-pass 9` | 4 | 1 | 96 MB (capped at all) |
+| `--memory-budget 50MB` (or `0.05G`, `5e7`) | 2 | 2 | 48 MB |
+| `--memory-budget 1GB` | 4 | 1 | 96 MB |
+| `--memory-budget 1GB --no-record` | 4 | 1 | none |
+| `--memory-budget 1MB` | error: one observer needs 0.024 GB | | |
+| `--memory-budget 50MB --observers-per-pass 2` | error: use one, not both | | |
+
+### Details
+
+- **The budget is for the image only:** not the program, the CUDA context, or Python's copy. The headroom is the caller's job; the driver will compute the budget from the machine (~7 GB on the laptop's GPU, ~22 GB on the A30's, [gpus.md](gpus.md)).
+- **Decimal units** (`bytes_per_unit`): `7GB` = 7·10⁹ bytes, as datasheets and disks count; case-insensitive; the `B` is optional.
+- **K is a ceiling:** the engine never allocates more than K × footprint.
+
+### Found on the way (in the [roadmap's backlog](roadmap.md#4-backlog-tasks-to-do))
+
+- **Unbalanced passes:** K = 3 with 4 observers gives 3 + 1. Splitting 2 + 2 takes the same 2 passes (the same time) with 48 MB instead of 72. Fix: K′ = ⌈observers / passes⌉ once the passes are known.
+- **Binary units:** `nvidia-smi` reports MiB, but `7GiB` is rejected today.
+
+---
+
+## Piece 13: the image in a pass (`image.cu`, `files.cuh`, `photon.cuh`)
+
+### The layout: `[observer][frame][iy][ix]`
+
+In `pixel_index`:
+
+```
+frame = slot · nphi + iphi
+pixel = (frame · size + iy) · size + ix
+```
+
+Each observer is **one contiguous block** of nphi × size² counts, frames in order:
+
+```
+| slot 0: frame 0, frame 1, … frame 149 | slot 1: frame 0, … | …
+```
+
+*Changes piece 7:* phase B used EP2's `[iphi][observer][iy][ix]`, with the observers interleaved inside each frame (one observer in 150 separate pieces). Contiguous blocks give:
+
+- **saving one observer** with one `fwrite`: the file *is* the block;
+- **zeroing only the slots in use** with one `memset`;
+- **on the GPU, copying one observer back** with one `cudaMemcpy` instead of a strided copy.
+
+### Zeroing, and first touch (measured)
+
+`allocate_image` is now only `malloc`; `zero_image` runs at the start of every pass. 512², 300 frames (315 MB per observer), 4 passes of 1 observer, two runs:
+
+| | Pass 1 | Passes 2–4 |
+|---|---|---|
+| `ZERO_TIME` | **0.15–0.18 s** | 0.005–0.007 s |
+
+- **25–30× slower in pass 1.** `malloc` only reserves addresses; the OS maps a real page the first time it is touched. Pass 1's `memset` pays for mapping ~77 000 pages (~2 GB/s); later passes write over mapped memory (~50 GB/s).
+- That is the "first touch" the phase-B comment about `calloc` was about, now visible but mixed into pass 1's `ZERO_TIME` (backlog: report it apart, or touch the pages in setup).
+- **On the GPU,** `cudaMalloc` maps the memory when it allocates, so this cost moves to SETUP.
+
+### Saving one observer, safely (`save_observer`, `files.cuh`)
+
+```
+write the block to   observer_mu0047_i1.5708.bin.partial
+check fwrite wrote everything, and that fclose succeeded
+rename .partial  →   observer_mu0047_i1.5708.bin
+```
+
+- **`rename` is atomic** on one filesystem: there is either no `.bin` or the whole one. A run killed while writing leaves only a `.partial`, which the driver redoes.
+- **The record follows the same steps, after the image:** a `.record` means its `.bin` is complete. It is the "done" marker.
+- `rename` replaces an existing file atomically too, so a rerun never leaves a mix of old and new.
+- **Limit:** without `fsync`, the data may still be in the OS's memory when the rename happens. Safe against a crash of the program, not against a power cut. `SAVE_TIME` (~0.15–0.18 s for 315 MB, ~2 GB/s) is the time to the OS's cache, not to the disk (backlog: decide on `fsync`).
+- `PARTIAL_PATH_LENGTH` = `PATH_LENGTH` + the length of `".partial"`, because GCC warned that a 4096-byte path plus the suffix might not fit.
+
+### Counting the observer's photons
+
+- `photons_in_observer` sums the block after saving: `RECORDED` in the record, timed inside SAVE.
+- A sanity number: the records of one pass add up to that pass's `RECORDED`.
+
+### Questions on piece 13
+
+**What is `fsync`? Is it like `rsync`?**
+
+No; only the names are alike.
+
+- **`rsync`** is a program that copies files between folders or machines, sending only what changed. We will use it in phase E to bring results back from IAG.
+- **`fsync`** ("file sync") is a system call, a request to the operating system: *"put this file's data on the disk now, and don't return until it is there."*
+
+Why it is needed: writing is two steps.
+
+```
+fwrite / write     →   the OS's page cache (RAM)     →   the disk
+   returns here ↑         kept "dirty" for a while         written later, by the OS
+```
+
+- **`fwrite` and `fclose` return as soon as the data is in the OS's memory** (the page cache). The OS writes it to the disk later, by itself: on Linux, data older than 30 s (`dirty_expire_centisecs` = 3000) is written out.
+- **If the program crashes,** nothing is lost: the data is in the OS, which will write it.
+- **If the power goes** (or WSL or Windows is killed) before the OS writes it, the data is lost, but the rename may already be on the disk. The result: a `.bin` that looks finished and is not.
+- **`fsync(fd)` before the rename** closes that gap: the rename happens only after the data is on the disk.
+
+Measured on the laptop (315 MB, `dd`, two runs):
+
+| | Run 1 | Run 2 |
+|---|---|---|
+| without `fsync` (to the cache) | 0.164 s (2.0 GB/s) | 0.080 s (4.1 GB/s) |
+| with `fsync` (to the disk) | 0.184 s (1.8 GB/s) | 0.146 s (2.3 GB/s) |
+
+- **The cost is small here:** a fast NVMe disk; tens of milliseconds per 315 MB. In a run of hours, nothing.
+- **`SAVE_TIME` without `fsync` measures the cache, not the disk,** so it varies with how busy the cache is (0.08 vs 0.16 s above). With `fsync` it measures the real save.
+- **To be complete,** the folder itself is `fsync`ed after the rename, so the new name is on the disk too.
+
+---
+
+## Piece 14: what the engine tells the outside world (`report.cu`, `run.cuh`)
+
+*Changes piece 1 and piece 7:* one result line became three kinds of line, plus a record per observer.
+
+### One format: a kind, then `KEY=VALUE`
+
+```
+PROGRESS PASS=1 PASSES=1 CHUNK=98627 CHUNKS=244141 PHOTONS_PER_SECOND=1.009940e+07 ELAPSED=10.0 ETA=14.8
+PASS PASS=2 PASSES=4 OBSERVERS=1 MU_BINS=35 PHOTONS=10000000 BLOCKED=41308 MISSED=9752155 RECORDED=206537 ZERO_TIME=0.000966 PHOTONS_TIME=1.001307 SAVE_TIME=0.018361
+SUMMARY DEVICE=CPU PRECISION=64 N=10000000 … PASSES=4 … RECORDED=825903 … PHOTONS_PER_SECOND=1.012762e+07 OUTPUT_DIR=…
+```
+
+- **One parser for all:** Python's `parse_key_values` skips the first word; `lines_of_kind(output, "SUMMARY")` picks the lines wanted. `grep ^PASS` works too.
+- **`setvbuf(stdout, NULL, _IOLBF, 0)`,** first line of `main`: into a pipe or a file, C buffers ~4 KB before writing, so progress would arrive in bursts or at the end. Line buffering sends each line when it is complete. That is what will make `status` live.
+
+### `PROGRESS`: cheap on purpose
+
+- `report_progress_if_due` runs after **every chunk** and prints only if 10 s have passed. Cost: one clock read (~25 ns) per chunk of 1024 photons (~100 µs): ~0.03%.
+- **ETA** = (chunks left in this pass + passes left × chunks per pass) ÷ this pass's chunk rate. Measured: at 10 s it said 14.8 s to go, at 20 s 4.1 s; the run ended at ~24 s.
+- It leaves out zero and save times (small next to the photons). The rate restarts each pass, so each pass's first line comes 10 s in.
+
+### `PASS` and `SUMMARY`
+
+- `PASS`: the pass's μ bins, its counts, its three times.
+- `SUMMARY`: the configuration, the counts (independent of K, piece 10), all phase times.
+- **`PHOTONS_PER_SECOND` counts traced photons** (photons × passes ÷ photon time): the tracing speed, comparable across K (4 passes of 10⁷: 1.01·10⁷/s, as one pass).
+
+### The record: one per observer, one `KEY=VALUE` per line
+
+```
+FINGERPRINT=none   CODE_HASH=none                      ← passed in by the driver
+IMAGE=observer_mu0047_i0.2045.bin   OBSERVER=3   MU_BIN=47
+INCLINATION_REQUESTED=0   INCLINATION_BIN_CENTER=0.204480199
+DEVICE=CPU   PRECISION=64   N=…  SEED=…  A=…  SPOTS=…  SIZE=…  FRAMES=…  NMU=…
+CHUNK_SIZE=…  FIRST_CHUNK=…  LAST_CHUNK=…
+PASS=1   PASSES=1   PASS_OBSERVERS=4
+PHOTONS=10000000   BLOCKED=41308   RECORDED=205525   IMAGE_BYTES=24000000
+PHOTONS_TIME=1.133055   SAVE_TIME=0.019488   FINISHED=2026-11-21T19:11:03Z
+```
+
+(one key per line in the file; grouped here to fit)
+
+- **Everything needed to read and trust the `.bin` alone:** its shape (SIZE, FRAMES), what it is (μ bin, inclinations, precision, chunk range), where and when it was made. Two images are comparable only if their records agree on these.
+- **`PHOTONS_TIME` belongs to the pass,** shared by its `PASS_OBSERVERS` observers. Summing it over a pass's records would count it several times; `PASS_OBSERVERS` is there to say so.
+- **Two clocks:** durations use `CLOCK_MONOTONIC` (`now_in_seconds` in `run.cuh`), which never jumps when the system clock is corrected; `FINISHED` uses wall-clock UTC (`time` + `gmtime_r`), because it must be a date.
+
+### `run.cuh`: the vocabulary
+
+- Small structs named for what they hold: `PhotonCounts`, `PassTimes`, `PassResult` (one pass's counts and times), `ObserverResult` (one observer's photons, bytes, save time), `RunTimes`, `Run` (options, observers, passes, start time), `Progress`.
+- `report.cu` only formats them; it decides nothing.
+
+### Found on the way (in the backlog)
+
+- **No machine name:** the laptop's CPU and the A30 server's CPU both say `DEVICE=CPU`. Add `HOST=`.
+- **No spaces in values:** an `OUTPUT_DIR` or `FINGERPRINT` with a space would break the split. State it, or reject spaces.
+
+---
+
+## Piece 15: the driver's side (`star.py`, `analysis.py`)
+
+*Changes piece 9:* the same small driver, adapted to the new engine. It is also the first bit of phase D, since it already reads records.
+
+### Talking to the engine
+
+- **`engine_command`:** observers as `",".join(f"{i:.17g}")`, 17 significant digits so a double survives the trip to C exactly. `--nmu` and `--observers-per-pass` only when set, so the engine's defaults (odd nmu, one pass) apply otherwise.
+- **`run_engine`** takes an **output folder** instead of an image file and returns the `SUMMARY` line (`lines_of_kind`). `parse_key_values` skips words without `=`, which drops the line kind.
+
+### Reading the results: the records are the index
+
+```python
+records = sorted(read_record(path) for path in glob("*.record"), key=OBSERVER)
+image   = np.stack([load_observer_image(record["IMAGE"], record["FRAMES"], record["SIZE"]) ...])
+```
+
+- **Python looks for `.record` files, never `.bin`:** a `.bin` without its record (an interrupted save) is ignored. Piece 13's "done marker" rule, already used in miniature; phase D's job state is the same idea.
+- **The record says how to read the `.bin`:** `FRAMES` and `SIZE` give its shape.
+- **Sorting by `OBSERVER`** restores the typed order (file names sort by μ bin).
+- The result is `[observer][frame][y][x]`: summing frames moved from `axis=0` to `axis=1`; photons per observer is `sum(axis=(1, 2, 3))`.
+
+### The checks
+
+| Check | Runs | Passes if | Today |
+|---|---|---|---|
+| **`--check-passes`** (new) | all observers in 1 pass, then `--observers-per-pass 1` | images `array_equal` and `PHOTONS`, `BLOCKED`, `MISSED`, `RECORDED` equal | identical |
+| `--check-split` | the full run, then two halves of the chunk range | halves summed (`uint64`) = full | identical |
+| `--compare-ep2` | EP4 and EP2, no spots | χ² between the images, frames summed | 0.9957 |
+| `--compare-precision` | FP64 and FP32 builds | photons moved vs Poisson noise | 1.2·10⁻⁴ |
+
+- **EP2's observers:** EP2 places them by count, at bins o · (nmu − 1)/(count − 1) (0, 15, 30, 46 for nmu = 47). `ep2_observer_inclinations` gives EP4 the **bin centers** of those bins (2.935, 1.918, 1.268, 0.207 rad), so `locate_observers` lands in the same bins.
+- `load_ep2_image` transposes EP2's `[frame][observer][y][x]` to the new order.
+
+### What is kept
+
+- **Checks:** `load_and_delete_observers` removes the output folder; `report.txt` (and the plot) stay.
+- **A run:** gifs named by the file stem (`observer_mu0023_i1.5708.gif`); the `.bin` files are deleted, the records kept.
+
+### Found on the way (in the backlog)
+
+- **Everything is loaded at once:** all observers stacked in RAM, then converted to float64 for the pictures. Fine at 24 MB per observer; impossible at 2k (5 GB per observer, 40 GB as float64). Read one `.bin` at a time with `np.memmap`.
+- **`nmu` is derived twice,** in C and in Python (`ep2_nmu`). Two copies of a rule can drift apart.
+
+---
+
+## Recap of pieces 10–15: what we learned
+
+### About passes
+
+1. **A pass is a full re-trace of the same photons.** Only the Scene's `slot_of_imu` changes between passes; the photon loop is phase B's.
+2. **Cost ≈ passes × trace time.** The trace dominates; computing the pixel for 8% or 2% of the photons makes no measurable difference; writing to the image costs ~180 ns per recorded photon. *(My first explanation, "the smaller image fits the cache", was wrong.)*
+3. **The summary does not depend on K:** photons and blocked are copied, recorded adds up, missed follows.
+4. **K is a ceiling** from `--observers-per-pass` or `--memory-budget`; the budget covers the image only.
+
+### About observers
+
+5. **μ bins are equal solid angles**, so every observer gets the same share of photons.
+6. **An observer's image is an average over its bin;** the file name carries the bin center, the record the typed inclination.
+7. **`nmu` must be odd** for the equator to be a bin center; the poles are always bin edges (pole-on is really i ≈ √(2/nmu)).
+
+### About memory and files
+
+8. **One contiguous block per observer** (`[observer][frame][iy][ix]`): one `fwrite`, one `memset`, and on the GPU one `cudaMemcpy`.
+9. **First touch:** `malloc` only reserves; pass 1's zeroing pays for mapping the pages (25–30× slower than later passes).
+10. **Write `.partial`, then rename:** a file that exists is whole; the record, written last, is the "done" marker. Without `fsync`, safe against a crash, not a power cut.
+
+### About reporting
+
+11. **A kind, then `KEY=VALUE`; line-buffered** so the driver sees each line live. Progress costs ~0.03%.
+12. **Records are self-describing:** everything needed to read and trust a `.bin` alone. `PHOTONS_TIME` belongs to the pass, not the observer.
+13. **Python finds results through the records,** never the `.bin` files.
+
+### What this means for the GPU engine
+
+- **Per pass:** copy the 16 KB `slot_of_imu` table into constant memory (`cudaMemcpyToSymbol`), `cudaMemset` the slots in use, launch, then copy each observer's block back.
+- **The host needs room for one observer, not K:** copy one block back, write it, reuse the buffer.
+- **The trace is what parallelizes;** the writes become atomics, and their cost is what Nsight Compute will show.
+- **First touch moves to `cudaMalloc`,** so the CPU and GPU zero times should mean the same thing (see below).
+- **Progress while the kernel runs** is an open question: the host must read the chunk counter from the device without stopping the kernel.
+
+### To change before the GPU
+
+The engine changes that the GPU engine will inherit. Cheaper to do once, now. Tracked in the [roadmap's backlog](roadmap.md#c-before-the-gpu-engine-changes-the-gpu-will-inherit).

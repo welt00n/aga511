@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <time.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 #include "real.cuh"
 #include "rng.cuh"
@@ -7,20 +8,10 @@
 #include "photon.cuh"
 #include "image.cuh"
 #include "options.cuh"
-
-typedef struct {
-    long long simulated;
-    long long blocked_by_spots;
-    long long missed_observers;
-    long long recorded;
-} PhotonCounts;
-
-typedef struct {
-    double setup;
-    double photons;
-    double save;
-    double total;
-} PhaseTimes;
+#include "observers.cuh"
+#include "run.cuh"
+#include "report.cuh"
+#include "files.cuh"
 
 typedef struct {
     PhiloxCounter counter;
@@ -37,17 +28,22 @@ static const PhiloxKnownAnswer RANDOM123_KNOWN_ANSWERS[] = {
      {0xd16cfe09, 0x94fdcceb, 0x5001e420, 0x24126ea1}},
 };
 
+static Scene scene;
+static ObserverList observers;
+
 
 // ============================================================ helpers
 
-static double now_in_seconds(void) {
-    struct timespec t;
-    clock_gettime(CLOCK_MONOTONIC, &t);
-    return t.tv_sec + t.tv_nsec / 1e9;
-}
-
 static long long smaller(long long a, long long b) {
     return a < b ? a : b;
+}
+
+static int prepare_output_dir(const char *folder) {
+    if (mkdir(folder, 0755) != 0 && errno != EEXIST) {
+        perror("Could not create the output folder");
+        return -1;
+    }
+    return 0;
 }
 
 
@@ -106,73 +102,118 @@ static void simulate_chunk(const Scene *scene, long long chunk, const Options *o
     counts->simulated += end_photon - first_photon;
 }
 
-static PhotonCounts simulate_chunks(const Scene *scene, const Options *options, Image *image) {
+static PhotonCounts simulate_chunks(const Run *run, Image *image, Progress *progress) {
+    const Options *options = run->options;
     PhotonCounts counts = {0, 0, 0, 0};
     long long next_chunk = options->first_chunk;
     while (next_chunk < options->last_chunk) {
-        simulate_chunk(scene, next_chunk, options, image, &counts);
+        simulate_chunk(&scene, next_chunk, options, image, &counts);
         next_chunk++;
+        progress->chunks_done++;
+        report_progress_if_due(run, progress);
     }
     return counts;
 }
 
 
-// ============================================================ result
+// ============================================================ passes
 
-static void print_result(const Options *options, const PhotonCounts *counts, const PhaseTimes *times,
-                         size_t image_size) {
-    const StarConfig *star = &options->star;
-    printf("DEVICE=CPU PRECISION=%d N=%lld SEED=%llu A=%g SPOTS=%u UMBRA_RADIUS=%g PENUMBRA_RADIUS=%g ",
-           PRECISION_BITS, star->photons, star->seed, star->limb_darkening, star->spots,
-           star->umbra_radius, star->penumbra_radius);
-    printf("OBSERVERS=%u NX=%u NY=%u NPHI=%u NMU=%u ", star->observers, star->nx, star->ny, star->nphi, star->nmu);
-    printf("CHUNK_SIZE=%lld CHUNKS=%lld FIRST_CHUNK=%lld LAST_CHUNK=%lld ",
-           options->chunk_size, chunk_count(options), options->first_chunk, options->last_chunk);
-    printf("PHOTONS=%lld BLOCKED=%lld MISSED=%lld RECORDED=%lld RECORD=%d IMAGE_BYTES=%zu ",
-           counts->simulated, counts->blocked_by_spots, counts->missed_observers, counts->recorded,
-           options->record ? 1 : 0, image_size);
-    printf("SETUP_TIME=%.6f PHOTONS_TIME=%.6f SAVE_TIME=%.6f TIME=%.6f PHOTONS_PER_SECOND=%.6e IMAGE=%s\n",
-           times->setup, times->photons, times->save, times->total,
-           times->photons > 0 ? counts->simulated / times->photons : 0.0,
-           options->record ? options->output : "none");
+static int save_pass_observers(const Run *run, const Pass *pass, const Image *image, const PassResult *pass_result) {
+    for (unsigned int slot = 0; slot < pass->observer_count; slot++) {
+        const Observer *observer = &run->observers->observers[pass->first_observer + slot];
+        char path[PATH_LENGTH];
+        observer_path(run->options->output_dir, observer, ".bin", path);
+        double started_at = now_in_seconds();
+        if (save_observer(image, slot, path) != 0) {
+            return -1;
+        }
+        ObserverResult saved = {photons_in_observer(image, slot), observer_bytes(image), 0};
+        saved.save_time = now_in_seconds() - started_at;
+        if (write_observer_record(run, pass, observer, pass_result, &saved) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+static int run_pass(const Run *run, const Pass *pass, Image *image, PassResult *result) {
+    bool record = run->options->record;
+    assign_pass_observers(&scene, run->observers, pass);
+
+    double phase_started_at = now_in_seconds();
+    if (record) {
+        zero_image(image, pass->observer_count);
+    }
+    result->times.zero = now_in_seconds() - phase_started_at;
+
+    phase_started_at = now_in_seconds();
+    Progress progress = {pass->number, 0, phase_started_at, phase_started_at};
+    result->counts = simulate_chunks(run, record ? image : NULL, &progress);
+    result->times.photons = now_in_seconds() - phase_started_at;
+
+    phase_started_at = now_in_seconds();
+    if (record && save_pass_observers(run, pass, image, result) != 0) {
+        return -1;
+    }
+    result->times.save = now_in_seconds() - phase_started_at;
+    print_pass(run, pass, result);
+    return 0;
+}
+
+static void add_pass(PhotonCounts *counts, RunTimes *times, const PassResult *pass) {
+    counts->simulated = pass->counts.simulated;
+    counts->blocked_by_spots = pass->counts.blocked_by_spots;
+    counts->recorded += pass->counts.recorded;
+    counts->missed_observers = counts->simulated - counts->blocked_by_spots - counts->recorded;
+    times->zero += pass->times.zero;
+    times->photons += pass->times.photons;
+    times->save += pass->times.save;
 }
 
 
 // ============================================================ main
 
+static int prepare_run(const Options *options, Image *image) {
+    if (build_scene(&options->star, &scene) != 0 || locate_observers(&options->star, &observers) != 0) {
+        return -1;
+    }
+    if (!options->record) {
+        return 0;
+    }
+    if (prepare_output_dir(options->output_dir) != 0) {
+        return -1;
+    }
+    return allocate_image(image, pixels_per_observer(&options->star), options->observers_per_pass);
+}
+
 int main(int argc, char *argv[]) {
+    setvbuf(stdout, NULL, _IOLBF, 0);
     double started_at = now_in_seconds();
     Options options = load_options(argc, argv);
     if (options.test_rng) {
         return test_rng();
     }
-    PhaseTimes times;
-
-    double phase_started_at = now_in_seconds();
-    static Scene scene;
-    if (build_scene(&options.star, &scene) != 0) {
+    RunTimes times = {0, 0, 0, 0, 0};
+    Image image = {NULL, 0, 0};
+    if (prepare_run(&options, &image) != 0) {
         return 1;
     }
-    Image image = {NULL, 0};
-    if (options.record && allocate_image(&image, options.star.nx, options.star.ny,
-                                         options.star.nphi, options.star.observers) != 0) {
-        return 1;
-    }
-    times.setup = now_in_seconds() - phase_started_at;
+    times.setup = now_in_seconds() - started_at;
 
-    phase_started_at = now_in_seconds();
-    PhotonCounts counts = simulate_chunks(&scene, &options, options.record ? &image : NULL);
-    times.photons = now_in_seconds() - phase_started_at;
-
-    phase_started_at = now_in_seconds();
-    if (options.record && save_image(&image, options.output) != 0) {
-        return 1;
+    Run run = {&options, &observers, pass_count(&options), started_at};
+    PhotonCounts counts = {0, 0, 0, 0};
+    for (unsigned int index = 0; index < run.passes; index++) {
+        Pass pass = make_pass(index, options.observers_per_pass, observers.count);
+        PassResult result;
+        if (run_pass(&run, &pass, &image, &result) != 0) {
+            return 1;
+        }
+        add_pass(&counts, &times, &result);
     }
-    times.save = now_in_seconds() - phase_started_at;
-    size_t image_size = options.record ? image_bytes(&image) : 0;
+
+    size_t allocated_bytes = options.record ? image_bytes(&image) : 0;
     free_image(&image);
-
     times.total = now_in_seconds() - started_at;
-    print_result(&options, &counts, &times, image_size);
+    print_summary(&run, &counts, &times, allocated_bytes);
     return 0;
 }

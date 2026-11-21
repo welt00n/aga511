@@ -10,12 +10,16 @@ Status tags: **[decided]** a choice made for EP4 · **[measured]** checked on th
 
 | Topic | Where |
 |---|---|
+| **The plan: phases A–I, how we got here, the log of decisions and findings** | [roadmap.md](roadmap.md) |
 | The EP4 engine, piece by piece, with the questions asked | [walkthrough.md](walkthrough.md) |
 | Piece 1: one run, the phases, the cost of counters and logging | [walkthrough.md](walkthrough.md#piece-1-one-run-from-start-to-finish) |
 | Piece 2: `real.cuh`, `HD`, overloading, `sine_from_cosine` | [walkthrough.md](walkthrough.md#piece-2-realcuh-the-precision-switch), [precision.md §8](precision.md#8-deep-dive-sine_from_cosine-and-the-fp32-correction) |
 | Piece 3: Philox (counter, key, rounds, a stream per chunk, the cuRAND copy) | [walkthrough.md](walkthrough.md#piece-3-random-numbers-philox-rngcuh) |
 | C++ for a Python programmer: the build, headers, `static inline`, include guards, templates with `HD`, the syntax | [cpp_for_python.md](cpp_for_python.md) |
 | FP64/FP32/FP16, random bits, the sine deep dive | [precision.md](precision.md) |
+| Amdahl (strong scaling) and Gustafson (weak scaling), and the EP4 scaling experiments | [scaling_laws.md](scaling_laws.md) |
+| Jobs, observers and passes: fitting any image in any machine's memory, resuming over days | [jobs_and_passes.md](jobs_and_passes.md) |
+| The driver: commands, job files and prompts, remote runs, the engine's records, sweeps and the Amdahl/Gustafson analysis | [driver.md](driver.md) |
 | The laptop and the IAG A30, predictions, questions for IAG | [gpus.md](gpus.md) |
 | Nsight: how it works, Buffon's profile, the permission error | [../cuda_class/nsight.md](../cuda_class/nsight.md) |
 | The class plan | [../cuda_class/class_plan.md](../cuda_class/class_plan.md) |
@@ -23,10 +27,14 @@ Status tags: **[decided]** a choice made for EP4 · **[measured]** checked on th
 
 **Documents in this folder:**
 
+- [roadmap.md](roadmap.md): the one plan (phases A–I), the story so far, the log of decisions and findings.
 - [walkthrough.md](walkthrough.md): the EP4 engine, piece by piece, with the questions asked along the way.
 - [cpp_for_python.md](cpp_for_python.md): C/C++ for a Python programmer: the build, headers with whole functions, how EP4's files are organized, the new syntax.
 - [precision.md](precision.md): FP64, FP32, FP16, random bits, and the deep dive on `sine_from_cosine`.
 - [gpus.md](gpus.md): the laptop GPU and the IAG A30 side by side, predictions, questions for IAG.
+- [scaling_laws.md](scaling_laws.md): Amdahl and Gustafson, and the EP4 scaling experiments.
+- [jobs_and_passes.md](jobs_and_passes.md): jobs, observers, passes, idempotent runs, machine analysis.
+- [driver.md](driver.md): the Python driver's commands, local and remote, and the scaling sweeps and analysis.
 - [experiments/](experiments/) and [figures/](figures/): small scripts behind the measurements, and their plots.
 - For the class: [../cuda_class/class_plan.md](../cuda_class/class_plan.md), [../cuda_class/nsight.md](../cuda_class/nsight.md).
 
@@ -57,6 +65,12 @@ Status tags: **[decided]** a choice made for EP4 · **[measured]** checked on th
 - **Small globals without malloc.** A `__device__` variable set with `cudaMemcpyToSymbol`, handy for a single counter.
 - **Managed and pinned memory.** `cudaMallocManaged` gives one pointer valid on both sides (convenient, hides the copies). `cudaMallocHost` (pinned RAM) makes big copies faster, relevant for copying a 1.5 GB image back. **[to explore]**
 - **EP4 placement.** Queue and image in global memory, the `Scene` (spots, limb darkening, observer table) in constant memory. **[decided]**
+- **A pointer does not say where it points.** An `unsigned int *` holding a GPU address looks exactly like one holding a RAM address; mixing them compiles and then crashes or reads garbage.
+- **Recording: shared physics, separate recording per side.** **[decided]**
+  - The CPU keeps `Image` + `count_photon` (`counts[pixel]++`).
+  - The GPU gets its own type, `DeviceImage`, with `allocate_device_image` (`cudaMalloc` + `cudaMemset`), `copy_to_host`, and a `__device__ count_photon_atomic` (`atomicAdd`), where the faster variants (warp aggregation, shared memory) will go.
+  - Rejected: one `HD` `count_photon` branching on `__CUDA_ARCH__`. It hides the atomic, lets a RAM image reach the kernel without a compile error, and would keep growing with GPU-only variants.
+  - Separate types make the compiler reject the wrong image on the wrong side. It is the same split as the queue and the counters: the physics is shared; how work is taken and results are written belongs to each side.
 
 ## 4. Synchronization, atomics and the work queue
 
@@ -100,7 +114,13 @@ Status tags: **[decided]** a choice made for EP4 · **[measured]** checked on th
 
 - **Amdahl's law with n = SMs.** T(1) is the GPU on one SM. CPU vs GPU is a separate throughput comparison, not part of Amdahl.
 - **The serial part.** In EP3, a ≈ 0.15 s, mostly CUDA context creation (the first CUDA call), plus allocations and the SM-listing kernel. In EP4 it also includes zeroing the image, copying it back and writing it to disk.
-- **p depends on N.** EP3: p ≈ 0 at N = 10⁴, 0.9986 at 3·10¹⁰. Amdahl's p is a property of the code *and* the problem size, which leads to Gustafson's law (weak scaling). **[to explore]**
+- **p depends on N.** EP3: p ≈ 0 at N = 10⁴, 0.9986 at 3·10¹⁰. Amdahl's p is a property of the code *and* the problem size, which leads to Gustafson's law (weak scaling).
+- **Gustafson's law.** Details: [scaling_laws.md](scaling_laws.md).
+  - Scaled speedup S(n) = n − s′(n − 1), with s′ the serial share measured on the parallel run.
+  - The problem grows with the machine, and the speedup grows linearly instead of hitting Amdahl's ceiling.
+  - For EP3 at N = 3.2·10¹⁰ it gives 34.8 on 36 SMs (Amdahl, measured: 34.3).
+  - For the star, the serial part grows with the image but not with N: Gustafson's assumption holds for one and not the other.
+  - Planned experiments: strong and weak scaling over SMs, weak scaling over the image ladder (512 → 1k → 2k), and the largest problem each machine fills in a fixed time. **[to measure]**
 - **Image resolution also changes p.** A bigger image means more serial memset, copy and write time.
 - **Timing with three clocks.** Wall time, kernel time, and `clock64()` cycles (independent of laptop boost: 2017–2908 MHz in EP3). **[measured]**
 - **Precision.** Consumer GPUs run FP64 at 1/64 of the FP32 rate: EP3 FP32 was 16× faster than FP64. FP16 was no faster (conversions, `hsin`, cuRAND makes floats). FP32 stops gaining accuracy near 7 digits. **[measured]** Whether the star needs FP64 is in section 12.

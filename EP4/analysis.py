@@ -9,12 +9,20 @@ from matplotlib import colormaps
 from PIL import Image as PilImage
 
 
-def load_image(path, nphi, observers, ny, nx):
+def load_observer_image(path, frames, size):
+    counts = np.fromfile(path, dtype=np.uint32)
+    expected = frames * size * size
+    if counts.size != expected:
+        raise ValueError(f"{path}: expected {expected} counts, found {counts.size}")
+    return counts.reshape(frames, size, size)
+
+
+def load_ep2_image(path, nphi, observers, ny, nx):
     counts = np.fromfile(path, dtype=np.uint32)
     expected = nphi * observers * ny * nx
     if counts.size != expected:
         raise ValueError(f"{path}: expected {expected} counts, found {counts.size}")
-    return counts.reshape(nphi, observers, ny, nx)
+    return counts.reshape(nphi, observers, ny, nx).transpose(1, 0, 2, 3)
 
 
 def frame_to_picture(frame, brightest):
@@ -29,14 +37,12 @@ def save_rotation_gif(frames, path, milliseconds_per_frame=80):
     pictures[0].save(path, save_all=True, append_images=pictures[1:], duration=milliseconds_per_frame, loop=0)
 
 
-def save_observer_pictures(image, folder):
+def save_observer_pictures(image, names, folder):
     paths = []
-    for observer in range(image.shape[1]):
-        frames = image[:, observer].astype(np.float64)
-        gif_path = os.path.join(folder, f"observer_{observer}.gif")
+    for frames, name in zip(image.astype(np.float64), names):
+        gif_path = os.path.join(folder, f"{name}.gif")
         save_rotation_gif(frames, gif_path)
-        frame_to_picture(frames[0], np.percentile(frames, 99.9)).save(
-            os.path.join(folder, f"observer_{observer}_frame_0.png"))
+        frame_to_picture(frames[0], np.percentile(frames, 99.9)).save(os.path.join(folder, f"{name}_frame_0.png"))
         paths.append(gif_path)
     return paths
 
@@ -64,8 +70,8 @@ def relative_noise_per_lit_pixel(image):
 
 
 def plot_independent_comparison(a, b, chi2, labels, title, path):
-    a_observer_0 = a.sum(axis=0)[0].astype(np.float64)
-    b_observer_0 = b.sum(axis=0)[0].astype(np.float64)
+    a_observer_0 = a[0].sum(axis=0).astype(np.float64)
+    b_observer_0 = b[0].sum(axis=0).astype(np.float64)
     total = a_observer_0 + b_observer_0
     residual = np.divide(a_observer_0 - b_observer_0, np.sqrt(total), out=np.zeros_like(total), where=total > 0)
     brightest = np.percentile(np.concatenate([a_observer_0.ravel(), b_observer_0.ravel()]), 99.9)

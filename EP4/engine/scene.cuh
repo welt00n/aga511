@@ -5,7 +5,8 @@
 
 #define MAX_SPOTS 64
 #define MAX_NMU 4096
-#define NOT_AN_OBSERVER (-1)
+#define MAX_OBSERVERS 1024
+#define NOT_IN_PASS (-1)
 #define SPOTS_SUBSEQUENCE (~0ULL)
 
 typedef struct {
@@ -15,8 +16,9 @@ typedef struct {
     unsigned int spots;
     double umbra_radius;
     double penumbra_radius;
-    unsigned int observers;
-    unsigned int nx, ny;
+    unsigned int observer_count;
+    double inclinations[MAX_OBSERVERS];
+    unsigned int size;
     unsigned int nphi, nmu;
 } StarConfig;
 
@@ -27,10 +29,11 @@ typedef struct {
     real umbra_chord_squared;
     real penumbra_chord_squared;
     real penumbra_escape_probability;
-    unsigned int nx, ny, nphi, nmu, observers;
-    int observer_of_imu[MAX_NMU];
+    unsigned int size, nphi, nmu;
+    int slot_of_imu[MAX_NMU];
 } Scene;
 
 int build_scene(const StarConfig *config, Scene *scene);
+void clear_observer_slots(Scene *scene);
 
 #endif

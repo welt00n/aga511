@@ -31,7 +31,7 @@ The broad idea: **history → foundations → programming model → Buffon → t
 | 4 | **Memory** | two address spaces, `cudaMalloc`/`cudaMemcpy`, registers / shared / global / constant | the memory hierarchy, drawn | - |
 | 5 | **Working together** | races, atomics, the work queue | the race, by hand | - |
 | 6 | **Buffon** | everything above in one program: persistent threads, the queue, Philox streams per chunk, SM masking | - | code excerpts |
-| 7 | **Measuring Buffon** | Amdahl with n = SMs, p depends on N, FP64 vs FP32 | **the class predicts first**, then we show | plots from EP3, **live nsys / ncu** |
+| 7 | **Measuring Buffon** | Amdahl with n = SMs, p depends on N, then Gustafson: grow the problem with the machine ([scaling_laws.md](../docs/scaling_laws.md)), FP64 vs FP32 | **the class predicts first**, then we show | plots from EP3, **live nsys / ncu** |
 | 8 | **The star: new problems** | a 1.5 GB image, atomics on many addresses, constant memory, the RNG check between CPU and GPU | why caching does not help here | - |
 | 9 | **The star: results** | whatever is ready: the video, the speedups, the profile | - | the video, plots |
 | 10 | **Closing** | what the GPU is good for, what it is not, what we learned | the three takeaways | - |

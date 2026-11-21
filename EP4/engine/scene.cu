@@ -16,10 +16,6 @@ static int validate_config(const StarConfig *config) {
         fprintf(stderr, "nmu can be at most %d.\n", MAX_NMU);
         return -1;
     }
-    if (config->observers < 1 || config->observers > config->nmu) {
-        fprintf(stderr, "Observers must be between 1 and nmu.\n");
-        return -1;
-    }
     if (config->umbra_radius > config->penumbra_radius) {
         fprintf(stderr, "The umbra radius must not be larger than the penumbra radius.\n");
         return -1;
@@ -69,27 +65,10 @@ static int place_spots(const StarConfig *config, Scene *scene) {
     return 0;
 }
 
-static unsigned int observer_imu(const StarConfig *config, unsigned int observer) {
-    if (config->observers == 1) {
-        return config->nmu / 2;
+void clear_observer_slots(Scene *scene) {
+    for (unsigned int imu = 0; imu < MAX_NMU; imu++) {
+        scene->slot_of_imu[imu] = NOT_IN_PASS;
     }
-    return observer * (config->nmu - 1) / (config->observers - 1);
-}
-
-static int fill_observer_table(const StarConfig *config, Scene *scene) {
-    for (unsigned int imu = 0; imu < config->nmu; imu++) {
-        scene->observer_of_imu[imu] = NOT_AN_OBSERVER;
-    }
-    for (unsigned int observer = 0; observer < config->observers; observer++) {
-        unsigned int imu = observer_imu(config, observer);
-        if (scene->observer_of_imu[imu] != NOT_AN_OBSERVER) {
-            fprintf(stderr, "Observers %d and %u fall in the same mu bin: use fewer observers or a larger nmu.\n",
-                    scene->observer_of_imu[imu], observer);
-            return -1;
-        }
-        scene->observer_of_imu[imu] = (int) observer;
-    }
-    return 0;
 }
 
 static real chord_squared(double angle) {
@@ -104,13 +83,9 @@ int build_scene(const StarConfig *config, Scene *scene) {
     scene->umbra_chord_squared = chord_squared(config->umbra_radius);
     scene->penumbra_chord_squared = chord_squared(config->penumbra_radius);
     scene->penumbra_escape_probability = (real) PENUMBRA_ESCAPE_PROBABILITY;
-    scene->nx = config->nx;
-    scene->ny = config->ny;
+    scene->size = config->size;
     scene->nphi = config->nphi;
     scene->nmu = config->nmu;
-    scene->observers = config->observers;
-    if (place_spots(config, scene) != 0) {
-        return -1;
-    }
-    return fill_observer_table(config, scene);
+    clear_observer_slots(scene);
+    return place_spots(config, scene);
 }

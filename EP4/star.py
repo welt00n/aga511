@@ -1,6 +1,9 @@
 import argparse
+import glob
 import json
+import math
 import os
+import shutil
 import subprocess
 from datetime import datetime
 
@@ -12,6 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ENGINE_FOLDER = os.path.join(HERE, "engine")
 EP2_ENGINE_FOLDER = os.path.join(HERE, "..", "EP2", "engine")
 RUNS_FOLDER = os.path.join(HERE, "runs")
+DEFAULT_OBSERVERS = [1.5708, 1.0472, 0.5236, 0.0]
 
 
 # ============================================================ command line
@@ -23,29 +27,35 @@ def photons(text):
     return int(value)
 
 
+def inclinations(text):
+    return [float(inclination) for inclination in text.split(",")]
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="EP4: Monte Carlo image of a spotted star")
     parser.add_argument("-n", "--photons", type=photons, default=10 ** 7, help="number of photons, e.g. 1e8")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--limb", type=float, default=1.0, help="limb darkening a in I = I0 (1 + a mu)")
     parser.add_argument("--spots", type=int, default=3)
-    parser.add_argument("--observers", type=int, default=4)
-    parser.add_argument("--nx", type=int, default=200)
-    parser.add_argument("--ny", type=int, default=200)
-    parser.add_argument("--nphi", type=int, default=150)
-    parser.add_argument("--nmu", type=int, default=150)
+    parser.add_argument("--observers", type=inclinations, default=DEFAULT_OBSERVERS,
+                        help="inclinations in radians, e.g. 1.5708,0.7854,0")
+    parser.add_argument("--size", type=int, default=200, help="square image side in pixels")
+    parser.add_argument("--frames", type=int, default=150)
+    parser.add_argument("--nmu", type=int, default=None, help="mu bins (default: the odd number nearest frames/pi)")
     parser.add_argument("--chunk-size", type=int, default=1024)
+    parser.add_argument("--observers-per-pass", type=int, default=None)
     parser.add_argument("--precision", type=int, choices=(64, 32), default=64)
     parser.add_argument("--compare-ep2", action="store_true", help="EP4 vs EP2, both without spots")
     parser.add_argument("--check-split", action="store_true", help="two halves of the chunk range vs the full run")
+    parser.add_argument("--check-passes", action="store_true", help="one observer per pass vs all in one pass")
     parser.add_argument("--compare-precision", action="store_true", help="FP32 vs FP64 on the same photons")
     return parser.parse_args()
 
 
 def star_config(args, **changes):
     config = {"photons": args.photons, "seed": args.seed, "limb": args.limb, "spots": args.spots,
-              "observers": args.observers, "nx": args.nx, "ny": args.ny, "nphi": args.nphi, "nmu": args.nmu,
-              "chunk_size": args.chunk_size}
+              "observers": args.observers, "size": args.size, "frames": args.frames, "nmu": args.nmu,
+              "chunk_size": args.chunk_size, "observers_per_pass": args.observers_per_pass}
     config.update(changes)
     return config
 
@@ -58,38 +68,74 @@ def compile_engine():
         raise RuntimeError(f"Error compiling the engine:\n{result.stdout}{result.stderr}")
 
 
-def parse_key_values(line):
+def parse_key_values(text):
     values = {}
-    for pair in line.split():
-        key, text = pair.split("=", 1)
+    for pair in text.split():
+        if "=" not in pair:
+            continue
+        key, value = pair.split("=", 1)
         for convert in (int, float, str):
             try:
-                values[key] = convert(text)
+                values[key] = convert(value)
                 break
             except ValueError:
                 pass
     return values
 
 
-def run_engine(config, image_path, precision=64, chunk_range=None):
+def lines_of_kind(output, kind):
+    return [parse_key_values(line) for line in output.splitlines() if line.startswith(kind + " ")]
+
+
+def engine_command(config, output_dir, precision, chunk_range):
     engine = os.path.join(ENGINE_FOLDER, "star" if precision == 64 else "star32")
     command = [engine, "-n", config["photons"], "-s", config["seed"], "-a", config["limb"],
-               "--spots", config["spots"], "--observers", config["observers"],
-               "--nx", config["nx"], "--ny", config["ny"], "--nphi", config["nphi"], "--nmu", config["nmu"],
-               "--chunk-size", config["chunk_size"], "-o", image_path]
+               "--spots", config["spots"], "--observers", ",".join(f"{i:.17g}" for i in config["observers"]),
+               "--size", config["size"], "--frames", config["frames"],
+               "--chunk-size", config["chunk_size"], "--output-dir", output_dir]
+    if config["nmu"] is not None:
+        command += ["--nmu", config["nmu"]]
+    if config["observers_per_pass"] is not None:
+        command += ["--observers-per-pass", config["observers_per_pass"]]
     if chunk_range is not None:
         command += ["--first-chunk", chunk_range[0], "--last-chunk", chunk_range[1]]
-    command = [str(item) for item in command]
+    return [str(item) for item in command]
+
+
+def run_engine(config, output_dir, precision=64, chunk_range=None):
+    command = engine_command(config, output_dir, precision, chunk_range)
     result = subprocess.run(command, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"Error running the engine:\n{' '.join(command)}\n{result.stderr}")
-    return parse_key_values(result.stdout.strip().splitlines()[-1])
+    return lines_of_kind(result.stdout, "SUMMARY")[0]
 
 
-def load_and_delete_image(result):
-    image = analysis.load_image(result["IMAGE"], result["NPHI"], result["OBSERVERS"], result["NY"], result["NX"])
-    os.remove(result["IMAGE"])
-    return image
+def read_record(path):
+    with open(path) as file:
+        return parse_key_values(file.read())
+
+
+def load_observers(output_dir):
+    records = sorted((read_record(path) for path in glob.glob(os.path.join(output_dir, "*.record"))),
+                     key=lambda record: record["OBSERVER"])
+    image = np.stack([analysis.load_observer_image(os.path.join(output_dir, record["IMAGE"]),
+                                                   record["FRAMES"], record["SIZE"]) for record in records])
+    return records, image
+
+
+def load_and_delete_observers(output_dir):
+    records, image = load_observers(output_dir)
+    shutil.rmtree(output_dir)
+    return records, image
+
+
+def ep2_nmu(config):
+    return config["nmu"] if config["nmu"] is not None else 2 * round((config["frames"] / math.pi - 1) / 2) + 1
+
+
+def ep2_observer_inclinations(count, nmu):
+    bins = [nmu // 2] if count == 1 else [observer * (nmu - 1) // (count - 1) for observer in range(count)]
+    return [math.acos(-1 + (bin + 0.5) * 2 / nmu) for bin in bins]
 
 
 def compile_and_run_ep2(config, folder):
@@ -98,7 +144,9 @@ def compile_and_run_ep2(config, folder):
     compiled = subprocess.run(["gcc", *sources, "-o", binary, "-O2", "-lm"], capture_output=True, text=True)
     if compiled.returncode != 0:
         raise RuntimeError(f"Error compiling EP2:\n{compiled.stderr}")
-    arguments = [config[key] for key in ("photons", "seed", "limb", "spots", "observers", "nx", "ny", "nphi", "nmu")]
+    observers = len(config["observers"])
+    arguments = [config["photons"], config["seed"], config["limb"], config["spots"], observers,
+                 config["size"], config["size"], config["frames"], config["nmu"]]
     started_at = datetime.now()
     ran = subprocess.run([binary, *map(str, arguments)], cwd=folder, capture_output=True, text=True)
     seconds = (datetime.now() - started_at).total_seconds()
@@ -107,7 +155,7 @@ def compile_and_run_ep2(config, folder):
         raise RuntimeError(f"Error running EP2:\n{ran.stderr}")
     image_name = next(name for name in os.listdir(folder) if name.startswith("star-N-") and name.endswith(".bin"))
     image_path = os.path.join(folder, image_name)
-    image = analysis.load_image(image_path, config["nphi"], config["observers"], config["ny"], config["nx"])
+    image = analysis.load_ep2_image(image_path, config["frames"], observers, config["size"], config["size"])
     os.remove(image_path)
     return image, seconds
 
@@ -133,15 +181,17 @@ def save_report(lines, path):
 
 
 def describe_run(result):
-    return (f"{result['PHOTONS']:.3g} photons in {result['PHOTONS_TIME']:.3f} s "
+    return (f"{result['PHOTONS']:.3g} photons, {result['PASSES']} pass(es), in {result['PHOTONS_TIME']:.3f} s "
             f"({result['PHOTONS_PER_SECOND']:.3g} photons/s); setup {result['SETUP_TIME']:.3f} s, "
-            f"save {result['SAVE_TIME']:.3f} s; recorded {result['RECORDED']} "
+            f"zero {result['ZERO_TIME']:.3f} s, save {result['SAVE_TIME']:.3f} s; recorded {result['RECORDED']} "
             f"({100 * result['RECORDED'] / result['PHOTONS']:.2f}%), blocked by spots {result['BLOCKED']}")
 
 
 def describe_star(config):
-    return (f"N = {config['photons']:.3g}, {config['nx']}x{config['ny']} pixels, nphi = {config['nphi']}, "
-            f"nmu = {config['nmu']}, {config['observers']} observers, {config['spots']} spots")
+    nmu = config["nmu"] if config["nmu"] is not None else "odd nearest frames/pi"
+    observers = ", ".join(f"{i:g}" for i in config["observers"])
+    return (f"N = {config['photons']:.3g}, {config['size']}x{config['size']} pixels, {config['frames']} frames, "
+            f"nmu = {nmu}, observers at {observers} rad, {config['spots']} spots")
 
 
 # ============================================================ experiments
@@ -149,20 +199,26 @@ def describe_star(config):
 def simulate_star(args):
     config = star_config(args)
     folder = new_run_folder(f"cpu-fp{args.precision}")
-    result = run_engine(config, os.path.join(folder, "image.bin"), args.precision)
+    observers_folder = os.path.join(folder, "observers")
+    result = run_engine(config, observers_folder, args.precision)
     save_json({"config": config, "result": result}, os.path.join(folder, "run.json"))
     print(describe_run(result))
-    for path in analysis.save_observer_pictures(load_and_delete_image(result), folder):
+    records, image = load_observers(observers_folder)
+    names = [record["IMAGE"].removesuffix(".bin") for record in records]
+    for path in analysis.save_observer_pictures(image, names, folder):
         print(f"  {os.path.relpath(path, HERE)}")
+    for record in records:
+        os.remove(os.path.join(observers_folder, record["IMAGE"]))
 
 
 def compare_with_ep2(args):
-    config = star_config(args, spots=0)
+    nmu = ep2_nmu(star_config(args))
+    config = star_config(args, spots=0, nmu=nmu, observers=ep2_observer_inclinations(len(args.observers), nmu))
     folder = new_run_folder(f"compare-ep2-fp{args.precision}")
-    ep4 = run_engine(config, os.path.join(folder, "ep4.bin"), args.precision)
-    ep4_image = load_and_delete_image(ep4)
+    ep4 = run_engine(config, os.path.join(folder, "ep4"), args.precision)
+    _, ep4_image = load_and_delete_observers(os.path.join(folder, "ep4"))
     ep2_image, ep2_seconds = compile_and_run_ep2(config, folder)
-    chi2 = analysis.chi2_between_independent_images(ep4_image.sum(axis=0), ep2_image.sum(axis=0))
+    chi2 = analysis.chi2_between_independent_images(ep4_image.sum(axis=1), ep2_image.sum(axis=1))
     verdict = "the same physics within noise" if abs(chi2["sigma_from_1"]) < 3 else "THE IMAGES DIFFER"
     lines = ["EP4 vs EP2, without spots, independent random numbers (frames summed)",
              f"  {describe_star(config)}",
@@ -172,7 +228,7 @@ def compare_with_ep2(args):
              f"  chi2/dof = {chi2['chi2_per_dof']:.4f} over {chi2['dof']} pixels "
              f"({chi2['sigma_from_1']:+.2f} sigma from 1): {verdict}",
              "  photons per observer, EP4 vs EP2:"]
-    for observer, (a, b) in enumerate(zip(ep4_image.sum(axis=(0, 2, 3)), ep2_image.sum(axis=(0, 2, 3)))):
+    for observer, (a, b) in enumerate(zip(ep4_image.sum(axis=(1, 2, 3)), ep2_image.sum(axis=(1, 2, 3)))):
         lines.append(f"    observer {observer}: {a} vs {b} ({(int(a) - int(b)) / np.sqrt(a + b):+.2f} sigma)")
     save_report(lines, os.path.join(folder, "report.txt"))
     analysis.plot_independent_comparison(ep4_image, ep2_image, chi2, ("EP4", "EP2"),
@@ -183,13 +239,14 @@ def compare_with_ep2(args):
 def check_split(args):
     config = star_config(args)
     folder = new_run_folder(f"check-split-fp{args.precision}")
-    full = run_engine(config, os.path.join(folder, "full.bin"), args.precision)
+    full = run_engine(config, os.path.join(folder, "full"), args.precision)
     chunks = full["CHUNKS"]
     middle = chunks // 2
-    first = run_engine(config, os.path.join(folder, "first.bin"), args.precision, (0, middle))
-    second = run_engine(config, os.path.join(folder, "second.bin"), args.precision, (middle, chunks))
-    halves = load_and_delete_image(first).astype(np.uint64) + load_and_delete_image(second)
-    identical = np.array_equal(halves, load_and_delete_image(full))
+    first = run_engine(config, os.path.join(folder, "first"), args.precision, (0, middle))
+    second = run_engine(config, os.path.join(folder, "second"), args.precision, (middle, chunks))
+    halves = (load_and_delete_observers(os.path.join(folder, "first"))[1].astype(np.uint64)
+              + load_and_delete_observers(os.path.join(folder, "second"))[1])
+    identical = np.array_equal(halves, load_and_delete_observers(os.path.join(folder, "full"))[1])
     save_report([f"Chunks [0, {middle}) + [{middle}, {chunks}) vs the full run [0, {chunks})",
                  f"  {describe_star(config)}, chunk size {config['chunk_size']}",
                  f"  recorded: {first['RECORDED']} + {second['RECORDED']} = "
@@ -200,15 +257,34 @@ def check_split(args):
         raise SystemExit(1)
 
 
+def check_passes(args):
+    folder = new_run_folder(f"check-passes-fp{args.precision}")
+    one_pass = run_engine(star_config(args, observers_per_pass=None), os.path.join(folder, "one-pass"), args.precision)
+    passes = run_engine(star_config(args, observers_per_pass=1), os.path.join(folder, "passes"), args.precision)
+    one_pass_image = load_and_delete_observers(os.path.join(folder, "one-pass"))[1]
+    passes_image = load_and_delete_observers(os.path.join(folder, "passes"))[1]
+    identical = np.array_equal(one_pass_image, passes_image)
+    same_counts = all(one_pass[key] == passes[key] for key in ("PHOTONS", "BLOCKED", "MISSED", "RECORDED"))
+    save_report([f"{one_pass['OBSERVERS']} observers in 1 pass vs {passes['PASSES']} passes of 1 observer",
+                 f"  {describe_star(star_config(args))}",
+                 f"  1 pass:   {describe_run(one_pass)}",
+                 f"  {passes['PASSES']} passes: {describe_run(passes)}",
+                 "  counts: " + ("the same" if same_counts else "DIFFERENT"),
+                 "  images: " + ("IDENTICAL, bit for bit" if identical else "DIFFERENT")],
+                os.path.join(folder, "report.txt"))
+    if not (identical and same_counts):
+        raise SystemExit(1)
+
+
 def compare_precision(args):
     config = star_config(args)
     folder = new_run_folder("compare-precision")
-    fp64 = run_engine(config, os.path.join(folder, "fp64.bin"), 64)
-    fp32 = run_engine(config, os.path.join(folder, "fp32.bin"), 32)
-    fp64_image = load_and_delete_image(fp64)
-    fp32_image = load_and_delete_image(fp32)
+    fp64 = run_engine(config, os.path.join(folder, "fp64"), 64)
+    fp32 = run_engine(config, os.path.join(folder, "fp32"), 32)
+    fp64_image = load_and_delete_observers(os.path.join(folder, "fp64"))[1]
+    fp32_image = load_and_delete_observers(os.path.join(folder, "fp32"))[1]
     moved = analysis.fraction_of_photons_moved(fp64_image, fp32_image)
-    noise = analysis.relative_noise_per_lit_pixel(fp64_image.sum(axis=0))
+    noise = analysis.relative_noise_per_lit_pixel(fp64_image.sum(axis=1))
     save_report(["FP32 vs FP64, same seed: the same random numbers, so the same photons",
                  f"  {describe_star(config)}",
                  f"  FP64: {describe_run(fp64)}",
@@ -223,7 +299,7 @@ def main():
     args = parse_args()
     compile_engine()
     checks = [(args.compare_ep2, compare_with_ep2), (args.check_split, check_split),
-              (args.compare_precision, compare_precision)]
+              (args.check_passes, check_passes), (args.compare_precision, compare_precision)]
     requested = [check for wanted, check in checks if wanted]
     for experiment in requested or [simulate_star]:
         experiment(args)

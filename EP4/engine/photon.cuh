@@ -91,7 +91,7 @@ static inline HD ObserverBin observer_bin(const Scene *scene, Vec3 direction) {
 }
 
 static inline HD unsigned long long pixel_index(const Scene *scene, Vec3 position, Vec3 direction,
-                                                ObserverBin bin, int observer) {
+                                                ObserverBin bin, int slot) {
     real u = direction.x, v = direction.y, w = direction.z;
     real root = sine_from_cosine(w);
     real ypp, zpp;
@@ -104,10 +104,10 @@ static inline HD unsigned long long pixel_index(const Scene *scene, Vec3 positio
         ypp = -sf * position.x + cf * position.y;
         zpp = -(cf * position.x + sf * position.y) * w + position.z * root;
     }
-    unsigned int ix = bin_index((ypp + 1) / 2, scene->nx);
-    unsigned int iy = bin_index((zpp + 1) / 2, scene->ny);
-    unsigned long long frame = (unsigned long long) bin.iphi * scene->observers + (unsigned int) observer;
-    return (frame * scene->ny + iy) * scene->nx + ix;
+    unsigned int ix = bin_index((ypp + 1) / 2, scene->size);
+    unsigned int iy = bin_index((zpp + 1) / 2, scene->size);
+    unsigned long long frame = (unsigned long long) slot * scene->nphi + bin.iphi;
+    return (frame * scene->size + iy) * scene->size + ix;
 }
 
 template <typename Rng>
@@ -118,11 +118,11 @@ static inline HD long long trace_photon(const Scene *scene, Rng *rng) {
         return PHOTON_BLOCKED_BY_SPOT;
     }
     ObserverBin bin = observer_bin(scene, direction);
-    int observer = scene->observer_of_imu[bin.imu];
-    if (observer == NOT_AN_OBSERVER) {
+    int slot = scene->slot_of_imu[bin.imu];
+    if (slot == NOT_IN_PASS) {
         return PHOTON_MISSES_OBSERVERS;
     }
-    return (long long) pixel_index(scene, point.position, direction, bin, observer);
+    return (long long) pixel_index(scene, point.position, direction, bin, slot);
 }
 
 #endif
