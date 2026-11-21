@@ -19,7 +19,7 @@
 enum {
     OPT_SPOTS = 1000, OPT_UMBRA_RADIUS, OPT_PENUMBRA_RADIUS, OPT_OBSERVERS, OPT_SIZE, OPT_FRAMES, OPT_NMU,
     OPT_CHUNK_SIZE, OPT_FIRST_CHUNK, OPT_LAST_CHUNK, OPT_OBSERVERS_PER_PASS, OPT_MEMORY_BUDGET,
-    OPT_NO_RECORD, OPT_FINGERPRINT, OPT_CODE_HASH, OPT_DESCRIBE, OPT_TEST_RNG
+    OPT_SMS, OPT_NO_RECORD, OPT_FINGERPRINT, OPT_CODE_HASH, OPT_DESCRIBE, OPT_TEST_RNG
 };
 
 static const struct option LONG_OPTIONS[] = {
@@ -38,6 +38,7 @@ static const struct option LONG_OPTIONS[] = {
     {"last-chunk", required_argument, 0, OPT_LAST_CHUNK},
     {"observers-per-pass", required_argument, 0, OPT_OBSERVERS_PER_PASS},
     {"memory-budget", required_argument, 0, OPT_MEMORY_BUDGET},
+    {"sms", required_argument, 0, OPT_SMS},
     {"no-record", no_argument, 0, OPT_NO_RECORD},
     {"output-dir", required_argument, 0, 'o'},
     {"fingerprint", required_argument, 0, OPT_FINGERPRINT},
@@ -66,6 +67,7 @@ static void print_usage(const char *program) {
            "      --last-chunk B           one past the last chunk (default: all)\n"
            "      --observers-per-pass K   observers recorded per pass (default: all, one pass)\n"
            "      --memory-budget B        or K from a budget for the image: 7GB, 7G, 7e9, 512MB, 6.5GiB\n"
+           "      --sms N                  the GPU engines: work on N SMs only (default: all)\n"
            "      --no-record              simulate the photons without an image\n"
            "  -o, --output-dir DIR         where the observer files go (default .)\n"
            "      --fingerprint F          the job's fingerprint, copied into the records\n"
@@ -158,6 +160,7 @@ static Options default_options(void) {
     options.last_chunk = ALL_CHUNKS;
     options.observers_per_pass = ALL_OBSERVERS;
     options.memory_budget = NO_BUDGET;
+    options.sms = ALL_SMS;
     options.record = true;
     options.output_dir = ".";
     options.fingerprint = "none";
@@ -185,6 +188,7 @@ static void read_option(Options *options, int flag, const char *value, const cha
     case OPT_LAST_CHUNK: options->last_chunk = (long long) number_or_stop(value, 0, 9e18, "--last-chunk must be 0 or more."); break;
     case OPT_OBSERVERS_PER_PASS: options->observers_per_pass = (unsigned int) number_or_stop(value, 1, MAX_OBSERVERS, "--observers-per-pass must be 1 or more."); break;
     case OPT_MEMORY_BUDGET: options->memory_budget = bytes_or_stop(value); break;
+    case OPT_SMS: options->sms = (unsigned int) number_or_stop(value, 1, 1024, "--sms must be from 1 to the GPU's SMs."); break;
     case OPT_NO_RECORD: options->record = false; break;
     case 'o': options->output_dir = word_or_stop(value, "--output-dir must not be empty or contain spaces."); break;
     case OPT_FINGERPRINT: options->fingerprint = word_or_stop(value, "--fingerprint must not be empty or contain spaces."); break;

@@ -43,18 +43,20 @@ def parse_args():
     parser.add_argument("--chunk-size", type=int, default=1024)
     parser.add_argument("--observers-per-pass", type=int, default=None)
     parser.add_argument("--processor", choices=PROCESSORS, default="cpu")
+    parser.add_argument("--sms", type=int, default=None, help="the GPU: work on this many SMs only")
     parser.add_argument("--precision", type=int, choices=(64, 32), default=64)
     parser.add_argument("--compare-ep2", action="store_true", help="EP4 vs EP2, both without spots")
     parser.add_argument("--check-split", action="store_true", help="two halves of the chunk range vs the full run")
     parser.add_argument("--check-passes", action="store_true", help="one observer per pass vs all in one pass")
     parser.add_argument("--compare-precision", action="store_true", help="FP32 vs FP64 on the same photons")
+    parser.add_argument("--compare-gpu", action="store_true", help="the GPU vs the CPU on the same photons")
     return parser.parse_args()
 
 
 def star_config(args, **changes):
     config = {"photons": args.photons, "seed": args.seed, "limb": args.limb, "spots": args.spots,
               "observers": args.observers, "size": args.size, "frames": args.frames, "nmu": args.nmu,
-              "chunk_size": args.chunk_size, "observers_per_pass": args.observers_per_pass}
+              "chunk_size": args.chunk_size, "observers_per_pass": args.observers_per_pass, "sms": args.sms}
     config.update(changes)
     return config
 
@@ -233,10 +235,39 @@ def compare_precision(args):
                 os.path.join(folder, "report.txt"))
 
 
+def differing_counts(a, b):
+    keys = ("PHOTONS", "BLOCKED", "MISSED", "RECORDED")
+    return [f"{key} {a[key]} vs {b[key]}" for key in keys if a[key] != b[key]]
+
+
+def compare_gpu(args):
+    config = star_config(args)
+    folder = new_run_folder(f"compare-gpu-{args.precision}")
+    cpu = run_engine(config, os.path.join(folder, "cpu"), "cpu", args.precision)
+    gpu = run_engine(config, os.path.join(folder, "gpu"), "gpu", args.precision)
+    cpu_image = load_and_delete_observers(os.path.join(folder, "cpu"))[1]
+    gpu_image = load_and_delete_observers(os.path.join(folder, "gpu"))[1]
+    identical = np.array_equal(cpu_image, gpu_image)
+    differences = differing_counts(cpu, gpu)
+    lines = [f"GPU vs CPU, {args.precision}-bit, same seed: the same random numbers, so the same photons",
+             f"  {describe_star(config)}",
+             f"  CPU: {describe_run(cpu)}",
+             f"  GPU: {describe_run(gpu)}",
+             f"  speed, photon phase, the whole GPU / one CPU core: "
+             f"{gpu['PHOTONS_PER_SECOND'] / cpu['PHOTONS_PER_SECOND']:.1f}",
+             f"  speed, whole run, the whole GPU / one CPU core: {cpu['TIME'] / gpu['TIME']:.1f}",
+             "  counts: " + ("the same" if not differences else "DIFFERENT: " + ", ".join(differences)),
+             "  images: " + ("IDENTICAL, bit for bit" if identical else
+                             f"{np.count_nonzero(cpu_image != gpu_image)} pixels differ; "
+                             f"{analysis.fraction_of_photons_moved(cpu_image, gpu_image):.2e} of the photons moved")]
+    save_report(lines, os.path.join(folder, "report.txt"))
+
+
 def main():
     args = parse_args()
     checks = [(args.compare_ep2, compare_with_ep2), (args.check_split, check_split),
-              (args.check_passes, check_passes), (args.compare_precision, compare_precision)]
+              (args.check_passes, check_passes), (args.compare_precision, compare_precision),
+              (args.compare_gpu, compare_gpu)]
     requested = [check for wanted, check in checks if wanted]
     for experiment in requested or [simulate_star]:
         experiment(args)

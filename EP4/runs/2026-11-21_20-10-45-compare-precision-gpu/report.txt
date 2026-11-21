@@ -1,0 +1,7 @@
+FP32 vs FP64, same seed: the same random numbers, so the same photons
+  N = 1e+08, 200x200 pixels, 150 frames, nmu = odd nearest frames/pi, observers at 1.5708, 1.0472, 0.5236, 0 rad, 3 spots
+  FP64: GPU 64-bit, 1e+08 photons, 1 pass(es), in 0.157 s (6.38e+08 photons/s); setup 0.183 s, zero 0.000 s, copy 0.006 s, save 0.125 s; recorded 8436785 (8.44%), blocked by spots 411940
+  FP32: GPU 32-bit, 1e+08 photons, 1 pass(es), in 0.011 s (9.29e+09 photons/s); setup 0.140 s, zero 0.000 s, copy 0.005 s, save 0.113 s; recorded 8436796 (8.44%), blocked by spots 411941
+  speed FP32 / FP64: 14.57
+  photons that land in another pixel in FP32: 1.13e-04
+  Poisson noise per lit pixel (frames summed): 1.23e-01

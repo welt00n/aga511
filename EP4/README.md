@@ -53,7 +53,8 @@ $B/star_cpu64 -h                 # all options
 ```
 python star.py -n 1e8                       run, a gif and a still frame per observer
 python star.py -n 1e8 --precision 32        the FP32 build
-python star.py -n 1e8 --processor gpu       on the GPU (from step 3 of today's plan)
+python star.py -n 1e8 --processor gpu       on the GPU (every check takes --processor gpu too)
+python star.py -n 1e8 --compare-gpu         the GPU vs the CPU on the same photons
 python star.py -n 2e8 --compare-ep2         same physics as EP2? (chi2, no spots)
 python star.py -n 1e7 --check-split         two halves of the chunk range = the full run?
 python star.py -n 1e7 --check-passes        one observer per pass = all in one pass?
@@ -81,7 +82,10 @@ Each run gets a folder in `runs/`: `run.json` and the gifs for a simulation, `re
 | `engine/report.cuh`, `report.cu` | the output lines and the observer records |
 | `engine/processor.cuh` | what the pass loop asks of a processor (open, load a pass, zero, trace, hand an observer to the host, close) |
 | `engine/cpu.cu` | the CPU as a processor: the chunk loop with our Philox copy |
-| `engine/gpu.cu` | the GPU as a processor (being built) |
+| `engine/gpu.cu` | the GPU as a processor: the Scene in constant memory, the kernel `trace_photons` (EP3's persistent threads and queue around the shared physics), the launch, the pinned host buffer |
+| `engine/gpu_image.cuh`, `gpu_image.cu` | the image in device memory: allocate, zero, copy one observer back; `count_photon_atomic` |
+| `engine/gpu_rng_test.cu` | `--test-rng` on the GPU: cuRAND vs `rng.cuh`, bit for bit |
+| `engine/gpu_sms.cuh`, `gpu_sms.cu` | the SMs: `%smid`, the mask (`--sms N`), the work per SM (`SM`, `SMS` lines) |
 | `engine/gpu_device.cuh`, `gpu_device.cu` | the GPU itself: CUDA errors, properties, name, compute capability, SMs |
 | `engine/main.cu` | the pass loop and its phase timings |
 | `engine/rng_test.cuh`, `rng_test.cu` | `--test-rng`: Random123's known answers, and on the GPU cuRAND vs our copy |

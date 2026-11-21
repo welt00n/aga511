@@ -1,95 +1,154 @@
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 
 #include "processor.cuh"
+#include "photon.cuh"
 #include "gpu_device.cuh"
+#include "gpu_image.cuh"
 #include "gpu_rng.cuh"
-#include "rng.cuh"
+#include "gpu_sms.cuh"
 
-#define NUMBERS_PER_CHUNK_CHECKED 16
+typedef struct {
+    unsigned long long seed;
+    long long photons;
+    long long chunk_size;
+    long long first_chunk;
+    long long last_chunk;
+} PhotonWork;
 
-static const unsigned long long CHUNKS_CHECKED[] = {0, 1, 1000003, 4294967301ULL};
-static const int CHUNK_CHECKS = sizeof(CHUNKS_CHECKED) / sizeof(CHUNKS_CHECKED[0]);
+typedef struct {
+    unsigned long long next_chunk;
+    unsigned long long simulated;
+    unsigned long long blocked_by_spots;
+    unsigned long long missed_observers;
+    unsigned long long recorded;
+} GpuCounters;
+
+typedef struct {
+    PhotonCounts tallies;
+    unsigned long long chunks;
+} ThreadWork;
+
+typedef struct {
+    int threads_per_block;
+    int blocks_per_sm;
+    int blocks;
+    bool cooperative;
+} Launch;
 
 struct Processor {
     const Options *options;
+    bool record;
+    GpuImage image;
+    PixelCount *host_counts;
+    GpuCounters *counters;
+    SmWork *sm_work;
+    Launch launch;
 };
 
+__constant__ Scene gpu_scene;
 
-// ============================================================ random numbers: cuRAND vs rng.cuh
 
-__global__ void draw_first_numbers(unsigned long long seed, const unsigned long long *chunks,
-                                   unsigned int *bits, real *uniforms) {
-    unsigned int check = threadIdx.x;
+// ============================================================ the kernel
+
+__device__ long long smaller(long long a, long long b) {
+    return a < b ? a : b;
+}
+
+__device__ long long take_next_chunk(const PhotonWork work, GpuCounters *counters) {
+    return work.first_chunk + (long long) atomicAdd(&counters->next_chunk, 1ULL);
+}
+
+__device__ void trace_chunk(long long chunk, const PhotonWork work, PixelCount *image, PhotonCounts *tallies) {
     GpuRng rng;
-    curand_init(seed, chunks[check], 0, &rng);
-    for (int i = 0; i < NUMBERS_PER_CHUNK_CHECKED; i++) {
-        bits[check * NUMBERS_PER_CHUNK_CHECKED + i] = curand(&rng);
-    }
-    curand_init(seed, chunks[check], 0, &rng);
-    for (int i = 0; i < NUMBERS_PER_CHUNK_CHECKED; i++) {
-        uniforms[check * NUMBERS_PER_CHUNK_CHECKED + i] = uniform(&rng);
-    }
-}
-
-static void draw_on_gpu(unsigned long long seed, unsigned int *bits, real *uniforms) {
-    size_t numbers = CHUNK_CHECKS * NUMBERS_PER_CHUNK_CHECKED;
-    unsigned long long *gpu_chunks;
-    unsigned int *gpu_bits;
-    real *gpu_uniforms;
-    check(cudaMalloc(&gpu_chunks, sizeof(CHUNKS_CHECKED)), "allocating the chunks to check");
-    check(cudaMalloc(&gpu_bits, numbers * sizeof(unsigned int)), "allocating the numbers");
-    check(cudaMalloc(&gpu_uniforms, numbers * sizeof(real)), "allocating the uniforms");
-    check(cudaMemcpy(gpu_chunks, CHUNKS_CHECKED, sizeof(CHUNKS_CHECKED), cudaMemcpyHostToDevice), "copying the chunks");
-    draw_first_numbers<<<1, CHUNK_CHECKS>>>(seed, gpu_chunks, gpu_bits, gpu_uniforms);
-    check(cudaGetLastError(), "launching draw_first_numbers");
-    check(cudaMemcpy(bits, gpu_bits, numbers * sizeof(unsigned int), cudaMemcpyDeviceToHost), "copying the numbers");
-    check(cudaMemcpy(uniforms, gpu_uniforms, numbers * sizeof(real), cudaMemcpyDeviceToHost), "copying the uniforms");
-    cudaFree(gpu_chunks);
-    cudaFree(gpu_bits);
-    cudaFree(gpu_uniforms);
-}
-
-static bool same_bits_as_cpu(unsigned long long seed, unsigned long long chunk, const unsigned int *gpu_bits) {
-    PhiloxState rng;
-    philox_init(seed, chunk, 0, &rng);
-    for (int i = 0; i < NUMBERS_PER_CHUNK_CHECKED; i++) {
-        if (philox_next(&rng) != gpu_bits[i]) {
-            return false;
+    curand_init(work.seed, (unsigned long long) chunk, 0, &rng);
+    long long first_photon = chunk * work.chunk_size;
+    long long end_photon = smaller(first_photon + work.chunk_size, work.photons);
+    for (long long photon = first_photon; photon < end_photon; photon++) {
+        long long pixel = trace_photon(&gpu_scene, &rng);
+        if (pixel == PHOTON_BLOCKED_BY_SPOT) {
+            tallies->blocked_by_spots++;
+        } else if (pixel == PHOTON_MISSES_OBSERVERS) {
+            tallies->missed_observers++;
+        } else {
+            tallies->recorded++;
+            if (image != NULL) {
+                count_photon_atomic(image, (unsigned long long) pixel);
+            }
         }
     }
-    return true;
+    tallies->simulated += end_photon - first_photon;
 }
 
-static bool same_uniforms_as_cpu(unsigned long long seed, unsigned long long chunk, const real *gpu_uniforms) {
-    PhiloxState rng;
-    philox_init(seed, chunk, 0, &rng);
-    for (int i = 0; i < NUMBERS_PER_CHUNK_CHECKED; i++) {
-        real cpu_uniform = uniform(&rng);
-        if (memcmp(&cpu_uniform, &gpu_uniforms[i], sizeof(real)) != 0) {
-            return false;
-        }
+__device__ ThreadWork take_chunks_until_none_left(const PhotonWork work, PixelCount *image, GpuCounters *counters) {
+    ThreadWork done = {{0, 0, 0, 0}, 0};
+    long long chunk = take_next_chunk(work, counters);
+    while (chunk < work.last_chunk) {
+        trace_chunk(chunk, work, image, &done.tallies);
+        done.chunks++;
+        chunk = take_next_chunk(work, counters);
     }
-    return true;
+    return done;
 }
 
-int compare_rng_with_cpu(unsigned long long seed) {
-    unsigned int bits[CHUNK_CHECKS * NUMBERS_PER_CHUNK_CHECKED];
-    real uniforms[CHUNK_CHECKS * NUMBERS_PER_CHUNK_CHECKED];
-    draw_on_gpu(seed, bits, uniforms);
-    printf("GPU_SEED_%llu_CHUNK_0=", seed);
-    for (int i = 0; i < 8; i++) {
-        printf("%08x%s", bits[i], i < 7 ? "," : "\n");
+__device__ void add_tallies(GpuCounters *counters, PhotonCounts tallies) {
+    atomicAdd(&counters->simulated, (unsigned long long) tallies.simulated);
+    atomicAdd(&counters->blocked_by_spots, (unsigned long long) tallies.blocked_by_spots);
+    atomicAdd(&counters->missed_observers, (unsigned long long) tallies.missed_observers);
+    atomicAdd(&counters->recorded, (unsigned long long) tallies.recorded);
+}
+
+__global__ void trace_photons(const PhotonWork work, PixelCount *image, GpuCounters *counters, SmWork *sm_work) {
+    long long started_at = clock64();
+    unsigned int sm = sm_id();
+    if (!is_allowed(sm, sm_work)) {
+        return;
     }
-    int failures = 0;
-    for (int c = 0; c < CHUNK_CHECKS; c++) {
-        bool bits_match = same_bits_as_cpu(seed, CHUNKS_CHECKED[c], &bits[c * NUMBERS_PER_CHUNK_CHECKED]);
-        bool uniforms_match = same_uniforms_as_cpu(seed, CHUNKS_CHECKED[c], &uniforms[c * NUMBERS_PER_CHUNK_CHECKED]);
-        printf("GPU_RNG_CHUNK=%llu BITS=%s UNIFORMS=%s\n", CHUNKS_CHECKED[c],
-               bits_match ? "SAME_AS_CPU" : "DIFFERENT", uniforms_match ? "SAME_AS_CPU" : "DIFFERENT");
-        failures += (bits_match ? 0 : 1) + (uniforms_match ? 0 : 1);
+    ThreadWork done = take_chunks_until_none_left(work, image, counters);
+    add_tallies(counters, done.tallies);
+    add_sm_work(sm_work, sm, done.chunks, (unsigned long long) done.tallies.simulated,
+                (unsigned long long) done.tallies.recorded, (unsigned long long) (clock64() - started_at));
+}
+
+
+// ============================================================ the launch
+
+static Launch choose_launch(void) {
+    Launch launch;
+    int smallest_full_grid;
+    check(cudaOccupancyMaxPotentialBlockSize(&smallest_full_grid, &launch.threads_per_block, trace_photons, 0, 0),
+          "choosing the block size");
+    check(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&launch.blocks_per_sm, trace_photons,
+                                                        launch.threads_per_block, 0),
+          "counting blocks per SM");
+    launch.blocks = launch.blocks_per_sm * gpu_attribute(cudaDevAttrMultiProcessorCount);
+    launch.cooperative = gpu_attribute(cudaDevAttrCooperativeLaunch) == 1;
+    return launch;
+}
+
+static void run_kernel(const void *kernel, Launch launch, void **arguments) {
+    if (launch.cooperative) {
+        check(cudaLaunchCooperativeKernel(kernel, launch.blocks, launch.threads_per_block, arguments, 0, 0),
+              "launching the kernel");
+    } else {
+        check(cudaLaunchKernel(kernel, launch.blocks, launch.threads_per_block, arguments, 0, 0),
+              "launching the kernel");
     }
-    return failures;
+    check(cudaDeviceSynchronize(), "waiting for the kernel");
+}
+
+static PhotonWork photon_work(const Options *options) {
+    PhotonWork work = {options->star.seed, options->star.photons, options->chunk_size,
+                       options->first_chunk, options->last_chunk};
+    return work;
+}
+
+static PhotonCounts read_counters(const GpuCounters *gpu_counters) {
+    GpuCounters counters;
+    check(cudaMemcpy(&counters, gpu_counters, sizeof(counters), cudaMemcpyDeviceToHost), "reading the counters");
+    PhotonCounts counts = {(long long) counters.simulated, (long long) counters.blocked_by_spots,
+                           (long long) counters.missed_observers, (long long) counters.recorded};
+    return counts;
 }
 
 
@@ -97,31 +156,62 @@ int compare_rng_with_cpu(unsigned long long seed) {
 
 void describe_processor(const Options *options, ProcessorInfo *info) {
     describe_gpu(info);
+    info->compute_units = resolve_sm_count(options->sms);
 }
 
 Processor *open_processor(const Options *options) {
-    fprintf(stderr, "The GPU does not trace photons yet.\n");
-    return NULL;
+    Processor *processor = (Processor *) calloc(1, sizeof(Processor));
+    processor->options = options;
+    processor->record = options->record;
+    if (processor->record) {
+        size_t pixels = pixels_per_observer(&options->star);
+        allocate_gpu_image(&processor->image, pixels, options->observers_per_pass);
+        zero_gpu_image(&processor->image, options->observers_per_pass);
+        check(cudaMallocHost(&processor->host_counts, pixels * sizeof(PixelCount)), "allocating the host buffer");
+    }
+    check(cudaMalloc(&processor->counters, sizeof(GpuCounters)), "allocating the counters");
+    processor->launch = choose_launch();
+    processor->sm_work = create_sm_work(resolve_sm_count(options->sms), processor->launch.blocks,
+                                        processor->launch.threads_per_block);
+    return processor;
 }
 
 void load_pass(Processor *processor, const Scene *scene) {
+    check(cudaMemcpyToSymbol(gpu_scene, scene, sizeof(Scene)), "copying the scene to constant memory");
 }
 
 void zero_pass_image(Processor *processor, unsigned int observers) {
+    if (processor->record) {
+        zero_gpu_image(&processor->image, observers);
+    }
 }
 
 PhotonCounts trace_pass(Processor *processor, const Run *run, Progress *progress) {
-    PhotonCounts counts = {0, 0, 0, 0};
-    return counts;
+    PhotonWork work = photon_work(run->options);
+    PixelCount *image = processor->record ? processor->image.counts : NULL;
+    void *arguments[] = {&work, &image, &processor->counters, &processor->sm_work};
+    check(cudaMemset(processor->counters, 0, sizeof(GpuCounters)), "resetting the counters");
+    reset_sm_work(processor->sm_work);
+    run_kernel((const void *) trace_photons, processor->launch, arguments);
+    print_sm_work(processor->sm_work, progress->pass);
+    return read_counters(processor->counters);
 }
 
 const PixelCount *observer_on_host(Processor *processor, unsigned int slot) {
-    return NULL;
+    copy_observer_to_host(&processor->image, slot, processor->host_counts);
+    return processor->host_counts;
 }
 
 size_t processor_image_bytes(const Processor *processor) {
-    return 0;
+    return processor->record ? gpu_image_bytes(&processor->image) : 0;
 }
 
 void close_processor(Processor *processor) {
+    if (processor->record) {
+        free_gpu_image(&processor->image);
+        cudaFreeHost(processor->host_counts);
+    }
+    cudaFree(processor->counters);
+    free_sm_work(processor->sm_work);
+    free(processor);
 }

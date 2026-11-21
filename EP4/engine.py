@@ -15,7 +15,8 @@ ENGINE_FOLDER = os.path.join(HERE, "engine")
 BUILD_FOLDER = os.path.join(ENGINE_FOLDER, "build")
 NVCC = "/usr/local/cuda/bin/nvcc"
 SHARED_SOURCES = ["main.cu", "options.cu", "scene.cu", "observers.cu", "image.cu", "report.cu", "rng_test.cu"]
-PROCESSOR_SOURCES = {"cpu": ["cpu.cu"], "gpu": ["gpu.cu", "gpu_device.cu"]}
+PROCESSOR_SOURCES = {"cpu": ["cpu.cu"],
+                     "gpu": ["gpu.cu", "gpu_image.cu", "gpu_sms.cu", "gpu_device.cu", "gpu_rng_test.cu"]}
 PROCESSORS = ("cpu", "gpu")
 PRECISIONS = (64, 32)
 FLAGS = ["-O2", "-std=c++17", "-Xcompiler", "-Wall"]
@@ -133,6 +134,8 @@ def engine_command(config, output_dir, processor, precision, chunk_range):
         command += ["--nmu", config["nmu"]]
     if config["observers_per_pass"] is not None:
         command += ["--observers-per-pass", config["observers_per_pass"]]
+    if config.get("sms") is not None:
+        command += ["--sms", config["sms"]]
     if chunk_range is not None:
         command += ["--first-chunk", chunk_range[0], "--last-chunk", chunk_range[1]]
     return [str(item) for item in command]

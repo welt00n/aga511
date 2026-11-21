@@ -57,3 +57,19 @@ Running notes, filled while EP4 is built: each concept we use, where EP4 uses it
 | Overloading + templates: one physics, two generators | `uniform(PhiloxState *)` vs `uniform(GpuRng *)` | — | 3 |
 | A first kernel launch: `<<<1, 4>>>`, `cudaMalloc`, `cudaMemcpy`, `cudaGetLastError` | `draw_first_numbers` | 19 registers | 3, 4 |
 | Name collisions from copying a library (macros are global) | `PHILOX_W32_0` vs cuRAND's | a compiler warning, renamed | (aside) |
+| The kernel: persistent threads + the work queue, the same as Buffon's; only the chunk's body changes | `trace_photons` vs EP3's `throw_needles` | — | 6, 8 |
+| Constant memory for the read-only Scene (`__constant__`, `cudaMemcpyToSymbol`) | `gpu_scene`, ~18 KB, loaded per pass | — | 4, 8 |
+| Atomics on the image in device memory | `count_photon_atomic` (`atomicAdd`) | — | 5, 8 |
+| Tallies in registers, one atomic per counter per thread at the end | `add_tallies` | — | 5 |
+| Pinned host memory: the copy engine writes straight into it | `cudaMallocHost`, one observer's worth | — | 4 |
+| Registers per thread decide occupancy; FP64 needs more | ptxas report | FP64 78, FP32 67 (Buffon 58), no spills | 3, 8 |
+| **Bit for bit vs statistically equal** | `--compare-gpu` | **FP64: the GPU's image = the CPU's, bit for bit**; FP32: 3.2·10⁻⁵ of the photons move | 8, 9 |
+| Fused multiply-add changes the last bit | `--fmad=false` experiment | FP32 differences 54 → 12 pixels: FMA is 3/4 of them, the math library the rest | 7, 9 |
+| The first speedups, with the baseline stated: **the whole GPU vs one CPU core**, photon phase vs whole run | `--compare-gpu` (prints both) | FP64, N = 10⁸: 75× on the photons, ~22× on the whole run; FP32 is 14.6× FP64 on this GPU (1:64) vs 1.45× on the CPU | 7, 9 |
+| Amdahl in one run: a fast kernel next to a fixed setup | N = 10⁸ FP32: photons 0.011 s, setup 0.14 s | 90% of the run is serial | 7 |
+| `%smid`: a thread can ask which SM it runs on; the SM mask | `gpu_sms.cu` (EP3's) | the same image on 1, 2, 9, 36 SMs | 6, 7 |
+| Cooperative launch: every block resident at once | `run_kernel` | — | 6 |
+| Load balance from a work queue: fast SMs take more chunks | `SM` lines | chunks per SM within 0.1%, cycles within 0.2% | 5, 7 |
+| **The GPU throttles its clock under load** (power, temperature) | `CYCLES` / time | **2.88 GHz on 1 SM, 1.95 GHz on 36**: speedup 30.7× in cycles, 20.8× in seconds | 7 |
+| Measure in cycles and in seconds, and report both | `clock64()` per SM next to the host's clock | the clock ratio explains the gap exactly | 7 |
+| One SM vs one CPU core | `--sms 1` vs `star_cpu64` | FP64 1.25×, FP32 ~25× | 2, 7 |

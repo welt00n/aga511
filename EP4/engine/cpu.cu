@@ -52,6 +52,10 @@ int compare_rng_with_cpu(unsigned long long seed) {
 }
 
 Processor *open_processor(const Options *options) {
+    if (options->sms != ALL_SMS) {
+        fprintf(stderr, "--sms needs a GPU engine (star_gpu64 or star_gpu32).\n");
+        return NULL;
+    }
     Processor *processor = (Processor *) calloc(1, sizeof(Processor));
     processor->options = options;
     processor->record = options->record;

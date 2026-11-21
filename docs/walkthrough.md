@@ -25,8 +25,8 @@ A guided tour of the EP4 sequential engine, one piece at a time, with the questi
 | — | **Recap of pieces 10–15: what we learned, what to change before the GPU** | | done |
 | 16 | The processor split: the pass loop stops knowing which processor traces | `processor.cuh`, `cpu.cu`, `main.cu` | done |
 | 17 | Random numbers on the GPU | `gpu_rng.cuh` | done |
-| 18 | The star on the GPU: constant Scene, `GpuImage`, the kernel and its queue | `gpu.cu`, `gpu_image.cu` | |
-| 19 | The SM mask | `gpu_sms.cu` | |
+| 18 | The star on the GPU: constant Scene, `GpuImage`, the kernel and its queue | `gpu.cu`, `gpu_image.cu` | done |
+| 19 | The SM mask | `gpu_sms.cu` | done |
 | 19b | The CPU's cores: the same queue on another processor | `cpu_cores.cu` | |
 | 20 | Sweeps and scaling | `sweeps.py`, `scaling.py` | |
 
@@ -1307,3 +1307,160 @@ GPU_RNG_CHUNK=4294967301 BITS=SAME_AS_CPU UNIFORMS=SAME_AS_CPU
 - **A macro collision:** our constants kept cuRAND's names; with both headers in `gpu.cu`, ours redefined cuRAND's (the compiler warned). Renamed `PHILOX_KEY_WEYL_0/1` and `PHILOX_ROUND_MULTIPLIER_0/1` (piece 3 updated).
 - **218 048 bytes of global memory** in the compiler's report for `gpu.cu`: most likely cuRAND's precomputed tables for its *other* generators (XORWOW, MRG32k3a), which `curand_kernel.h` brings in even though Philox needs none. Philox is counter-based: it skips ahead by arithmetic, not with tables.
 - **The test kernel:** 19 registers, no stack, no spills.
+
+---
+
+## Piece 18: the star on the GPU (`gpu.cu`, `gpu_image.cu`)
+
+The plan: [gpu_engine.md §4](gpu_engine.md#4-a-pass-on-the-gpu). The queue is EP3's (tested there, [§8](gpu_engine.md#8-what-ep3-already-settled-review-of-the-ep3-sessions-2026-11-21)); what is new is the inside of a chunk and everything around the kernel.
+
+### The kernel, top to bottom
+
+```c
+__constant__ Scene gpu_scene;                                   // the star, in constant memory
+
+__global__ void trace_photons(const PhotonWork work, PixelCount *image, GpuCounters *counters) {
+    add_tallies(counters, take_chunks_until_none_left(work, image, counters));
+}
+```
+
+| Function | Does | As in |
+|---|---|---|
+| `take_next_chunk` | `atomicAdd(&counters->next_chunk, 1)`: the work queue, one hot address | EP3, unchanged |
+| `take_chunks_until_none_left` | a persistent thread: take a chunk, trace it, take the next, until none left | EP3, unchanged |
+| `trace_chunk` | `curand_init(seed, chunk, 0)`, then `trace_photon(&gpu_scene, &rng)` for each photon of the chunk; tally it; if recorded, `count_photon_atomic` | the CPU's `simulate_chunk`, line for line |
+| `add_tallies` | the thread's four counts (registers), added once with `atomicAdd` | EP3's `crossings` |
+
+- **`PhotonWork`** (seed, N, chunk size, chunk range) is passed by value: kernel arguments live in their own constant bank.
+- **`GpuCounters`** (the queue's counter and the four tallies) is one small struct in device memory, zeroed with `cudaMemset` before each pass.
+- **`trace_photon(&gpu_scene, &rng)`** is the same function the CPU calls (piece 6), with cuRAND's state instead of our copy (piece 17). The pointer to a `__constant__` variable, once inlined, reads from the constant cache.
+
+### Around the kernel, per pass
+
+| Phase | GPU | CPU |
+|---|---|---|
+| SETUP | `cudaMalloc` the image (K observers) + `cudaMemset` it once (the first touch); `cudaMallocHost` a **pinned** host buffer of **one** observer; `choose_launch` | `malloc` + `touch_every_page` |
+| load the pass | `cudaMemcpyToSymbol(gpu_scene, &scene)`: ~18 KB into constant memory | keep a pointer |
+| ZERO | `cudaMemset` of the slots in use | `memset` |
+| PHOTONS | reset the counters, launch, `cudaDeviceSynchronize`, read the counters | the chunk loop |
+| COPY | one `cudaMemcpy` device → pinned buffer, per observer | a pointer |
+| SAVE | shared: `.partial`, `fsync`, rename, the record | shared |
+
+- **Pinned memory** (`cudaMallocHost`): memory the OS may not move, so the GPU's copy engine can write into it directly (DMA). Copying into ordinary (pageable) memory goes through a hidden pinned buffer, one more copy. One observer's worth (24 MB here) is enough, since observers are copied one at a time.
+- **The launch** (`choose_launch`, EP3's): the occupancy API picks the block size and the blocks per SM for `trace_photons`, and the grid is blocks per SM × 36 SMs. No `__launch_bounds__` (EP3 had 1024): the star's kernel needs more registers than Buffon's, so the compiler is left free and the occupancy API sizes the blocks around it. *(The numbers come in step 5.)*
+
+### What the compiler says
+
+| | FP64 | FP32 |
+|---|---|---|
+| registers per thread | 78 | 67 |
+| stack | 40 bytes | 32 bytes |
+| spills | 0 | 0 |
+
+(EP3's kernel: 58 registers.) The stack is small local memory, most likely the thread's tallies or the `SurfacePoint`/direction structs; the instruction mix (step 6) will show what.
+
+### GPU = CPU?
+
+| N | FP64 | FP32 |
+|---|---|---|
+| 10⁷ | **identical, bit for bit** | 54 pixels differ: 3.2·10⁻⁵ of the photons |
+| 10⁸ | **identical, bit for bit** | — |
+
+- **The random numbers are identical** (piece 17), so every difference comes from arithmetic.
+- **FP64: no photon changes pixel.** CUDA's FP64 `sin`, `cos`, `atan2`, `cbrt` and the fused multiply-adds round differently from glibc in the last bit, but at FP64's 53 bits a photon almost never sits close enough to a pixel edge for that to matter: none at 10⁸ photons.
+- **FP32: 27 photons of 843 339 move.** Experiment: the same FP32 build with `--fmad=false` (no fused multiply-add) moves only 12 pixels (7.1·10⁻⁶). **FMA explains ~3/4 of the difference; the rest is CUDA's FP32 math library** (`sinf`, `cosf`, `atan2f`, `cbrtf` are not glibc's).
+- **For scale:** FP32 vs FP64 moves 1.1·10⁻⁴; GPU vs CPU in FP32 moves 3.5× less. Both are far below the Poisson noise (0.12 per lit pixel).
+- **For the class: bit for bit vs statistically equal.** Same random numbers + FP64 = the same image on two different processors; FP32 = statistically equal, and we can say why.
+
+### The other checks, on the GPU
+
+- split and passes: **bit for bit**, FP64 and FP32;
+- EP2: χ²/dof = 0.9957, the same number as the CPU's (the images are identical);
+- FP32 vs FP64 on the GPU: FP32 **14.6×** faster (the CPU: 1.45×), the same 1.1·10⁻⁴ moved.
+
+### First speeds (laptop GPU; one run each; the sweeps will repeat)
+
+**What is compared:** the **whole GPU (all 36 SMs)** against **one CPU core** (the CPU engine is single-threaded), and by default only **the photon phase** (`PHOTONS_PER_SECOND`: the kernel vs the chunk loop). Every speedup below says which.
+
+| | N | PHOTONS phase | photons/s | photon phase vs one CPU core |
+|---|---|---|---|---|
+| GPU FP64 | 10⁸ | 0.158 s | 6.3·10⁸ | **75×** |
+| GPU FP32 | 10⁸ | 0.011 s | 9.3·10⁹ | ~700× |
+| GPU FP64 | 10⁷ | 0.026 s | 3.9·10⁸ | 41× |
+| GPU FP32 | 10⁷ | 0.003 s | 3.8·10⁹ | 291× |
+
+**The whole run** (setup + zero + photons + copy + save), from the same runs, approximately:
+
+| | CPU, whole run | GPU, whole run | whole-run speedup | photon-phase speedup |
+|---|---|---|---|---|
+| FP64, N = 10⁷ | ~1.2 s | ~0.29 s | **~4×** | 41× |
+| FP32, N = 10⁷ | ~1.0 s | ~0.37 s | **~3×** | 291× |
+| FP64, N = 10⁸ | ~10.7 s | ~0.48 s | **~22×** | 75× |
+
+- **The gap between the two columns is Amdahl's law:** the GPU pays ~0.15 s to create the CUDA context before any photon; the bigger N, the smaller that share.
+- **Not against the whole CPU:** all 20 cores (8 P + 12 E) would narrow the gap, roughly by 10–15× (an estimate; CPU threads are deferred). Stated as "vs one core", following Hoefler and Belli ([hpc_architecture.md §4](hpc_architecture.md#4-benchmarking-like-hpc)).
+- **Not per SM:** one SM vs one core would be ~75/36 ≈ 2× in FP64 and ~20× in FP32 *if* the GPU scaled perfectly. The SM mask (step 4) measures it instead of assuming it: see piece 19.
+
+---
+
+## Piece 19: the SM mask, and the work per SM (`gpu_sms.cu`)
+
+EP3's design, now for the star: run on N SMs of the 36, to measure Amdahl's law over SMs.
+
+### How the mask works
+
+```
+open_processor:
+    choose_launch                      blocks per SM × 36 SMs: the grid covers the whole GPU
+    create_sm_work(sms, launch)
+        list_sm_ids: a tiny kernel (mark_sm_ids) with the same launch; each block writes its SM's id
+        allow the first `sms` ids found   (the ids need not be 0…35: list them, don't assume)
+trace_photons, first lines:
+    sm = sm_id()                       the %smid register: which SM this thread runs on
+    if (!is_allowed(sm)) return;       blocks on other SMs leave at once
+```
+
+- **Cooperative launch** (`cudaLaunchCooperativeKernel`, when the GPU supports it, as EP3): the launch fails unless every block can be resident at once. That is what makes the mask honest: all blocks start together, the ones on forbidden SMs leave, and the queue is shared only by the allowed SMs.
+- **`--sms N`** on the GPU engines; the CPU engine refuses it ("--sms needs a GPU engine"). `COMPUTE_UNITS` in the output is the number of SMs allowed.
+
+### The work per SM (`SmWork`, in device memory)
+
+Each thread, before leaving, adds to its SM's counters: chunks taken, photons, recorded, and its cycles (`clock64()`, from its first line to its last; `atomicMax` keeps the slowest thread). After each pass:
+
+```
+SM PASS=1 SM=0 CHUNKS=27136 PHOTONS=27787264 RECORDED=2345585 CYCLES=251587808
+...
+SMS PASS=1 SMS_USED=36 CYCLES=251640725
+```
+
+**Measured (FP32, N = 10⁹, all SMs):** chunks per SM from 27 104 to 27 136 (0.1%), cycles from 251.2 M to 251.6 M (0.2%). **The queue balances the SMs almost perfectly:** a fast SM simply takes more chunks.
+
+### Checks
+
+- **The same image on 1, 2, 9 and 36 SMs** (FP32, N = 10⁸): the files are identical byte for byte. Who traces a chunk never changes its photons.
+- FP64 kernel: 80 registers (78 before the mask).
+
+### First scaling over SMs (FP32, N = 10⁸, photon phase, one run each)
+
+| SMs | time | speedup over 1 SM | cycles of the slowest SM | implied clock = cycles / time |
+|---|---|---|---|---|
+| 1 | 0.313 s | 1 | 903 M | **2.88 GHz** |
+| 2 | 0.157 s | 2.0 | 452 M | 2.88 GHz |
+| 9 | 0.036 s | 8.7 | 103 M | 2.85 GHz |
+| 36 | 0.015 s | 20.8 | 29.5 M | **1.95 GHz** |
+
+- **The GPU changes its clock with the load.** One busy SM runs at ~2.9 GHz; all 36 at ~1.95 GHz (most likely the laptop's power or temperature limit).
+- **In cycles, 36 SMs are 30.7× faster than 1; in seconds, 20.8×.** The ratio, 1.48, is the clock ratio. A strong-scaling curve in seconds mixes two effects: how well the work parallelizes, and how the hardware throttles. With `CYCLES` next to the time, they separate. This is why Hoefler and Belli ask for the clocks with every result ([hpc_architecture.md §4](hpc_architecture.md#4-benchmarking-like-hpc)).
+- **At 36 SMs and N = 10⁸ the kernel lasts 15 ms,** short enough for the start and the tail (the last chunks) to matter too; the sweeps use a calibrated N (5 s at 36 SMs).
+
+### One SM vs one CPU core (N = 10⁸)
+
+| | one SM | one CPU core | one SM / one core |
+|---|---|---|---|
+| FP64 | 1.18·10⁷ photons/s | 0.95·10⁷ | **1.25** |
+| FP32 | 3.2·10⁸ photons/s | 1.3·10⁷ | **~25** |
+
+On this laptop, one SM is worth about one CPU core in FP64 (its FP64 units run at 1:64) and ~25 cores in FP32. The GPU wins by having 36 of them.
+
+- **Amdahl, already visible:** at N = 10⁸ in FP32, the photons take 0.011 s and SETUP (mostly creating the CUDA context) 0.14 s; the run is 90% serial. At 10⁷ the GPU's speed looks lower because the kernel is too short to fill and drain the GPU efficiently. The `problem-size` sweep (step 7) measures exactly this.
+- **FP32 is 14.6× faster than FP64 on this GPU** (its FP64 units run at 1:64), against 1.45× on the CPU: the same code, opposite conclusions about precision, as predicted in [gpus.md](gpus.md).

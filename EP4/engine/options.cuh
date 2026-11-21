@@ -5,6 +5,8 @@
 
 #include "scene.cuh"
 
+#define ALL_SMS 0
+
 typedef struct {
     StarConfig star;
     long long chunk_size;
@@ -12,6 +14,7 @@ typedef struct {
     long long last_chunk;
     unsigned int observers_per_pass;
     double memory_budget;
+    unsigned int sms;
     bool record;
     const char *output_dir;
     const char *fingerprint;
