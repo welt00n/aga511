@@ -1,0 +1,272 @@
+{
+  "64": [
+    {
+      "variant": "baseline",
+      "registers": 80,
+      "spill_bytes": 0,
+      "threads_per_block": 768,
+      "occupancy": 0.5,
+      "kernel_time_median": 0.774527,
+      "kernel_time_min": 0.77437,
+      "kernel_time_max": 0.777006,
+      "photons_per_second": 645555287.2914696,
+      "sm_clock_median_mhz": 2812.0,
+      "power_median_w": 55.165,
+      "pixels_differing_from_baseline": 0,
+      "sections": []
+    },
+    {
+      "variant": "scene_in_global",
+      "registers": 88,
+      "spill_bytes": 0,
+      "threads_per_block": 640,
+      "occupancy": 0.417,
+      "kernel_time_median": 0.773164,
+      "kernel_time_min": 0.771352,
+      "kernel_time_max": 0.773391,
+      "photons_per_second": 646693327.6769224,
+      "sm_clock_median_mhz": 2512.5,
+      "power_median_w": 44.61,
+      "pixels_differing_from_baseline": 0,
+      "sections": []
+    },
+    {
+      "variant": "registers_64",
+      "registers": 64,
+      "spill_bytes": 24,
+      "threads_per_block": 1024,
+      "occupancy": 0.667,
+      "kernel_time_median": 0.783449,
+      "kernel_time_min": 0.779863,
+      "kernel_time_max": 0.78381,
+      "photons_per_second": 638203635.4631891,
+      "sm_clock_median_mhz": 2722.5,
+      "power_median_w": 42.760000000000005,
+      "pixels_differing_from_baseline": 0,
+      "sections": []
+    },
+    {
+      "variant": "registers_40",
+      "registers": 40,
+      "spill_bytes": 344,
+      "threads_per_block": 768,
+      "occupancy": 1.0,
+      "kernel_time_median": 0.850259,
+      "kernel_time_min": 0.84886,
+      "kernel_time_max": 0.850675,
+      "photons_per_second": 588056109.9617882,
+      "sm_clock_median_mhz": 2583.5,
+      "power_median_w": 59.07,
+      "pixels_differing_from_baseline": 0,
+      "sections": []
+    },
+    {
+      "variant": "no_fma",
+      "registers": 80,
+      "spill_bytes": 0,
+      "threads_per_block": 768,
+      "occupancy": 0.5,
+      "kernel_time_median": 0.835332,
+      "kernel_time_min": 0.831575,
+      "kernel_time_max": 0.836782,
+      "photons_per_second": 598564403.1355197,
+      "sm_clock_median_mhz": 2756.0,
+      "power_median_w": 55.230000000000004,
+      "pixels_differing_from_baseline": 0,
+      "sections": []
+    },
+    {
+      "variant": "sections",
+      "registers": 112,
+      "spill_bytes": 0,
+      "threads_per_block": 512,
+      "occupancy": 0.333,
+      "kernel_time_median": 0.769798,
+      "kernel_time_min": 0.768791,
+      "kernel_time_max": 0.772281,
+      "photons_per_second": 649521043.182757,
+      "sm_clock_median_mhz": 2486.0,
+      "power_median_w": 46.760000000000005,
+      "pixels_differing_from_baseline": 0,
+      "sections": [
+        {
+          "PASS": 1,
+          "NAME": "surface",
+          "CYCLES": 8155926366403,
+          "SHARE": 0.2024
+        },
+        {
+          "PASS": 1,
+          "NAME": "direction",
+          "CYCLES": 13473198388714,
+          "SHARE": 0.3344
+        },
+        {
+          "PASS": 1,
+          "NAME": "spots",
+          "CYCLES": 3368017944484,
+          "SHARE": 0.0836
+        },
+        {
+          "PASS": 1,
+          "NAME": "bin",
+          "CYCLES": 8678575419953,
+          "SHARE": 0.2154
+        },
+        {
+          "PASS": 1,
+          "NAME": "pixel",
+          "CYCLES": 580669289349,
+          "SHARE": 0.0144
+        },
+        {
+          "PASS": 1,
+          "NAME": "chunk",
+          "CYCLES": 377796002,
+          "SHARE": 0.0
+        },
+        {
+          "PASS": 1,
+          "NAME": "record",
+          "CYCLES": 6034721850869,
+          "SHARE": 0.1498
+        }
+      ]
+    }
+  ],
+  "32": [
+    {
+      "variant": "baseline",
+      "registers": 67,
+      "spill_bytes": 0,
+      "threads_per_block": 896,
+      "occupancy": 0.583,
+      "kernel_time_median": 0.451003,
+      "kernel_time_min": 0.449199,
+      "kernel_time_max": 0.45234,
+      "photons_per_second": 11086400755.649076,
+      "sm_clock_median_mhz": 2309.5,
+      "power_median_w": 71.965,
+      "pixels_differing_from_baseline": 0,
+      "sections": []
+    },
+    {
+      "variant": "scene_in_global",
+      "registers": 68,
+      "spill_bytes": 0,
+      "threads_per_block": 896,
+      "occupancy": 0.583,
+      "kernel_time_median": 0.458368,
+      "kernel_time_min": 0.458339,
+      "kernel_time_max": 0.463664,
+      "photons_per_second": 10908265847.528624,
+      "sm_clock_median_mhz": 2223.5,
+      "power_median_w": 74.19000000000001,
+      "pixels_differing_from_baseline": 0,
+      "sections": []
+    },
+    {
+      "variant": "registers_64",
+      "registers": 55,
+      "spill_bytes": 0,
+      "threads_per_block": 576,
+      "occupancy": 0.75,
+      "kernel_time_median": 0.467517,
+      "kernel_time_min": 0.461968,
+      "kernel_time_max": 0.470403,
+      "photons_per_second": 10694798264.020346,
+      "sm_clock_median_mhz": 2531.0,
+      "power_median_w": 72.935,
+      "pixels_differing_from_baseline": 0,
+      "sections": []
+    },
+    {
+      "variant": "registers_40",
+      "registers": 40,
+      "spill_bytes": 80,
+      "threads_per_block": 768,
+      "occupancy": 1.0,
+      "kernel_time_median": 0.473858,
+      "kernel_time_min": 0.472884,
+      "kernel_time_max": 0.474944,
+      "photons_per_second": 10551684259.841557,
+      "sm_clock_median_mhz": 2467.0,
+      "power_median_w": 89.55,
+      "pixels_differing_from_baseline": 0,
+      "sections": []
+    },
+    {
+      "variant": "no_fma",
+      "registers": 67,
+      "spill_bytes": 0,
+      "threads_per_block": 896,
+      "occupancy": 0.583,
+      "kernel_time_median": 0.46043,
+      "kernel_time_min": 0.456951,
+      "kernel_time_max": 0.462966,
+      "photons_per_second": 10859414026.019156,
+      "sm_clock_median_mhz": 2433.5,
+      "power_median_w": 76.085,
+      "pixels_differing_from_baseline": 30689,
+      "sections": []
+    },
+    {
+      "variant": "sections",
+      "registers": 69,
+      "spill_bytes": 0,
+      "threads_per_block": 896,
+      "occupancy": 0.583,
+      "kernel_time_median": 0.489412,
+      "kernel_time_min": 0.486936,
+      "kernel_time_max": 0.490101,
+      "photons_per_second": 10216341242.143633,
+      "sm_clock_median_mhz": 2310.0,
+      "power_median_w": 33.87,
+      "pixels_differing_from_baseline": 0,
+      "sections": [
+        {
+          "PASS": 1,
+          "NAME": "surface",
+          "CYCLES": 11980694402375,
+          "SHARE": 0.2764
+        },
+        {
+          "PASS": 1,
+          "NAME": "direction",
+          "CYCLES": 17665443512121,
+          "SHARE": 0.4075
+        },
+        {
+          "PASS": 1,
+          "NAME": "spots",
+          "CYCLES": 3968732686774,
+          "SHARE": 0.0916
+        },
+        {
+          "PASS": 1,
+          "NAME": "bin",
+          "CYCLES": 3625186373668,
+          "SHARE": 0.0836
+        },
+        {
+          "PASS": 1,
+          "NAME": "pixel",
+          "CYCLES": 394518492537,
+          "SHARE": 0.0091
+        },
+        {
+          "PASS": 1,
+          "NAME": "chunk",
+          "CYCLES": 6115443808,
+          "SHARE": 0.0001
+        },
+        {
+          "PASS": 1,
+          "NAME": "record",
+          "CYCLES": 5707625792375,
+          "SHARE": 0.1317
+        }
+      ]
+    }
+  ]
+}
