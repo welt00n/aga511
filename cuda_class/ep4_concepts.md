@@ -85,4 +85,15 @@ Running notes, filled while EP4 is built: each concept we use, where EP4 uses it
 | Where the cycles go, per piece of the photon | `sections` variant | direction 33–41%, surface 20–28%, atan2 22% (FP64), atomics 13–15% | 8, 9 |
 | Amdahl inside the kernel: only the FP64 part slows down | FP64 vs FP32 per photon | 17×, not 64× | 7, 9 |
 | The clock depends on the work (power limit) | `gpu_monitor.py` | FP32 2310 MHz at 72 W, FP64 2812 MHz at 55 W | 7 |
+| **p(N): Amdahl's parallel fraction depends on the problem size** (EP3's result, for the star) | `problem-size` sweep, `scaling.py` | FP32 photon phase: 0.14 (10⁵) → 0.9993 (10⁹); whole run: ≈ 0 → 0.987 (10¹⁰) | 7 |
+| Speedups at the same precision, the baseline named | `devices` sweep | GPU vs one core: 82× (FP64), 850× (FP32) on the photons; ~28× on the whole run at 10⁸ | 7, 9 |
+| **Strong scaling over SMs, measured:** FP64 35.9× on 36 SMs, p = 0.9998 | `strong_fp64` | the clock steady at 2880 MHz | 7 |
+| **The clock in the speedup:** FP32 36.0× in cycles, 33.1× in seconds | `strong_fp32` | 2895 → 2636 MHz on 36 SMs | 7 |
+| **Weak scaling and Gustafson, measured:** flat time, s′ fitted 0.054 vs measured 0.058 (FP64) | `weak_fp64` | — | 7 |
+| Gustafson's scaled speedup: one processor's time for the *n-fold* problem / n processors' time | `scaling.py` | my first formula counted the serial part n times (negative s′): corrected | 7 |
+| **Amdahl's ceiling, measured:** at N = 10⁸, 36 SMs give 2.3×; p = 0.58, ceiling 2.4 (the CUDA context is the wall) | `amdahl_ceiling_fp32` | the class's central plot: three curves, one GPU | 7 |
+| **The showcase:** 3.9·10¹² photons in 6.4 min on the laptop's GPU (~4 days on one CPU core) | `showcase.py` | 1k, 300 frames, 4 observers, one pass | 9 |
+| Planning from physics, checked by measurement: N ↔ SNR | `showcase.py` | SNR measured = predicted: 14.1 center, 11.7 limb ring | 9 |
+| Reading a 1.3 GB file frame by frame (`np.memmap`) | the video writer | never loaded whole | (aside) |
+| A laptop's CPU and GPU share one power budget | the CPU ran at 7.1·10⁶ in the sweep vs 9.5·10⁶ alone | (likely) | 7 |
 | FMA: faster and (in FP32) a different last bit | `no_fma` variant | FP64 +7% speed, identical images; FP32 30 689 pixels differ at 5·10⁹ | 7, 9 |

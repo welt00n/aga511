@@ -1,4 +1,5 @@
 *.bin
+*.mp4
 
 # EP4 build outputs
 EP4/engine/build/

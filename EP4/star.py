@@ -8,12 +8,11 @@ from datetime import datetime
 import numpy as np
 
 import analysis
-from engine import run_engine, describe_engine, load_observers, load_and_delete_observers, PROCESSORS
+from engine import run_engine, describe_engine, load_observers, load_and_delete_observers, PROCESSORS, DEFAULT_OBSERVERS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EP2_ENGINE_FOLDER = os.path.join(HERE, "..", "EP2", "engine")
 RUNS_FOLDER = os.path.join(HERE, "runs")
-DEFAULT_OBSERVERS = [1.5708, 1.0472, 0.5236, 0.0]
 
 
 # ============================================================ command line

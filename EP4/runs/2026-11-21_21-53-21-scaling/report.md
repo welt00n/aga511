@@ -1,0 +1,116 @@
+# Scaling analysis (the laptop: RTX 5070 Laptop GPU, 36 SMs; CPU baseline: one core)
+
+## Strong scaling, FP64 (N = 3.12e+09)
+
+| SMs | photon phase (s) | whole run (s) | speedup, photons | speedup, whole run | speedup, cycles | SM clock (MHz) |
+|---|---|---|---|---|---|---|
+| 1 | 172.665 | 172.981 | 1.00 | 1.00 | 1.00 | 2887 |
+| 2 | 86.424 | 86.735 | 2.00 | 1.99 | 2.00 | 2887 |
+| 3 | 57.618 | 58.003 | 3.00 | 2.98 | 3.00 | 2887 |
+| 4 | 43.123 | 43.421 | 4.00 | 3.98 | 4.00 | 2887 |
+| 6 | 28.790 | 29.176 | 6.00 | 5.93 | 5.99 | 2880 |
+| 9 | 19.365 | 19.732 | 8.92 | 8.77 | 8.95 | 2880 |
+| 12 | 14.399 | 14.749 | 11.99 | 11.73 | 11.99 | 2880 |
+| 18 | 9.596 | 9.929 | 17.99 | 17.42 | 17.99 | 2880 |
+| 24 | 7.201 | 7.506 | 23.98 | 23.05 | 23.98 | 2880 |
+| 36 | 4.805 | 5.125 | 35.94 | 33.75 | 35.98 | 2880 |
+
+- Amdahl fit, photon phase: p = 0.99980, s = 0.00020, ceiling 1/s = 4895
+- Amdahl fit, whole run: p = 0.99782, s = 0.00218, ceiling 1/s = 458
+- serial fraction measured from the phases (setup + zero + copy + save) / T(1): 0.00186
+
+## Weak scaling, FP64
+
+| SMs | N | photon phase (s) | whole run (s) | scaled speedup, photons | scaled speedup, whole run | efficiency |
+|---|---|---|---|---|---|---|
+| 1 | 8.24e+07 | 4.671 | 4.983 | 1.00 | 1.00 | 1.000 |
+| 2 | 1.65e+08 | 4.573 | 4.909 | 2.04 | 1.97 | 1.021 |
+| 3 | 2.47e+08 | 4.589 | 4.916 | 3.05 | 2.92 | 1.018 |
+| 4 | 3.30e+08 | 4.567 | 4.883 | 4.09 | 3.89 | 1.023 |
+| 6 | 4.94e+08 | 4.569 | 4.874 | 6.13 | 5.82 | 1.022 |
+| 9 | 7.42e+08 | 4.567 | 4.911 | 9.20 | 8.63 | 1.023 |
+| 12 | 9.89e+08 | 4.570 | 4.905 | 12.26 | 11.50 | 1.022 |
+| 18 | 1.48e+09 | 4.755 | 5.079 | 17.68 | 16.62 | 0.982 |
+| 24 | 1.98e+09 | 4.609 | 4.895 | 24.32 | 22.97 | 1.013 |
+| 36 | 2.97e+09 | 4.590 | 4.938 | 36.63 | 34.12 | 1.018 |
+
+- scaled speedup, whole run = (serial + n · photon time on 1 SM) / T(n): the time one SM would take for the n-fold problem, over the time n SMs take (Gustafson's definition)
+- Gustafson fit, whole run: s′ = 0.05419
+- serial share measured on 36 SMs: 0.05828
+
+## Strong scaling, FP32 (N = 5.65e+10)
+
+| SMs | photon phase (s) | whole run (s) | speedup, photons | speedup, whole run | speedup, cycles | SM clock (MHz) |
+|---|---|---|---|---|---|---|
+| 1 | 175.380 | 175.630 | 1.00 | 1.00 | 1.00 | 2895 |
+| 2 | 87.741 | 88.008 | 2.00 | 2.00 | 2.00 | 2895 |
+| 3 | 58.499 | 58.768 | 3.00 | 2.99 | 3.00 | 2895 |
+| 4 | 43.893 | 44.158 | 4.00 | 3.98 | 4.00 | 2895 |
+| 6 | 29.295 | 29.564 | 5.99 | 5.94 | 6.00 | 2887 |
+| 9 | 19.574 | 19.829 | 8.96 | 8.86 | 8.99 | 2880 |
+| 12 | 14.682 | 14.950 | 11.95 | 11.75 | 12.00 | 2880 |
+| 18 | 9.801 | 10.057 | 17.89 | 17.46 | 17.99 | 2880 |
+| 24 | 7.442 | 7.691 | 23.57 | 22.84 | 23.98 | 2850 |
+| 36 | 5.302 | 5.568 | 33.08 | 31.54 | 35.97 | 2636 |
+
+- Amdahl fit, photon phase: p = 0.99916, s = 0.00084, ceiling 1/s = 1197
+- Amdahl fit, whole run: p = 0.99767, s = 0.00233, ceiling 1/s = 429
+- serial fraction measured from the phases (setup + zero + copy + save) / T(1): 0.00150
+
+## Strong scaling, FP32 (N = 1.00e+08)
+
+| SMs | photon phase (s) | whole run (s) | speedup, photons | speedup, whole run | speedup, cycles | SM clock (MHz) |
+|---|---|---|---|---|---|---|
+| 1 | 0.329 | 0.580 | 1.00 | 1.00 | 1.00 | 2141 |
+| 2 | 0.166 | 0.406 | 1.99 | 1.43 | 1.99 | 2647 |
+| 3 | 0.110 | 0.347 | 2.99 | 1.67 | 2.99 | 2381 |
+| 4 | 0.084 | 0.326 | 3.91 | 1.78 | 3.97 | 2298 |
+| 6 | 0.057 | 0.294 | 5.77 | 1.97 | 5.87 | 2254 |
+| 9 | 0.038 | 0.319 | 8.65 | 1.82 | 8.80 | 2212 |
+| 12 | 0.029 | 0.252 | 11.21 | 2.30 | 11.48 | 2190 |
+| 18 | 0.021 | 0.273 | 15.61 | 2.13 | 16.53 | 2168 |
+| 24 | 0.015 | 0.250 | 22.14 | 2.32 | 22.76 | 2164 |
+| 36 | 0.011 | 0.251 | 29.73 | 2.32 | 30.88 | 2145 |
+
+- Amdahl fit, photon phase: p = 0.99384, s = 0.00616, ceiling 1/s = 162
+- Amdahl fit, whole run: p = 0.57617, s = 0.42383, ceiling 1/s = 2
+- serial fraction measured from the phases (setup + zero + copy + save) / T(1): 0.41171
+
+## Weak scaling, FP32
+
+| SMs | N | photon phase (s) | whole run (s) | scaled speedup, photons | scaled speedup, whole run | efficiency |
+|---|---|---|---|---|---|---|
+| 1 | 1.57e+09 | 4.904 | 5.135 | 1.00 | 1.00 | 1.000 |
+| 2 | 3.15e+09 | 4.885 | 5.099 | 2.01 | 1.97 | 1.004 |
+| 3 | 4.72e+09 | 4.887 | 5.113 | 3.01 | 2.92 | 1.004 |
+| 4 | 6.29e+09 | 4.889 | 5.194 | 4.01 | 3.82 | 1.003 |
+| 6 | 9.44e+09 | 4.905 | 5.155 | 6.00 | 5.75 | 1.000 |
+| 9 | 1.42e+10 | 4.906 | 5.130 | 9.00 | 8.65 | 1.000 |
+| 12 | 1.89e+10 | 4.907 | 5.135 | 11.99 | 11.51 | 0.999 |
+| 18 | 2.83e+10 | 4.912 | 5.156 | 17.97 | 17.17 | 0.998 |
+| 24 | 3.78e+10 | 4.962 | 5.192 | 23.72 | 22.72 | 0.988 |
+| 36 | 5.66e+10 | 5.313 | 5.558 | 33.23 | 31.80 | 0.923 |
+
+- scaled speedup, whole run = (serial + n · photon time on 1 SM) / T(n): the time one SM would take for the n-fold problem, over the time n SMs take (Gustafson's definition)
+- Gustafson fit, whole run: s′ = 0.08855
+- serial share measured on 36 SMs: 0.04423
+
+## p(N), FP32 (from 1 and 36 SMs)
+
+| N | p, photon phase | p, whole run |
+|---|---|---|
+| 1e+05 | 0.14305 | 0.02524 |
+| 1e+06 | 0.48670 | -0.01611 |
+| 1e+07 | 0.92258 | 0.06706 |
+| 1e+08 | 0.98869 | 0.54330 |
+| 1e+09 | 0.99930 | 0.92394 |
+| 1e+10 | 0.99737 | 0.98722 |
+
+## Devices (N = 10⁸; the GPU: all 36 SMs; the CPU: one core; speedups at the same precision)
+
+| binary | photons/s (photon phase) | whole run (s) | speedup, photon phase | speedup, whole run |
+|---|---|---|---|---|
+| cpu64 | 7.14e+06 | 14.249 | 1.0× | 1.0× |
+| cpu32 | 1.06e+07 | 9.637 | 1.0× | 1.0× |
+| gpu64 | 5.88e+08 | 0.515 | 82.4× | 27.7× |
+| gpu32 | 9.05e+09 | 0.328 | 853.6× | 29.4× |

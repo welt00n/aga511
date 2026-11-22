@@ -1,0 +1,262 @@
+{
+  "kind": "problem-size",
+  "precision": 32,
+  "seconds_on_all_sms": 5.0,
+  "repeats": 3,
+  "created": "2026-11-21T20:57:51",
+  "code_hash": "b2b335648897",
+  "points": [
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 100000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 100000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 1000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 1000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 10000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 10000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 1000000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 1000000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 10000000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 10000000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 100000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 100000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 1000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 1000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 10000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 10000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 1000000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 1000000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 10000000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 10000000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 100000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 100000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 1000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 1000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 10000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 10000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 1000000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 1000000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 10000000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 10000000000,
+      "repeat": 3
+    }
+  ]
+}

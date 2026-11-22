@@ -30,7 +30,9 @@ A guided tour of the EP4 sequential engine, one piece at a time, with the questi
 | 19b | ~~The CPU's cores~~ (deferred) | `cpu_cores.cu` | — |
 | 20 | Memory, passes and the kernel's resources | `gpu_device.cu`, `gpu.cu`, `options.cu`, `report.cu` | done |
 | 21 | The code mapped to the hardware, measured | `instruction_mix.py`, `kernel_experiments.py`, `gpu_monitor.py`, `gpu_sections.cuh` | done |
-| 22 | Sweeps and scaling | `sweeps.py`, `scaling.py` | |
+| 22 | The sweeps | `sweeps.py` | done |
+| 23 | The scaling analysis | `scaling.py` | done |
+| 24 | The showcase | `showcase.py` | done |
 
 ---
 
@@ -1402,6 +1404,8 @@ __global__ void trace_photons(const PhotonWork work, PixelCount *image, GpuCount
 - **The gap between the two columns is Amdahl's law:** the GPU pays ~0.15 s to create the CUDA context before any photon; the bigger N, the smaller that share.
 - **Not against the whole CPU:** all 20 cores (8 P + 12 E) would narrow the gap, roughly by 10–15× (an estimate; CPU threads are deferred). Stated as "vs one core", following Hoefler and Belli ([hpc_architecture.md §4](hpc_architecture.md#4-benchmarking-like-hpc)).
 - **Not per SM:** one SM vs one core would be ~75/36 ≈ 2× in FP64 and ~20× in FP32 *if* the GPU scaled perfectly. The SM mask (step 4) measures it instead of assuming it: see piece 19.
+- **Amdahl, already visible:** at N = 10⁸ in FP32, the photons take 0.011 s and SETUP (mostly creating the CUDA context) 0.14 s; the run is 90% serial. At 10⁷ the GPU's speed looks lower because the kernel is too short to fill and drain the GPU efficiently. The `problem-size` sweep (step 7) measures exactly this.
+- **FP32 is 14.6× faster than FP64 on this GPU** (its FP64 units run at 1:64), against 1.45× on the CPU: the same code, opposite conclusions about precision, as predicted in [gpus.md](gpus.md).
 
 ---
 
@@ -1591,5 +1595,201 @@ The map of [hpc_architecture.md §7](hpc_architecture.md#7-the-code-mapped-to-wh
 3. **The clock depends on the work:** the FP32 kernel ran at a median 2310 MHz drawing ~72 W, the FP64 one at 2812 MHz drawing ~55 W. FP32 keeps more units busy, so it hits the power limit sooner (medians of a few 200 ms samples: indicative).
 4. **Still open:** pass 2 of piece 20 ran 5× slower after a 12 s save (idle clock?). The sweeps' warm-up run and clock sampling will show it.
 
-- **Amdahl, already visible:** at N = 10⁸ in FP32, the photons take 0.011 s and SETUP (mostly creating the CUDA context) 0.14 s; the run is 90% serial. At 10⁷ the GPU's speed looks lower because the kernel is too short to fill and drain the GPU efficiently. The `problem-size` sweep (step 7) measures exactly this.
-- **FP32 is 14.6× faster than FP64 on this GPU** (its FP64 units run at 1:64), against 1.45× on the CPU: the same code, opposite conclusions about precision, as predicted in [gpus.md](gpus.md).
+---
+
+## Piece 22: the sweeps (`sweeps.py`)
+
+The definition is in [gpu_engine.md §7](gpu_engine.md#7-the-sweeps-today-to-review); this is the code that runs it.
+
+### One point = one engine process
+
+```python
+def run_point(point, scratch_folder):          # point = {processor, precision, sms, photons, repeat}
+    config = engine.default_star_config(point["photons"], sms=point["sms"])
+    with GpuMonitor() as monitor:              # nvidia-smi every 200 ms, next to the run
+        output = engine.run_engine_output(config, scratch_folder, processor, precision)
+    → SUMMARY, KERNEL, SMS lines + the monitor's clocks + Python's PROCESS_TIME; the image is deleted
+```
+
+- **The default star** (EP2's: 200², 150 frames, 4 observers, one pass, recorded) comes from `engine.default_star_config`, the same one `kernel_experiments.py` uses.
+- **Each point is saved as its own file** (`point_gpu32_sms09_n5.50e+10_rep2.json`), written `.partial` then renamed: a file that exists is a finished point.
+
+### A sweep = a list of points, decided first
+
+```python
+describe_sweep(kind, precision, seconds, repeats)   → sweep.json: what was asked, the code hash, every point
+run_sweep(folder)                                   → runs only the points without a file
+```
+
+| Kind | Points | N |
+|---|---|---|
+| `strong` | SMs 1, 2, 3, 4, 6, 9, 12, 18, 24, 36, the same N | calibrated: 5 s of photons on 36 SMs |
+| `weak` | the same SMs, N ∝ SMs | calibrated: 5 s per point |
+| `problem-size` | N = 10⁵ … 10¹⁰, each on 1 and on 36 SMs (FP32) | fixed list |
+| `devices` | `cpu64`, `cpu32`, `gpu64`, `gpu32`, all units | 10⁸ |
+
+- **Calibration** (`speed_on_all_units`): one short run on all SMs measures the photons per second; N = seconds × speed. The resulting N is written in `sweep.json`, so the sweep can be repeated exactly.
+- **Interleaved repeats:** repeat 1 of every point, then 2, then 3, so a slow drift (the laptop heating) spreads over all points instead of biasing the last ones.
+- **A warm-up run** before the first point, not saved: the GPU starts from its idle clock and the first CUDA call loads the driver.
+- **Resuming:** `python sweeps.py continue <folder>` runs only the missing points (tested: 2 deleted points were the only ones rerun).
+- **`python sweeps.py all`** runs the six sweeps in turn: devices, problem-size (FP32), weak (FP64, FP32), strong (FP64, FP32).
+
+### While it runs
+
+Nothing else should use the GPU: another program would change the clocks and the timings. The full set takes about 50 minutes (the 1-SM points of `strong` are the longest: ~3–5 min each).
+
+---
+
+## Piece 23: the scaling analysis (`scaling.py`)
+
+Reads the latest sweep of each kind, takes the **median of the repeats** for each point, fits the laws, and saves each figure as a `.png` with its data as `.json` (so the slides can be redrawn without rerunning), plus a `report.md`.
+
+### The laws, as code
+
+```python
+def fit_amdahl(sms, times):          # T(n) = T(1) · (s + p/n): linear in 1/n, least squares
+    columns = [1, 1/n]  →  serial, parallel  →  s = serial / T(1), p = parallel / T(1), ceiling = 1/s
+
+def fit_gustafson(sms, scaled):      # S(n) = n − s′(n − 1): one parameter, least squares
+    s′ = Σ (n − S)(n − 1) / Σ (n − 1)²
+                                     # S(n) measured = (serial + n · photons(1)) / T(n): one SM's time for the
+                                     # n-fold problem, over n SMs' time (Gustafson's definition)
+
+def parallel_fraction(speedup):      # p from two points (1 and 36 SMs): Amdahl solved for p
+    p = (1 − 1/S) / (1 − 1/36)
+```
+
+### The figures
+
+| Figure | From | Shows |
+|---|---|---|
+| `amdahl_ceiling_fp32` | `strong` at N = 10⁸, `strong` at large N, `weak` | the same GPU, three questions: Amdahl's flattening (small N), near-ideal strong scaling (large N), Gustafson's line |
+| `strong_fp64`, `strong_fp32` | `strong` | speedup vs SMs for the **photon phase**, the **whole run**, and the photon phase **in cycles** (the clock removed); the ideal line; the Amdahl fits (dashed). A second panel: the SM clock per point (one axis per panel, never two on one) |
+| `weak_fp64`, `weak_fp32` | `weak` | time per point (ideal: flat) and the scaled speedup, (serial + n · photons(1)) / T(n), with the Gustafson fit |
+| `strong_vs_weak_fp64/32` | both | the flattening curve and the straight line on one plot: the class's central figure |
+| `problem_size` | `problem-size` | p vs N, photon phase and whole run |
+| `devices` | `devices` | photons per second, the four binaries (log scale) |
+
+- **Three speedups, three questions:** the photon phase (how well the kernel parallelizes), the whole run (what the user waits for, with the context creation), the cycles (the same, without the clock changing under it, piece 19).
+- **The serial part, two ways:** fitted (Amdahl's s) and measured from the phases ((setup + zero + copy + save) / T(1)); they should agree.
+- **Speedups always at the same precision:** GPU FP32 against CPU FP32, GPU FP64 against CPU FP64; the CPU is one core, said in every title.
+
+### First results (the finished sweeps)
+
+**p(N), FP32 (medians of 3):**
+
+| N | p, photon phase | p, whole run |
+|---|---|---|
+| 10⁵ | 0.14 | ≈ 0 |
+| 10⁶ | 0.49 | ≈ 0 |
+| 10⁷ | 0.92 | 0.07 |
+| 10⁸ | 0.989 | 0.54 |
+| 10⁹ | **0.9993** | 0.92 |
+| 10¹⁰ | 0.997 | **0.987** |
+
+- **EP3's result, for the star:** p is not a property of the program; it grows with N. For the whole run it stays near 0 until the photons outweigh the context creation (~0.15 s).
+- p slightly *below* 1 at 10¹⁰ in the photon phase: the 36-SM run lasts long enough for the clock to drop, while the 1-SM run keeps its boost (piece 19). The cycle-based speedup separates this in `strong`.
+- p ≈ 0 (even −0.02) for the whole run at 10⁶: both runs are ~0.3 s of setup; the difference is noise.
+
+**Devices (N = 10⁸, the GPU on all 36 SMs, the CPU on one core):**
+
+| | photons/s | whole run | GPU vs CPU, same precision: photon phase | whole run |
+|---|---|---|---|---|
+| CPU FP64 | 7.1·10⁶ | 14.2 s | | |
+| CPU FP32 | 1.1·10⁷ | 9.6 s | | |
+| GPU FP64 | 5.9·10⁸ | 0.52 s | **82×** | **28×** |
+| GPU FP32 | 9.0·10⁹ | 0.33 s | **850×** | **29×** |
+
+- The CPU ran slower here (7.1·10⁶) than alone earlier (9.5·10⁶): the laptop's CPU and GPU share one power and thermal budget, and `nvidia-smi` polls next to it. *(Likely; not measured.)*
+- **The whole-run speedup is ~28× in both precisions:** at N = 10⁸, the GPU's run is mostly setup, which does not depend on the precision.
+
+### The full results (strong and weak; medians of 3)
+
+**Strong scaling (N calibrated for 5 s on 36 SMs):**
+
+| | FP64, N = 3.1·10⁹ | FP32, N = 5.7·10¹⁰ |
+|---|---|---|
+| speedup on 36 SMs: photon phase | **35.9** | 33.1 |
+| … in cycles (the clock removed) | 36.0 | **36.0** |
+| … whole run | 33.8 | 31.5 |
+| Amdahl fit, photon phase | p = 0.99980 | p = 0.99916 |
+| Amdahl fit, whole run | p = 0.99782 (s = 0.0022, ceiling 458) | p = 0.99767 (s = 0.0023, ceiling 429) |
+| serial part measured from the phases | 0.0019 | 0.0015 |
+| SM clock, 1 → 36 SMs | 2887 → 2880 MHz | 2895 → **2636 MHz** |
+
+- **FP64 scales perfectly over the 36 SMs** (35.9× of 36), and the clock does not move: the FP64 kernel stays under the laptop's power limit.
+- **FP32 scales perfectly in cycles (36.0×) but 33.1× in seconds:** on 24 and 36 SMs the clock falls (2850, 2636 MHz). In FP32, Amdahl's fitted "serial part" is mostly the hardware throttling, not serial code.
+- **The serial part, two ways, agree** for the whole run: fitted s = 0.0022 vs measured 0.0019 (FP64).
+
+**Weak scaling (5 s per point, N ∝ SMs):**
+
+| | FP64 | FP32 |
+|---|---|---|
+| photon phase, 1 → 36 SMs | 4.67 → 4.59 s (flat) | 4.90 → **5.31 s** |
+| efficiency on 36 SMs | 1.02 | **0.92** |
+| scaled speedup on 36 SMs (whole run) | 34.1 | 31.8 |
+| Gustafson fit s′ (whole run) | **0.054** | 0.089 |
+| serial share measured on 36 SMs | **0.058** | 0.044 |
+
+- **FP64: Gustafson's law and the measurement agree** (s′ fitted 0.054, measured 0.058): the constant serial part (~0.3 s of setup) is all there is.
+- **FP32: the fit's s′ is twice the measured serial share,** because the photon phase itself grows by 8% on 36 SMs: the clock again.
+
+**A mistake of mine, corrected:** the first version computed the weak "scaled speedup" as n · T(1, W) / T(n, nW), which counts the serial part n times; its Gustafson fit came out *negative* (s′ = −0.013), meaningless. Gustafson's definition is the time *one* SM would take for the *n-fold* problem (the serial part once, plus n times the parallel part), over the time n SMs take: **S(n) = (serial + n · photons(1)) / T(n)**. With it, the fit and the measurement agree (FP64). The photon-phase line, n · T(1, W)/T(n, nW), is kept as "n × efficiency".
+
+### What the class can take from it
+
+1. **Strong scaling at large N is almost ideal on this GPU (p = 0.998–0.9998):** Monte Carlo is embarrassingly parallel, and the queue balances the SMs.
+2. **But p depends on N** (the `problem-size` table): at 10⁸ photons the whole run is half setup (p = 0.54).
+3. **The clock is part of the result:** the same code in FP32 throttles the laptop, in FP64 it does not. Measured in cycles, both scale perfectly; measured in seconds, FP32 loses ~8% on all 36 SMs.
+4. **Strong at large N looks like weak:** with p ≈ 0.998 both curves are nearly straight. Amdahl's flattening needs a small N: the small-N strong sweep (N = 10⁸) shows it (`amdahl_ceiling_fp32`).
+
+### Amdahl's ceiling, measured (strong, FP32, N = 10⁸)
+
+| SMs | photon phase | whole run | speedup, photons | speedup, whole run |
+|---|---|---|---|---|
+| 1 | 0.329 s | 0.580 s | 1 | 1 |
+| 6 | 0.057 s | 0.294 s | 5.8 | 2.0 |
+| 36 | 0.011 s | 0.251 s | 29.7 | **2.3** |
+
+- **Whole run: p = 0.58, ceiling 1/s = 2.4.** The serial part fitted (s = 0.42) and measured from the phases (0.41) agree. Thirty-six SMs make the run 2.3× faster: the ~0.25 s of setup (the CUDA context) is the wall.
+- **The photon phase alone still scales** (p = 0.994): the kernel is as parallel as ever; the program around it is not.
+- **The figure `amdahl_ceiling_fp32`:** the same GPU, three questions. Small N strong (flat at 2.3×), large N strong (p = 0.998, nearly straight), weak (Gustafson's line). The class's central plot.
+
+---
+
+## Piece 24: the showcase (`showcase.py`)
+
+```
+python showcase.py --size 1024 --frames 300 --snr 10 --precision 32
+```
+
+1. **N from the SNR wanted at the limb:** N = SNR² · nmu · frames · (π/4) · size² · (1 + 2a/3) ([jobs_and_passes.md §10](jobs_and_passes.md#10-photons-per-pixel-snr-and-n-always-both-ways)); `nmu` from the engine's `--describe`.
+2. **The run** on the GPU, FP32, with `nvidia-smi` sampled.
+3. **Per observer:** a still (frame 0) and a 10 s mp4 at 30 fps (`ffmpeg`, H.264), each frame read from the file on disk with `np.memmap`: a 1.26 GB observer is never loaded whole.
+4. **Measured vs predicted SNR** in two rings: the disk's center (r < 0.2) and near the limb (0.90 ≤ r < 0.95).
+
+### The run
+
+| | |
+|---|---|
+| image | 1024², 300 frames, nmu 95, 4 observers in **1 pass** (5.03 GB on the GPU) |
+| photons | **N = 3.9·10¹²** (SNR 10 at the limb) |
+| photon phase | **385 s at 1.0·10¹⁰ photons/s** (whole run 393 s) |
+| on one CPU core | ~4.3 days at the CPU's 1.06·10⁷ photons/s (FP32) |
+
+### The SNR, measured vs predicted
+
+| observer | center: measured / predicted | limb ring: measured / predicted |
+|---|---|---|
+| i = 1.5708 (equator-on) | 14.1 / 14.1 | 11.7 / 11.7 |
+| i = 1.0411 | 14.1 / 14.1 | 11.7 / 11.7 |
+| i = 0.5293 | 14.0 / 14.1 | 11.7 / 11.7 |
+| i = 0.1452 (pole-on) | 13.6 / 14.1 | 11.7 / 11.7 |
+
+- **The planning formula and the run agree** to the first decimal: the photons land where the physics says, in the numbers it says.
+- The limb ring (mean μ ≈ 0.38) predicts 11.7; the formula's SNR 10 is for μ → 0, the very edge.
+- The pole-on center is slightly lower (13.6): most likely a spot near the pole passing through the central ring in some frames.
+
+### The files
+
+- `observer_…_frame_0.png` (1.3 MB each) and `observer_….mp4` (~49 MB each, 10 s): in `runs/…-showcase-1024-f300-snr10-gpu32/`. The videos stay out of git (`*.mp4` in `.gitignore`), as the 5 GB of raw images do (`*.bin`); the stills, the records and `showcase.json` are committed.

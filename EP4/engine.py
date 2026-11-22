@@ -120,6 +120,17 @@ def build_engine(processor="cpu", precision=64, architecture="native", verbose=F
 
 # ============================================================ running
 
+DEFAULT_OBSERVERS = [1.5708, 1.0472, 0.5236, 0.0]
+
+
+def default_star_config(photons, **changes):
+    config = {"photons": photons, "seed": 42, "limb": 1.0, "spots": 3, "observers": DEFAULT_OBSERVERS,
+              "size": 200, "frames": 150, "nmu": None, "chunk_size": 1024, "observers_per_pass": None,
+              "sms": None, "variant": None}
+    config.update(changes)
+    return config
+
+
 def parse_key_values(text):
     values = {}
     for pair in text.split():

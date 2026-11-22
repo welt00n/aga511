@@ -17,12 +17,6 @@ VARIANTS = [None, "scene_in_global", "registers_64", "registers_40", "no_fma", "
 SPILLS = re.compile(r"(\d+) bytes spill stores")
 
 
-def star_config(photons, variant):
-    return {"photons": photons, "seed": 42, "limb": 1.0, "spots": 3, "observers": [1.5708, 1.0472, 0.5236, 0.0],
-            "size": 200, "frames": 150, "nmu": None, "chunk_size": 1024, "observers_per_pass": None,
-            "variant": variant}
-
-
 def spill_bytes(precision, variant):
     report = engine.read_text(engine.binary_path("gpu", precision, variant) + ".report") or ""
     kernel_part = report[report.find("trace_photons"):]
@@ -41,7 +35,7 @@ def run_once(config, precision, folder):
 
 
 def run_variant(precision, variant, photons, repeats, folder):
-    config = star_config(photons, variant)
+    config = engine.default_star_config(photons, variant=variant)
     runs = []
     for repeat in range(repeats):
         output_dir = os.path.join(folder, f"images-{variant or 'baseline'}-{precision}")

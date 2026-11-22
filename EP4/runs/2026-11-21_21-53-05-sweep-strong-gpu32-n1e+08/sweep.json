@@ -1,0 +1,221 @@
+{
+  "kind": "strong",
+  "precision": 32,
+  "seconds_on_all_sms": 5.0,
+  "photons": 100000000,
+  "repeats": 3,
+  "created": "2026-11-21T21:53:05",
+  "code_hash": "b2b335648897",
+  "points": [
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 2,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 3,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 4,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 6,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 9,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 12,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 18,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 24,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 2,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 3,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 4,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 6,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 9,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 12,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 18,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 24,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 1,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 2,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 3,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 4,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 6,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 9,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 12,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 18,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 24,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": 36,
+      "photons": 100000000,
+      "repeat": 3
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "kind": "devices",
+  "precision": null,
+  "seconds_on_all_sms": 5.0,
+  "repeats": 3,
+  "created": "2026-11-21T20:56:36",
+  "code_hash": "b2b335648897",
+  "points": [
+    {
+      "processor": "cpu",
+      "precision": 64,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "cpu",
+      "precision": 32,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 64,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 1
+    },
+    {
+      "processor": "cpu",
+      "precision": 64,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "cpu",
+      "precision": 32,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 64,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 2
+    },
+    {
+      "processor": "cpu",
+      "precision": 64,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "cpu",
+      "precision": 32,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 64,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 3
+    },
+    {
+      "processor": "gpu",
+      "precision": 32,
+      "sms": null,
+      "photons": 100000000,
+      "repeat": 3
+    }
+  ]
+}

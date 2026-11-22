@@ -1,6 +1,6 @@
 # EP4: the spotted star, toward the GPU
 
-The EP2 star (Monte Carlo image of a star with spots, the professor's algorithm) rebuilt with CUDA. **In progress (2026-11-21):** the CPU engine is complete; the GPU engine is being built ([`../docs/roadmap.md`](../docs/roadmap.md) §0).
+The EP2 star (Monte Carlo image of a star with spots, the professor's algorithm) rebuilt with CUDA: the same engine on the CPU and on the GPU, checked against each other bit for bit, measured over the GPU's SMs (Amdahl and Gustafson), and a 1k showcase. Results below; the plan and its log in [`../docs/roadmap.md`](../docs/roadmap.md).
 
 The ideas behind every choice are in [`../docs/README.md`](../docs/README.md); the GPU design in [`../docs/gpu_engine.md`](../docs/gpu_engine.md) and [`../docs/hpc_architecture.md`](../docs/hpc_architecture.md).
 
@@ -95,6 +95,9 @@ Each run gets a folder in `runs/`: `run.json` and the gifs for a simulation, `re
 | `engine/gpu_sections.cuh` | the section timers (laps with `clock64()`), only in the `sections` build variant |
 | `gpu_monitor.py` | `nvidia-smi` sampled during a run: clocks, power, temperature, utilization, memory |
 | `instruction_mix.py` | the GPU kernel's compiled instructions counted by hardware unit (`python instruction_mix.py`) |
+| `sweeps.py` | the scaling sweeps, one engine process per point: `python sweeps.py strong|weak|problem-size|devices|all`, `continue <folder>` |
+| `scaling.py` | Amdahl and Gustafson from the sweeps: fits, figures with their data, a report (`python scaling.py`) |
+| `showcase.py` | the big run: N from the SNR, the videos, the SNR measured vs predicted (`python showcase.py --plan`) |
 | `kernel_experiments.py` | the kernel's variants (Scene in global memory, capped registers, no FMA, section timers) timed and compared (`python kernel_experiments.py`) |
 
 ## What changed from EP2, and why
@@ -140,6 +143,35 @@ Each run gets a folder in `runs/`: `run.json` and the gifs for a simulation, `re
 
 At N = 10⁸, one frame has ~0.14 photons per pixel (see the planning formula in the docs): the single-frame pictures are still noise. The GPU is what will make clean frames possible.
 
+## Results on the GPU (2026-11-21, RTX 5070 Laptop GPU, 36 SMs)
+
+**Correctness**
+
+| Check | Result |
+|---|---|
+| cuRAND on the GPU vs our CPU copy | the same numbers, bit for bit, raw and uniform, FP64 and FP32, chunks up to 2³² + 5 |
+| GPU vs CPU, the same photons | **FP64: identical images, bit for bit**; FP32: 3.2·10⁻⁵ of the photons in another pixel (3/4 from fused multiply-add) |
+| split, passes, on the GPU | bit for bit |
+| the same image on 1, 2, 9, 36 SMs | byte for byte |
+| EP4 (GPU) vs EP2 | χ²/dof = 0.9957, the CPU's number |
+
+**Speed and scaling** (`python sweeps.py all`, `python scaling.py`; medians of 3)
+
+| | FP64 | FP32 |
+|---|---|---|
+| photons/s, all 36 SMs | 5.9·10⁸ | 9.0·10⁹ (1.0·10¹⁰ in long runs) |
+| vs one CPU core, same precision: photon phase / whole run (N = 10⁸) | 82× / 28× | 850× / 29× |
+| strong scaling on 36 SMs, photon phase (large N) | **35.9×**, p = 0.9998 | 33.1× in seconds, **36.0× in cycles** (the clock falls to 2636 MHz) |
+| weak scaling, 1 → 36 SMs | flat; Gustafson s′ 0.054 (measured 0.058) | efficiency 0.92 (the clock) |
+| strong scaling at N = 10⁸, whole run | | **2.3× on 36 SMs: Amdahl's ceiling** (p = 0.58) |
+| p(N), photon phase | | 0.14 (10⁵) → 0.9993 (10⁹) |
+
+**The kernel** (`python instruction_mix.py`, `python kernel_experiments.py`): limited by arithmetic (direction and surface sampling, `atan2` in FP64); the image's atomics take 13–15% of the cycles; 80 / 67 registers give occupancy 0.50 / 0.58, and raising it by capping registers is slower; FP64 is 17× slower than FP32 per photon on a 1:64 GPU, because integer work is the largest class.
+
+**The showcase** (`python showcase.py`): 1024², 300 frames, 4 observers, **N = 3.9·10¹² photons in 385 s**; SNR measured = predicted (14.1 at the center, 11.7 near the limb); four 10 s videos (kept out of git).
+
+The full story, piece by piece: [`../docs/walkthrough.md`](../docs/walkthrough.md), pieces 16–24.
+
 ## Next
 
-The driver, local then remote ([`../docs/driver.md`](../docs/driver.md), steps 3–4). Then the GPU step: kernels for the chunk loop, cuRAND on the device (checked against this CPU copy bit for bit), the queue and the image in device memory, the Scene in constant memory, and the SM sweep for Amdahl's law.
+The driver in full (jobs, resuming, remote runs at IAG: [`../docs/driver.md`](../docs/driver.md)), the A30, the CPU on all its cores ([`../docs/roadmap.md`](../docs/roadmap.md)).
