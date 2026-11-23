@@ -4,6 +4,10 @@
 #   tmux new -s a30 'bash run_a30.sh'        or        nohup bash run_a30.sh > a30.out 2>&1 &
 # REPEATS=1 bash run_a30.sh shortens the measurement; SKIP_2K=1 skips the 2k image.
 cd "$(dirname "$0")"
+FORGE=${FORGE:-$HOME/miniforge3}
+if [ -f "$FORGE/bin/activate" ]; then
+    source "$FORGE/bin/activate" aga511
+fi
 LOG=runs/a30_$(date +%Y-%m-%d_%H-%M-%S).log
 mkdir -p runs
 REPEATS=${REPEATS:-3}

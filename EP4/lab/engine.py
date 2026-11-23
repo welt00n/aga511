@@ -2,6 +2,7 @@ import functools
 import glob
 import hashlib
 import os
+import re
 import shutil
 import subprocess
 
@@ -58,7 +59,26 @@ def variant_flags(processor, variant):
     return GPU_VARIANTS[variant]
 
 
+NATIVE_SINCE = (11, 6)
+
+
+@functools.lru_cache(maxsize=None)
+def nvcc_release():
+    found = re.search(r"release (\d+)\.(\d+)", nvcc_version())
+    return (int(found.group(1)), int(found.group(2))) if found else (0, 0)
+
+
+@functools.lru_cache(maxsize=None)
+def gpu_compute_capability():
+    result = subprocess.run([shutil.which("nvidia-smi") or "nvidia-smi", "--query-gpu=compute_cap",
+                             "--format=csv,noheader"], capture_output=True, text=True)
+    first = result.stdout.split()[0] if result.returncode == 0 and result.stdout.split() else ""
+    return first.replace(".", "") if re.fullmatch(r"\d+\.\d+", first) else None
+
+
 def architecture_flags(architecture):
+    if architecture == "native" and nvcc_release() < NATIVE_SINCE and gpu_compute_capability():
+        architecture = gpu_compute_capability()
     if architecture == "native":
         return ["-arch=native"]
     return ["-gencode", f"arch=compute_{architecture},code=sm_{architecture}"]
