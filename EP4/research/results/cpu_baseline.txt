@@ -1,0 +1,39 @@
+# cpu_baseline.py
+# 2026-11-22 16:18 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+Q4: how much does the one-core CPU baseline (FP64) move, and what moves it?
+
+Pinned to each logical CPU (taskset -c n), N=1e+07:
+  cpu  0: 7.62e+06 photons/s
+  cpu  1: 8.18e+06 photons/s
+  cpu  2: 8.05e+06 photons/s
+  cpu  3: 8.05e+06 photons/s
+  cpu  4: 8.14e+06 photons/s
+  cpu  5: 8.19e+06 photons/s
+  cpu  6: 8.30e+06 photons/s
+  cpu  7: 8.50e+06 photons/s
+  cpu  8: 8.62e+06 photons/s
+  cpu  9: 9.00e+06 photons/s
+  cpu 10: 8.71e+06 photons/s
+  cpu 11: 8.22e+06 photons/s
+  cpu 12: 8.88e+06 photons/s
+  cpu 13: 9.00e+06 photons/s
+  cpu 14: 8.90e+06 photons/s
+  cpu 15: 8.77e+06 photons/s
+  cpu 16: 8.83e+06 photons/s
+  cpu 17: 9.39e+06 photons/s
+  cpu 18: 9.38e+06 photons/s
+  cpu 19: 9.23e+06 photons/s
+
+Not pinned, 8 runs, N=1e+07:
+  8.50e+06  8.32e+06  8.27e+06  7.99e+06  8.92e+06  8.29e+06  7.99e+06  8.11e+06
+
+Alone vs with nvidia-smi sampling every 200 ms, N=1e+08:
+  repeat 1: alone 8.49e+06, monitored 8.60e+06, ratio 1.013
+  repeat 2: alone 8.96e+06, monitored 9.01e+06, ratio 1.006
+
+Before and right after a long GPU FP32 run (N=3e+11), N=1e+08:
+  before 9.11e+06, GPU ran 35.7 s, after 8.89e+06, ratio 0.976
+
+Found on 2026-11-22: 8.8-9.1e6 photons/s in every case, against 7.0-8.0e6 in Saturday's sweep.
+Not the core, the run length, the GPU's heat or nvidia-smi. The cause is still open.

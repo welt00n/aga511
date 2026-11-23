@@ -1,0 +1,18 @@
+# sm_limits.py
+# 2026-11-22 16:16 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+The SM's limits, from cudaGetDeviceProperties (what decides how many warps fit):
+
+  NAME = NVIDIA GeForce RTX 5070 Laptop GPU
+  COMPUTE_CAPABILITY = 120
+  SMS = 36
+  REGISTERS_PER_SM = 65536
+  REGISTERS_PER_BLOCK = 65536
+  MAX_THREADS_PER_SM = 1536
+  MAX_THREADS_PER_BLOCK = 1024
+  MAX_BLOCKS_PER_SM = 24
+  WARP_SIZE = 32
+  SHARED_MEMORY_PER_SM = 102400
+
+Found on 2026-11-22 (RTX 5070 Laptop, cc 12.0): 65 536 registers per SM, 1536 threads (48 warps),
+24 blocks per SM. Registers are given in steps of 8 per thread (256 per warp).

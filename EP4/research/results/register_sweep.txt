@@ -1,0 +1,69 @@
+# register_sweep.py
+# 2026-11-22 16:21 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+Cap the registers (-maxrregcount) and measure occupancy and speed. The caps are interleaved (forward,
+then backward) so a clock that drifts during the sweep hits every cap alike; speed is also given in
+cycles of the slowest SM, which do not depend on the clock.
+
+  FP64 repeat 1 cap none: 80 registers, kernel 1.765 s, 4.464e+09 cycles
+  FP64 repeat 1 cap 72: 72 registers, kernel 1.541 s, 4.444e+09 cycles
+  FP64 repeat 1 cap 64: 64 registers, kernel 1.545 s, 4.457e+09 cycles
+  FP64 repeat 1 cap 56: 56 registers, kernel 1.623 s, 4.682e+09 cycles
+  FP64 repeat 1 cap 48: 48 registers, kernel 1.653 s, 4.766e+09 cycles
+  FP64 repeat 1 cap 40: 40 registers, kernel 1.693 s, 4.882e+09 cycles
+  FP64 repeat 1 cap 32: 32 registers, kernel 1.698 s, 4.892e+09 cycles
+  FP64 repeat 2 cap 32: 32 registers, kernel 1.698 s, 4.892e+09 cycles
+  FP64 repeat 2 cap 40: 40 registers, kernel 1.694 s, 4.882e+09 cycles
+  FP64 repeat 2 cap 48: 48 registers, kernel 1.653 s, 4.765e+09 cycles
+  FP64 repeat 2 cap 56: 56 registers, kernel 1.623 s, 4.683e+09 cycles
+  FP64 repeat 2 cap 64: 64 registers, kernel 1.546 s, 4.457e+09 cycles
+  FP64 repeat 2 cap 72: 72 registers, kernel 1.541 s, 4.444e+09 cycles
+  FP64 repeat 2 cap none: 80 registers, kernel 1.547 s, 4.464e+09 cycles
+  FP64 repeat 3 cap none: 80 registers, kernel 1.546 s, 4.459e+09 cycles
+  FP64 repeat 3 cap 72: 72 registers, kernel 1.541 s, 4.444e+09 cycles
+  FP64 repeat 3 cap 64: 64 registers, kernel 1.546 s, 4.457e+09 cycles
+  FP64 repeat 3 cap 56: 56 registers, kernel 1.622 s, 4.680e+09 cycles
+  FP64 repeat 3 cap 48: 48 registers, kernel 1.653 s, 4.765e+09 cycles
+  FP64 repeat 3 cap 40: 40 registers, kernel 1.694 s, 4.882e+09 cycles
+  FP64 repeat 3 cap 32: 32 registers, kernel 1.698 s, 4.892e+09 cycles
+  FP32 repeat 1 cap none: 67 registers, kernel 0.912 s, 2.503e+09 cycles
+  FP32 repeat 1 cap 64: 55 registers, kernel 0.933 s, 2.533e+09 cycles
+  FP32 repeat 1 cap 56: 52 registers, kernel 0.954 s, 2.582e+09 cycles
+  FP32 repeat 1 cap 48: 48 registers, kernel 0.959 s, 2.597e+09 cycles
+  FP32 repeat 1 cap 40: 40 registers, kernel 0.962 s, 2.597e+09 cycles
+  FP32 repeat 1 cap 32: 32 registers, kernel 1.008 s, 2.627e+09 cycles
+  FP32 repeat 2 cap 32: 32 registers, kernel 1.008 s, 2.627e+09 cycles
+  FP32 repeat 2 cap 40: 40 registers, kernel 0.962 s, 2.597e+09 cycles
+  FP32 repeat 2 cap 48: 48 registers, kernel 0.960 s, 2.596e+09 cycles
+  FP32 repeat 2 cap 56: 52 registers, kernel 0.954 s, 2.582e+09 cycles
+  FP32 repeat 2 cap 64: 55 registers, kernel 0.937 s, 2.534e+09 cycles
+  FP32 repeat 2 cap none: 67 registers, kernel 0.918 s, 2.503e+09 cycles
+  FP32 repeat 3 cap none: 67 registers, kernel 0.921 s, 2.503e+09 cycles
+  FP32 repeat 3 cap 64: 55 registers, kernel 0.941 s, 2.535e+09 cycles
+  FP32 repeat 3 cap 56: 52 registers, kernel 0.959 s, 2.583e+09 cycles
+  FP32 repeat 3 cap 48: 48 registers, kernel 0.965 s, 2.597e+09 cycles
+  FP32 repeat 3 cap 40: 40 registers, kernel 0.969 s, 2.599e+09 cycles
+  FP32 repeat 3 cap 32: 32 registers, kernel 1.015 s, 2.627e+09 cycles
+
+FP64, N = 1e+09, 3 interleaved repeats
+  cap  regs  warps   occ  spill B  kernel s   time  cycles    MHz     W  same image
+ none    80     25  0.50        0     1.547  1.000   1.000   2885    47         yes
+   72    72     28  0.58        0     1.541  0.996   0.995   2883    45         yes
+   64    64     32  0.67       24     1.546  0.999   0.998   2883    45         yes
+   56    56     36  0.75       84     1.623  1.049   1.049   2886    46         yes
+   48    48     42  0.83      164     1.653  1.068   1.068   2883    45         yes
+   40    40     51  1.00      344     1.694  1.095   1.094   2883    49         yes
+   32    32     64  1.00      444     1.698  1.097   1.096   2881    51         yes
+
+FP32, N = 1e+10, 3 interleaved repeats
+  cap  regs  warps   occ  spill B  kernel s   time  cycles    MHz     W  same image
+ none    67     28  0.58        0     0.918  1.000   1.000   2728    82         yes
+   64    55     36  0.75        0     0.937  1.021   1.012   2705    87         yes
+   56    52     36  0.75        0     0.954  1.040   1.031   2705    81         yes
+   48    48     42  0.83       24     0.960  1.046   1.037   2705    91         yes
+   40    40     51  1.00       80     0.962  1.048   1.038   2699    77         yes
+   32    32     64  1.00      156     1.008  1.099   1.049   2605    83         yes
+
+Found on 2026-11-22 (time only, not interleaved): FP64 occupancy follows the register limit exactly;
+80 -> 0.50 and 72 -> 0.58 run at the same speed, 40 -> 1.00 is 9% slower (344 B spilled). FP32 was
+inconclusive: the clock fell from 2748 to 2017 MHz during the sweep, hence the interleaving and cycles.

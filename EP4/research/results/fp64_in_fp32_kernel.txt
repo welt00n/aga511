@@ -1,0 +1,30 @@
+# fp64_in_fp32_kernel.py
+# 2026-11-22 16:17 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+Q1: which instructions in the FP32 kernel are FP64, and where do they come from?
+
+ptxas --warn-on-double-precision-use: 20 warnings, at PTX lines [503, 504, 505, 581, 582, 583, 1043, 1044, 1045, 1121, 1122, 1123]
+
+FP64 instructions in the FP32 kernel's SASS: 12
+  I2F.F64.S64 R4, R4
+  DMUL R6, R4, UR4
+  F2F.F32.F64 R6, R6
+  I2F.F64.S64 R4, R4
+  DMUL R6, R4, UR4
+  F2F.F32.F64 R6, R6
+  I2F.F64.S64 R4, R6
+  DMUL R4, R4, UR4
+  F2F.F32.F64 R4, R4
+  I2F.F64.S64 R6, R6
+  DMUL R4, R6, UR4
+  F2F.F32.F64 R4, R4
+
+PTX .f64 operations by source line (innermost first, then where it was inlined):
+    3  real.cuh:28 <- photon.cuh:36
+    3  real.cuh:26 <- photon.cuh:37
+    3  real.cuh:28 <- photon.cuh:56
+    3  real.cuh:26 <- photon.cuh:57
+
+Found on 2026-11-22: 12 instructions, 3 per call (I2F.F64 -> DMUL by a constant -> F2F.F32), in the 4
+sinf/cosf calls (real.cuh:26/28, used at photon.cuh:36-37 and 56-57). They are CUDA's Payne-Hanek
+argument reduction, taken only for |x| > ~1e5 radians: never for the star's angles.

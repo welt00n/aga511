@@ -1,0 +1,181 @@
+{
+  "summary": {
+    "PROCESSOR": "GPU",
+    "PROCESSOR_NAME": "NVIDIA_GeForce_RTX_5070_Laptop_GPU",
+    "COMPUTE_CAPABILITY": 12.0,
+    "COMPUTE_UNITS": 36,
+    "COMPUTE_UNITS_TOTAL": 36,
+    "UNIT": "sm",
+    "MEMORY_TOTAL": 8518369280,
+    "MEMORY_FREE": 7338983424,
+    "MEMORY_FOR_IMAGE": 7070547968,
+    "L2_BYTES": 33554432,
+    "PEAK_BANDWIDTH": 379200000000.0,
+    "FP32_PER_FP64": 64,
+    "MAX_THREADS_PER_UNIT": 1536,
+    "CUDA_RUNTIME": 13030,
+    "CUDA_DRIVER": 13050,
+    "REGISTERS_PER_THREAD": 67,
+    "LOCAL_BYTES_PER_THREAD": 32,
+    "CONSTANT_BYTES": 17256,
+    "THREADS_PER_BLOCK": 896,
+    "BLOCKS_PER_UNIT": 1,
+    "BLOCKS": 36,
+    "OCCUPANCY": 0.583,
+    "HOST": "Welton",
+    "PRECISION": 32,
+    "N": 880168705,
+    "SEED": 42,
+    "A": 1,
+    "SPOTS": 3,
+    "UMBRA_RADIUS": 0.05,
+    "PENUMBRA_RADIUS": 0.1,
+    "SIZE": 256,
+    "FRAMES": 60,
+    "NMU": 19,
+    "OBSERVERS": 4,
+    "OBSERVERS_PER_PASS": 4,
+    "PASSES": 1,
+    "CHUNK_SIZE": 1024,
+    "CHUNKS": 859540,
+    "FIRST_CHUNK": 0,
+    "LAST_CHUNK": 859540,
+    "PHOTONS": 880168705,
+    "BLOCKED": 3630022,
+    "MISSED": 692792947,
+    "RECORDED": 183745736,
+    "RECORD": 1,
+    "IMAGE_BYTES": 62914560,
+    "SETUP_TIME": 0.129647,
+    "ZERO_TIME": 8e-06,
+    "PHOTONS_TIME": 0.099576,
+    "COPY_TIME": 0.00414,
+    "SAVE_TIME": 0.0887,
+    "TIME": 0.324311,
+    "PHOTONS_PER_SECOND": 8839199000.0,
+    "OUTPUT_DIR": "/home/welto/aga511/EP4/runs/make/2026-11-22_19-52-07-256-f60-gpu32-snr3/observers"
+  },
+  "gpu_monitor": {
+    "GPU_SAMPLES": 1,
+    "SM_CLOCK_MHZ_MIN": 1552.0,
+    "SM_CLOCK_MHZ_MEDIAN": 1552.0,
+    "SM_CLOCK_MHZ_MAX": 1552.0,
+    "MEMORY_CLOCK_MHZ_MIN": 11851.0,
+    "MEMORY_CLOCK_MHZ_MEDIAN": 11851.0,
+    "MEMORY_CLOCK_MHZ_MAX": 11851.0,
+    "POWER_W_MIN": 17.01,
+    "POWER_W_MEDIAN": 17.01,
+    "POWER_W_MAX": 17.01,
+    "POWER_LIMIT_W_MIN": 106.09,
+    "POWER_LIMIT_W_MEDIAN": 106.09,
+    "POWER_LIMIT_W_MAX": 106.09,
+    "TEMPERATURE_C_MIN": 55.6,
+    "TEMPERATURE_C_MEDIAN": 55.6,
+    "TEMPERATURE_C_MAX": 55.6,
+    "UTILIZATION_PERCENT_MIN": 12.0,
+    "UTILIZATION_PERCENT_MEDIAN": 12.0,
+    "UTILIZATION_PERCENT_MAX": 12.0,
+    "MEMORY_USED_MIB_MIN": 3022.0,
+    "MEMORY_USED_MIB_MEDIAN": 3022.0,
+    "MEMORY_USED_MIB_MAX": 3022.0,
+    "POWER_CAP_SHARE": 0.0,
+    "VOLTAGE_CEILING_SHARE": 1.0,
+    "THERMAL_SLOWDOWN_SHARE": 0.0,
+    "HARDWARE_SLOWDOWN_SHARE": 0.0
+  },
+  "observers": [
+    {
+      "image": "observer_mu0009_i1.5708.bin",
+      "media": "observer_mu0009_i1.5708.mp4",
+      "snr": [
+        {
+          "region": "center",
+          "mean_mu": 0.9899454569506141,
+          "counts_measured": 17.931485084306097,
+          "counts_predicted": 17.90950913244146,
+          "snr_measured": 4.234558428491228,
+          "snr_predicted": 4.23196279903799
+        },
+        {
+          "region": "limb",
+          "mean_mu": 0.377630256547625,
+          "counts_measured": 12.332423733557235,
+          "counts_predicted": 12.398672322695566,
+          "snr_measured": 3.511755078811339,
+          "snr_predicted": 3.521174849776075
+        }
+      ]
+    },
+    {
+      "image": "observer_mu0014_i1.0165.bin",
+      "media": "observer_mu0014_i1.0165.mp4",
+      "snr": [
+        {
+          "region": "center",
+          "mean_mu": 0.9899454569506141,
+          "counts_measured": 17.88583009079118,
+          "counts_predicted": 17.90950913244146,
+          "snr_measured": 4.229164230766072,
+          "snr_predicted": 4.23196279903799
+        },
+        {
+          "region": "limb",
+          "mean_mu": 0.377630256547625,
+          "counts_measured": 12.286908760145536,
+          "counts_predicted": 12.398672322695566,
+          "snr_measured": 3.5052687143991594,
+          "snr_predicted": 3.521174849776075
+        }
+      ]
+    },
+    {
+      "image": "observer_mu0017_i0.5696.bin",
+      "media": "observer_mu0017_i0.5696.mp4",
+      "snr": [
+        {
+          "region": "center",
+          "mean_mu": 0.9899454569506141,
+          "counts_measured": 17.656809338521402,
+          "counts_predicted": 17.90950913244146,
+          "snr_measured": 4.202000635235721,
+          "snr_predicted": 4.23196279903799
+        },
+        {
+          "region": "limb",
+          "mean_mu": 0.377630256547625,
+          "counts_measured": 12.366582703610412,
+          "counts_predicted": 12.398672322695566,
+          "snr_measured": 3.516615233944483,
+          "snr_predicted": 3.521174849776075
+        }
+      ]
+    },
+    {
+      "image": "observer_mu0018_i0.3259.bin",
+      "media": "observer_mu0018_i0.3259.mp4",
+      "snr": [
+        {
+          "region": "center",
+          "mean_mu": 0.9899454569506141,
+          "counts_measured": 17.238505188067446,
+          "counts_predicted": 17.90950913244146,
+          "snr_measured": 4.151927888110227,
+          "snr_predicted": 4.23196279903799
+        },
+        {
+          "region": "limb",
+          "mean_mu": 0.377630256547625,
+          "counts_measured": 12.344311502938707,
+          "counts_predicted": 12.398672322695566,
+          "snr_measured": 3.51344723924221,
+          "snr_predicted": 3.521174849776075
+        }
+      ]
+    }
+  ],
+  "combined_videos": [
+    "observers_grid.mp4",
+    "observers_around.mp4"
+  ],
+  "loops": 5
+}

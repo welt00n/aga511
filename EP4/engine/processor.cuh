@@ -3,10 +3,10 @@
 
 #include <stddef.h>
 
-#include "options.cuh"
-#include "scene.cuh"
-#include "image.cuh"
-#include "run.cuh"
+#include "run/options.cuh"
+#include "physics/scene.cuh"
+#include "run/image.cuh"
+#include "run/run.cuh"
 
 typedef struct Processor Processor;
 

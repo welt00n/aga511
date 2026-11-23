@@ -82,7 +82,7 @@ Each photon is a short, independent calculation (~50 operations), and the tally 
 
 ## 7. First measurement (CPU, N = 10⁸, EP2's default star) **[measured]**
 
-`python star.py -n 1e8 --compare-precision`:
+`python star.py -n 1e8 --compare-precision` (today: the precision check in `python main.py measure --parts validation`):
 
 - **Same random numbers, same photons.** Recorded photons: 2 652 017 in both. Photons in spots: 411 940 (FP64) vs 411 941 (FP32), one photon at a spot edge.
 - **5·10⁻⁴ of the recorded photons land in a different pixel or bin** in FP32. That is larger than the rough 10⁻⁵ guessed in section 4. The rounding inside a photon (trig of angles up to 2π, several chained operations) is closer to 10⁻⁶ than to one unit roundoff, and every photon crosses four binnings (ix, iy, imu, iphi).

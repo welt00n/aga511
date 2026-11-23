@@ -1,0 +1,64 @@
+{
+  "rows": [
+    {
+      "binary": "cpu64",
+      "photons": 8000000,
+      "units": 1,
+      "machine": "Intel(R) Core(TM) Ultra 7 255HX",
+      "photons_per_second": {
+        "median": 8827387.0,
+        "min": 8827387.0,
+        "max": 8827387.0,
+        "spread": 0.0,
+        "repeats": 1
+      }
+    },
+    {
+      "binary": "cpu32",
+      "photons": 15000000,
+      "units": 1,
+      "machine": "Intel(R) Core(TM) Ultra 7 255HX",
+      "photons_per_second": {
+        "median": 13655730.0,
+        "min": 13655730.0,
+        "max": 13655730.0,
+        "spread": 0.0,
+        "repeats": 1
+      }
+    },
+    {
+      "binary": "gpu64",
+      "photons": 1000000000,
+      "units": 36,
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU",
+      "photons_per_second": {
+        "median": 610756700.0,
+        "min": 610756700.0,
+        "max": 610756700.0,
+        "spread": 0.0,
+        "repeats": 1
+      }
+    },
+    {
+      "binary": "gpu32",
+      "photons": 15000000000,
+      "units": 36,
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU",
+      "photons_per_second": {
+        "median": 10074510000.0,
+        "min": 10074510000.0,
+        "max": 10074510000.0,
+        "spread": 0.0,
+        "repeats": 1
+      }
+    }
+  ],
+  "gpu_over_one_cpu_core": {
+    "fp64": 69.18884376543137,
+    "fp32": 737.7496479499814
+  },
+  "fp32_over_fp64": {
+    "cpu": 1.5469730736853387,
+    "gpu": 16.49512809274135
+  }
+}

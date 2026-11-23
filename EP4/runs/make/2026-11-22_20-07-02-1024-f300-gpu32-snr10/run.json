@@ -1,0 +1,48 @@
+{
+  "kind": "make",
+  "label": "1024-f300-gpu32-snr10",
+  "command": [
+    "python",
+    "main.py",
+    "make",
+    "--snr",
+    "10",
+    "--yes"
+  ],
+  "asked": {
+    "photons": 3911860906768,
+    "seed": 42,
+    "limb": 1.0,
+    "spots": 3,
+    "observers": [
+      0.0,
+      0.5236,
+      1.0472,
+      1.5708,
+      2.0944,
+      2.618,
+      3.1416
+    ],
+    "size": 1024,
+    "frames": 300,
+    "nmu": null,
+    "chunk_size": 1024,
+    "observers_per_pass": null,
+    "sms": null,
+    "variant": null,
+    "processor": "gpu",
+    "precision": 32,
+    "snr_at_the_limb": 10.0,
+    "loops": 5
+  },
+  "code_hash": "72b86b63cbf7",
+  "host": "Welton",
+  "machine": [
+    "NVIDIA GeForce RTX 5070 Laptop GPU (cc 12.0, 36 SMs)"
+  ],
+  "started": "2026-11-22T20:07:02",
+  "finished": "2026-11-22T20:23:23",
+  "status": "done",
+  "passed": null,
+  "headline": "N = 3.91e+12 photons in 770 s (1e+10 photons/s); SNR center 14.1 (predicted 14.1), limb 11.7 (predicted 11.7)"
+}

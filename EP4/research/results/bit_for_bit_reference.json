@@ -1,0 +1,32 @@
+{
+ "cpu64": {
+  "image": "ca15f60c0c55d18a",
+  "recorded": 843339,
+  "blocked": 41308,
+  "registers_and_spills": null
+ },
+ "cpu32": {
+  "image": "7a7595f8fc2c1e09",
+  "recorded": 843339,
+  "blocked": 41308,
+  "registers_and_spills": null
+ },
+ "gpu64": {
+  "image": "ca15f60c0c55d18a",
+  "recorded": 843339,
+  "blocked": 41308,
+  "registers_and_spills": [
+   80,
+   0
+  ]
+ },
+ "gpu32": {
+  "image": "03e8487d69a4c2ad",
+  "recorded": 843339,
+  "blocked": 41308,
+  "registers_and_spills": [
+   67,
+   0
+  ]
+ }
+}

@@ -1,0 +1,20 @@
+# nop_runs.py
+# 2026-11-22 16:15 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+Q2: where are the kernel's NOPs, and what surrounds them?
+
+== FP64: 2744 instructions, 1063 NOPs in 304 runs
+  run length: 1 x43, 2 x2, 3 x25, 4 x233, 9 x1
+  instruction before a run: DFMA 90, DMUL 44, MOV 40, UMOV.64 29, DADD 12, FSEL 12
+  instruction after a run:  DFMA 147, DMUL 58, BSYNC.RECONVERGENT 42, DADD 21, DSETP.GT.AND 7, I2F.F64.U32 4
+  NOPs between two FP64 instructions: 592 of 1063
+  NOPs after the last instruction (end padding): 9
+== FP32: 1520 instructions, 87 NOPs in 53 runs
+  run length: 1 x44, 4 x8, 11 x1
+  instruction before a run: MOV 19, FFMA 6, BRA 5, I2F.F64.S64 4, DMUL 4, FSEL 4
+  instruction after a run:  BSYNC.RECONVERGENT 44, DMUL 4, F2F.F32.F64 4, END 1
+  NOPs between two FP64 instructions: 0 of 87
+  NOPs after the last instruction (end padding): 11
+
+Found on 2026-11-22: in FP64 the NOPs come in runs of 4 between dependent FP64 instructions: the
+compiler makes the warp wait for the slow FP64 unit. They are executed, not padding.

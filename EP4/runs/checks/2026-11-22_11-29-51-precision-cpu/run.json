@@ -1,0 +1,44 @@
+{
+  "kind": "checks",
+  "label": "precision-cpu",
+  "command": [
+    "python",
+    "main.py",
+    "check",
+    "all",
+    "-n",
+    "1e7"
+  ],
+  "asked": {
+    "photons": 10000000,
+    "seed": 42,
+    "limb": 1.0,
+    "spots": 3,
+    "observers": [
+      1.5708,
+      1.0472,
+      0.5236,
+      0.0
+    ],
+    "size": 200,
+    "frames": 150,
+    "nmu": null,
+    "chunk_size": 1024,
+    "observers_per_pass": null,
+    "sms": null,
+    "variant": null,
+    "check": "precision",
+    "processor": "cpu",
+    "precision": 64
+  },
+  "code_hash": "72b86b63cbf7",
+  "host": "Welton",
+  "machine": [
+    "Intel(R) Core(TM) Ultra 7 255HX (one core)"
+  ],
+  "started": "2026-11-22T11:29:51",
+  "finished": "2026-11-22T11:29:54",
+  "status": "done",
+  "passed": null,
+  "headline": "FP32 moves 1.01e-04 of the photons (noise 3.87e-01); 1.47\u00d7 the speed of FP64"
+}

@@ -1,0 +1,107 @@
+{
+  "checks": [
+    {
+      "name": "independent",
+      "processor": "gpu",
+      "precision": 64,
+      "passed": true,
+      "headline": "\u03c7\u00b2/dof = 1.0035: the same physics within noise",
+      "data": {
+        "photons": 100000000,
+        "precision": 64,
+        "seed": 42,
+        "chunks": {
+          "cpu": [
+            0,
+            97656
+          ],
+          "gpu": [
+            97656,
+            195313
+          ]
+        },
+        "chi2_per_dof": 1.003490494862568,
+        "dof": 126225,
+        "sigma_from_1": 0.8768891470203214,
+        "observer_totals": [
+          {
+            "observer": 0,
+            "gpu": 2122254,
+            "cpu": 2122063,
+            "difference_sigma": 0.09271061472533357
+          },
+          {
+            "observer": 1,
+            "gpu": 2112754,
+            "cpu": 2111815,
+            "difference_sigma": 0.4568507985187644
+          },
+          {
+            "observer": 2,
+            "gpu": 2103575,
+            "cpu": 2103173,
+            "difference_sigma": 0.19599852570619658
+          },
+          {
+            "observer": 3,
+            "gpu": 2100578,
+            "cpu": 2099713,
+            "difference_sigma": 0.4220621603643691
+          }
+        ]
+      }
+    },
+    {
+      "name": "precision",
+      "processor": "gpu",
+      "precision": 64,
+      "passed": null,
+      "headline": "FP32 moves 1.06e-04 of the photons (noise 1.94e-02); 17.51\u00d7 the speed of FP64",
+      "data": {
+        "photons": 4000000000,
+        "processor": "gpu",
+        "moved": 0.00010552374771242262,
+        "noise": 0.019409463159378863,
+        "speed_ratio": 17.513881818895932,
+        "fp64_photons_per_second": 612329700.0,
+        "fp32_photons_per_second": 10724270000.0
+      }
+    },
+    {
+      "name": "gpu",
+      "processor": "gpu",
+      "precision": 64,
+      "passed": true,
+      "headline": "the GPU vs the sequential CPU: the images are identical, bit for bit",
+      "data": {
+        "photons": 100000000,
+        "precision": 64,
+        "identical": true,
+        "differing_pixels": 0,
+        "moved": 0.0,
+        "same_counts": true
+      }
+    },
+    {
+      "name": "gpu",
+      "processor": "gpu",
+      "precision": 32,
+      "passed": null,
+      "headline": "the GPU vs the sequential CPU: 699 pixels differ (4.14e-05 of the photons moved)",
+      "data": {
+        "photons": 100000000,
+        "precision": 32,
+        "identical": false,
+        "differing_pixels": 699,
+        "moved": 4.142568356822704e-05,
+        "same_counts": false
+      }
+    }
+  ],
+  "digests": {
+    "gpu64": "ee9af07f55ed409a",
+    "gpu32": "4829b43062c435b8",
+    "cpu64": "ee9af07f55ed409a"
+  },
+  "digest_photons": 100000000
+}

@@ -1,0 +1,77 @@
+{
+  "rows": [
+    {
+      "precision": 64,
+      "sms": 1,
+      "photons": 4000000000,
+      "photons_per_second": {
+        "median": 18073980.0,
+        "min": 17399890.0,
+        "max": 18090460.0,
+        "spread": 0.03820796526277002,
+        "repeats": 3
+      },
+      "cycles": 639535593590,
+      "sm_clock_mhz": 2887.0,
+      "power_w": 29.96,
+      "power_cap_share": 0.0
+    },
+    {
+      "precision": 64,
+      "sms": 36,
+      "photons": 4000000000,
+      "photons_per_second": {
+        "median": 635924400.0,
+        "min": 632281000.0,
+        "max": 639799100.0,
+        "spread": 0.011822317243999445,
+        "repeats": 3
+      },
+      "cycles": 17921685709,
+      "sm_clock_mhz": 2880.0,
+      "power_w": 57.63,
+      "power_cap_share": 0.0
+    },
+    {
+      "precision": 32,
+      "sms": 1,
+      "photons": 60000000000,
+      "photons_per_second": {
+        "median": 322298400.0,
+        "min": 322249000.0,
+        "max": 322338700.0,
+        "spread": 0.000278313513191502,
+        "repeats": 3
+      },
+      "cycles": 539829842852,
+      "sm_clock_mhz": 2895.0,
+      "power_w": 34.75,
+      "power_cap_share": 0.0
+    },
+    {
+      "precision": 32,
+      "sms": 36,
+      "photons": 60000000000,
+      "photons_per_second": {
+        "median": 10608240000.0,
+        "min": 10479580000.0,
+        "max": 10635780000.0,
+        "spread": 0.014724402916977745,
+        "repeats": 3
+      },
+      "cycles": 15026852844,
+      "sm_clock_mhz": 2624.5,
+      "power_w": 114.88,
+      "power_cap_share": 0.9333333333333333
+    }
+  ],
+  "all_sms": 36,
+  "all_sms_over_one_sm": {
+    "fp64": 35.184524935847,
+    "fp32": 32.914342733317945
+  },
+  "fp32_over_fp64": {
+    "one_sm": 17.832176421573998,
+    "all_sms": 16.681605549338883
+  }
+}

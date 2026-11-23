@@ -1,0 +1,104 @@
+{
+  "gpu": {
+    "NAME": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "COMPUTE_CAPABILITY": 120,
+    "SMS": 36,
+    "REGISTERS_PER_SM": 65536,
+    "MAX_THREADS_PER_SM": 1536,
+    "MAX_BLOCKS_PER_SM": 24,
+    "WARP_SIZE": 32,
+    "SHARED_MEMORY_PER_SM": 102400
+  },
+  "nvcc": "Build cuda_13.3.r13.3/compiler.38244171_0",
+  "driver": "621.14",
+  "environment": [
+    {
+      "status": "ok",
+      "name": "nvcc",
+      "detail": "Build cuda_13.3.r13.3/compiler.38244171_0"
+    },
+    {
+      "status": "ok",
+      "name": "disk",
+      "detail": "999 GB free under runs/"
+    },
+    {
+      "status": "warn",
+      "name": "engine code",
+      "detail": "31 uncommitted change(s): code 72b86b63cbf7 matches no commit"
+    },
+    {
+      "status": "ok",
+      "name": "GPU",
+      "detail": "NVIDIA GeForce RTX 5070 Laptop GPU, driver 621.14, 4.8 GiB free"
+    },
+    {
+      "status": "warn",
+      "name": "other GPU work",
+      "detail": "2 other process(es) on the GPU: they would skew the times (9, /python3.10, [N/A]; 14208, /python3.10, [N/A])"
+    },
+    {
+      "status": "ok",
+      "name": "GPU power",
+      "detail": "now 727 MHz, 10.52 W of a 97.35 W limit, 56.10 \u00b0C (read only: clocks and limits are not changed)"
+    },
+    {
+      "status": "ok",
+      "name": "Python packages",
+      "detail": "numpy, matplotlib, pandas, nbformat, nbclient, nbconvert"
+    },
+    {
+      "status": "ok",
+      "name": "PDF",
+      "detail": "tectonic and pandoc"
+    },
+    {
+      "status": "ok",
+      "name": "speeds",
+      "detail": "measured on this machine"
+    }
+  ],
+  "minimums": [
+    {
+      "minimum": 905969664,
+      "by_time": 639799100,
+      "by_work": 905969664,
+      "speed": 639799100.0,
+      "speed_source": "measured here",
+      "resident_threads": 27648,
+      "binary": "gpu64",
+      "sms": 36
+    },
+    {
+      "minimum": 25165824,
+      "by_time": 17772197,
+      "by_work": 25165824,
+      "speed": 17772197.22222222,
+      "speed_source": "measured here",
+      "resident_threads": 768,
+      "binary": "gpu64",
+      "sms": 1
+    },
+    {
+      "minimum": 10980820000,
+      "by_time": 10980820000,
+      "by_work": 1056964608,
+      "speed": 10980820000.0,
+      "speed_source": "measured here",
+      "resident_threads": 32256,
+      "binary": "gpu32",
+      "sms": 36
+    },
+    {
+      "minimum": 305022777,
+      "by_time": 305022777,
+      "by_work": 29360128,
+      "speed": 305022777.77777773,
+      "speed_source": "measured here",
+      "resident_threads": 896,
+      "binary": "gpu32",
+      "sms": 1
+    }
+  ],
+  "cpu": "Intel(R) Core(TM) Ultra 7 255HX"
+}

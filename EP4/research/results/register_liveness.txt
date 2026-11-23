@@ -1,0 +1,30 @@
+# register_liveness.py
+# 2026-11-22 16:15 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+Where do the registers go? nvdisasm counts the registers live at every instruction (-plr -lrm count);
+the line info (-g -gi) maps each instruction to its source line and the lines it was inlined at.
+The compiler needs as many registers as the peak of that count (plus a few reserved), not one per variable.
+
+== FP64: 2735 instructions, peak 74 registers live at once
+  where the peak is (live >= 71; innermost line first, then where it was inlined):
+     17 instructions at real.cuh:27 <- photon.cuh:57 <- photon.cuh:124
+      9 instructions at real.cuh:29 <- photon.cuh:56 <- photon.cuh:124
+      5 instructions at real.cuh:35 <- photon.cuh:55 <- photon.cuh:124
+  live inside the photon's physics: min 22, median 59, max 74
+  live inside Philox (curand):      min 31, median 55, max 65
+  by innermost source file: real.cuh min 22, median 60, max 74; photon.cuh min 25, median 60, max 66; curand_kernel.h min 40, median 55, max 65; curand_philox4x32_x.h min 31, median 52, max 64; curand_uniform.h min 50, median 58, max 64
+== FP32: 1509 instructions, peak 63 registers live at once
+  where the peak is (live >= 60; innermost line first, then where it was inlined):
+     30 instructions at real.cuh:28 <- photon.cuh:56 <- photon.cuh:124
+     29 instructions at real.cuh:26 <- photon.cuh:57 <- photon.cuh:124
+      3 instructions at real.cuh:26
+      1 instructions at real.cuh:22 <- real.cuh:35 <- photon.cuh:35
+      1 instructions at real.cuh:22 <- photon.cuh:48 <- photon.cuh:53
+      1 instructions at real.cuh:22 <- real.cuh:35 <- photon.cuh:55
+  live inside the photon's physics: min 31, median 54, max 63
+  live inside Philox (curand):      min 35, median 51, max 56
+  by innermost source file: real.cuh min 31, median 55, max 63; photon.cuh min 32, median 55, max 61; geometry.cuh min 52, median 55, max 57; curand_philox4x32_x.h min 35, median 50, max 56; curand_kernel.h min 45, median 52, max 56
+
+Found on 2026-11-22: FP64 peaks at 74 live (80 allocated), FP32 at 63 (67), both inside sin/cos
+(real.cuh) called for the local azimuth in sample_emission_direction (photon.cuh:56-57), while the
+surface point, Philox's state, the loop's indices and the five 64-bit tallies are all live.

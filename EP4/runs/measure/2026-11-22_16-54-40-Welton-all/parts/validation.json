@@ -1,0 +1,101 @@
+{
+  "checks": [
+    {
+      "name": "ep2",
+      "processor": "gpu",
+      "precision": 64,
+      "passed": true,
+      "headline": "\u03c7\u00b2/dof = 0.9987: the same physics within noise",
+      "data": {
+        "photons": 100000000,
+        "chi2_per_dof": 0.998706782390743,
+        "dof": 126227,
+        "sigma_from_1": -0.32488730536267857,
+        "ep2_seconds": 14.161372,
+        "ep4_photons_per_second": 692985500.0,
+        "observer_totals": [
+          {
+            "observer": 0,
+            "ep4": 2128674,
+            "ep2": 2128826,
+            "difference_sigma": -0.07366585937424378
+          },
+          {
+            "observer": 1,
+            "ep4": 2127481,
+            "ep2": 2126543,
+            "difference_sigma": 0.4547815845540777
+          },
+          {
+            "observer": 2,
+            "ep4": 2128273,
+            "ep2": 2126353,
+            "difference_sigma": 0.9308303471890464
+          },
+          {
+            "observer": 3,
+            "ep4": 2125956,
+            "ep2": 2129887,
+            "difference_sigma": -1.9055056669222779
+          }
+        ]
+      }
+    },
+    {
+      "name": "precision",
+      "processor": "gpu",
+      "precision": 64,
+      "passed": null,
+      "headline": "FP32 moves 1.06e-04 of the photons (noise 3.88e-02); 17.15\u00d7 the speed of FP64",
+      "data": {
+        "photons": 1000000000,
+        "processor": "gpu",
+        "moved": 0.00010561396378373157,
+        "noise": 0.03881388215060474,
+        "speed_ratio": 17.147651407168826,
+        "fp64_photons_per_second": 645235300.0,
+        "fp32_photons_per_second": 11064270000.0
+      }
+    },
+    {
+      "name": "gpu",
+      "processor": "gpu",
+      "precision": 64,
+      "passed": true,
+      "headline": "the images are identical, bit for bit; 67\u00d7 one CPU core on the photons, 25\u00d7 on the whole run",
+      "data": {
+        "photons": 100000000,
+        "precision": 64,
+        "identical": true,
+        "differing_pixels": 0,
+        "moved": 0.0,
+        "same_counts": true,
+        "photon_speedup": 66.796093013834,
+        "run_speedup": 25.13743672558174
+      }
+    },
+    {
+      "name": "gpu",
+      "processor": "gpu",
+      "precision": 32,
+      "passed": null,
+      "headline": "699 pixels differ (4.14e-05 of the photons moved); 575\u00d7 one CPU core on the photons, 25\u00d7 on the whole run",
+      "data": {
+        "photons": 100000000,
+        "precision": 32,
+        "identical": false,
+        "differing_pixels": 699,
+        "moved": 4.142568356822704e-05,
+        "same_counts": false,
+        "photon_speedup": 575.0250953769912,
+        "run_speedup": 24.707007953110136
+      }
+    }
+  ],
+  "digests": {
+    "gpu64": "ee9af07f55ed409a",
+    "gpu32": "4829b43062c435b8",
+    "cpu64": "ee9af07f55ed409a"
+  },
+  "digest_photons": 100000000
+}

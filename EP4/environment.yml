@@ -1,0 +1,17 @@
+name: aga511
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - numpy
+  - matplotlib
+  - pandas
+  - pillow
+  - ipykernel
+  - nbformat
+  - nbclient
+  - nbconvert
+  - pandoc
+  - tectonic
+  - ffmpeg

@@ -1,0 +1,340 @@
+{
+  "resources": {
+    "fp64": {
+      "registers": 80,
+      "spill_bytes": 0,
+      "local_bytes": 40,
+      "constant_bytes": 18048,
+      "threads_per_block": 768,
+      "blocks_per_sm": 1,
+      "occupancy": 0.5
+    },
+    "fp32": {
+      "registers": 67,
+      "spill_bytes": 0,
+      "local_bytes": 32,
+      "constant_bytes": 17256,
+      "threads_per_block": 896,
+      "blocks_per_sm": 1,
+      "occupancy": 0.583
+    }
+  },
+  "variants": {
+    "fp64": [
+      {
+        "photons": 4000000000,
+        "registers": 80,
+        "occupancy": 0.5,
+        "threads_per_block": 768,
+        "blocks_per_sm": 1,
+        "kernel_time": {
+          "median": 6.289479,
+          "min": 6.2513,
+          "max": 6.325755,
+          "spread": 0.01183802346744466,
+          "repeats": 3
+        },
+        "photons_per_second": 635982726.0731771,
+        "cycles": 17921685709,
+        "effective_mhz": 2849.47063325913,
+        "sm_clock_mhz": 2880.0,
+        "power_w": 57.63,
+        "power_cap_share": 0.0,
+        "image_digest": "df274f6394332931",
+        "same_image_every_repeat": true,
+        "time_vs_baseline": 1.0,
+        "cycles_vs_baseline": 1.0,
+        "image_equals_baseline": true,
+        "variant": "baseline",
+        "spill_bytes": 0
+      },
+      {
+        "photons": 4000000000,
+        "registers": 88,
+        "occupancy": 0.417,
+        "threads_per_block": 640,
+        "blocks_per_sm": 1,
+        "kernel_time": {
+          "median": 6.221019,
+          "min": 6.149624,
+          "max": 6.248314,
+          "spread": 0.01586396055051423,
+          "repeats": 3
+        },
+        "photons_per_second": 642981479.4007219,
+        "cycles": 17807206824,
+        "effective_mhz": 2862.426046922538,
+        "sm_clock_mhz": 2880.0,
+        "power_w": 57.41,
+        "power_cap_share": 0.0,
+        "image_digest": "df274f6394332931",
+        "same_image_every_repeat": true,
+        "time_vs_baseline": 0.9891151556432576,
+        "cycles_vs_baseline": 0.9936122702485229,
+        "image_equals_baseline": true,
+        "variant": "scene_in_global",
+        "spill_bytes": 0
+      },
+      {
+        "photons": 4000000000,
+        "registers": 80,
+        "occupancy": 0.5,
+        "threads_per_block": 768,
+        "blocks_per_sm": 1,
+        "kernel_time": {
+          "median": 6.853753,
+          "min": 6.658093,
+          "max": 6.960758,
+          "spread": 0.04416047674901622,
+          "repeats": 3
+        },
+        "photons_per_second": 583621849.226256,
+        "cycles": 19360819576,
+        "effective_mhz": 2824.8493308702546,
+        "sm_clock_mhz": 2880.0,
+        "power_w": 55.96,
+        "power_cap_share": 0.0,
+        "image_digest": "df274f6394332931",
+        "same_image_every_repeat": true,
+        "time_vs_baseline": 1.089717129193054,
+        "cycles_vs_baseline": 1.0803012557171052,
+        "image_equals_baseline": true,
+        "variant": "no_fma",
+        "spill_bytes": 0
+      },
+      {
+        "photons": 4000000000,
+        "registers": 112,
+        "occupancy": 0.333,
+        "threads_per_block": 512,
+        "blocks_per_sm": 1,
+        "kernel_time": {
+          "median": 6.13572,
+          "min": 6.116112,
+          "max": 6.302943,
+          "spread": 0.030449727171383268,
+          "repeats": 3
+        },
+        "photons_per_second": 651920231.0405298,
+        "cycles": 17648841437,
+        "effective_mhz": 2876.409196801679,
+        "sm_clock_mhz": 2880.0,
+        "power_w": 56.67,
+        "power_cap_share": 0.0,
+        "image_digest": "df274f6394332931",
+        "same_image_every_repeat": true,
+        "time_vs_baseline": 0.9755529830054286,
+        "cycles_vs_baseline": 0.9847757473024437,
+        "image_equals_baseline": true,
+        "variant": "sections",
+        "spill_bytes": 0
+      }
+    ],
+    "fp32": [
+      {
+        "photons": 60000000000,
+        "registers": 67,
+        "occupancy": 0.583,
+        "threads_per_block": 896,
+        "blocks_per_sm": 1,
+        "kernel_time": {
+          "median": 5.655184,
+          "min": 5.640668,
+          "max": 5.724849,
+          "spread": 0.014885634136749584,
+          "repeats": 3
+        },
+        "photons_per_second": 10609734360.544237,
+        "cycles": 15026852844,
+        "effective_mhz": 2656.7784692770388,
+        "sm_clock_mhz": 2624.5,
+        "power_w": 114.88,
+        "power_cap_share": 0.9333333333333333,
+        "image_digest": "320a236670d92579",
+        "same_image_every_repeat": true,
+        "time_vs_baseline": 1.0,
+        "cycles_vs_baseline": 1.0,
+        "image_equals_baseline": true,
+        "variant": "baseline",
+        "spill_bytes": 0
+      },
+      {
+        "photons": 60000000000,
+        "registers": 68,
+        "occupancy": 0.583,
+        "threads_per_block": 896,
+        "blocks_per_sm": 1,
+        "kernel_time": {
+          "median": 5.807048,
+          "min": 5.794535,
+          "max": 5.957274,
+          "spread": 0.02802439380559627,
+          "repeats": 3
+        },
+        "photons_per_second": 10332272094.186237,
+        "cycles": 15242214863,
+        "effective_mhz": 2624.7785213760935,
+        "sm_clock_mhz": 2632.0,
+        "power_w": 113.83500000000001,
+        "power_cap_share": 0.9354838709677419,
+        "image_digest": "320a236670d92579",
+        "same_image_every_repeat": true,
+        "time_vs_baseline": 1.0268539449821614,
+        "cycles_vs_baseline": 1.0143318112738418,
+        "image_equals_baseline": true,
+        "variant": "scene_in_global",
+        "spill_bytes": 0
+      },
+      {
+        "photons": 60000000000,
+        "registers": 67,
+        "occupancy": 0.583,
+        "threads_per_block": 896,
+        "blocks_per_sm": 1,
+        "kernel_time": {
+          "median": 5.79963,
+          "min": 5.746191,
+          "max": 5.807497,
+          "spread": 0.010570674336121457,
+          "repeats": 3
+        },
+        "photons_per_second": 10345487556.964842,
+        "cycles": 15283608459,
+        "effective_mhz": 2638.7720783912077,
+        "sm_clock_mhz": 2662.5,
+        "power_w": 114.33,
+        "power_cap_share": 0.9333333333333333,
+        "image_digest": "004cfcae0ebdb634",
+        "same_image_every_repeat": true,
+        "time_vs_baseline": 1.025542228157386,
+        "cycles_vs_baseline": 1.0170864530095214,
+        "image_equals_baseline": false,
+        "variant": "no_fma",
+        "spill_bytes": 0
+      },
+      {
+        "photons": 60000000000,
+        "registers": 69,
+        "occupancy": 0.583,
+        "threads_per_block": 896,
+        "blocks_per_sm": 1,
+        "kernel_time": {
+          "median": 6.202543,
+          "min": 6.130367,
+          "max": 6.217542,
+          "spread": 0.014054719169218209,
+          "repeats": 3
+        },
+        "photons_per_second": 9673451679.416006,
+        "cycles": 16238715511,
+        "effective_mhz": 2623.9442417408472,
+        "sm_clock_mhz": 2621.0,
+        "power_w": 114.59,
+        "power_cap_share": 0.90625,
+        "image_digest": "320a236670d92579",
+        "same_image_every_repeat": true,
+        "time_vs_baseline": 1.096788893164219,
+        "cycles_vs_baseline": 1.0806464719912312,
+        "image_equals_baseline": true,
+        "variant": "sections",
+        "spill_bytes": 0
+      }
+    ]
+  },
+  "sections": {
+    "fp64": [
+      {
+        "name": "surface",
+        "share": 0.2023
+      },
+      {
+        "name": "direction",
+        "share": 0.3343
+      },
+      {
+        "name": "spots",
+        "share": 0.0836
+      },
+      {
+        "name": "bin",
+        "share": 0.2155
+      },
+      {
+        "name": "pixel",
+        "share": 0.0144
+      },
+      {
+        "name": "chunk",
+        "share": 0.0
+      },
+      {
+        "name": "record",
+        "share": 0.1498
+      }
+    ],
+    "fp32": [
+      {
+        "name": "surface",
+        "share": 0.2764
+      },
+      {
+        "name": "direction",
+        "share": 0.4075
+      },
+      {
+        "name": "spots",
+        "share": 0.0915
+      },
+      {
+        "name": "bin",
+        "share": 0.0836
+      },
+      {
+        "name": "pixel",
+        "share": 0.0091
+      },
+      {
+        "name": "chunk",
+        "share": 0.0001
+      },
+      {
+        "name": "record",
+        "share": 0.1317
+      }
+    ]
+  },
+  "instruction_mix": {
+    "star_gpu64": {
+      "constant loads": 46,
+      "integer units": 660,
+      "other": 45,
+      "moves, special registers": 250,
+      "control flow": 1261,
+      "global memory": 14,
+      "warp-wide": 6,
+      "uniform datapath": 66,
+      "atomics (L2)": 2,
+      "conversions": 25,
+      "FP64 units": 278,
+      "special function unit (MUFU)": 13,
+      "FP32 cores": 73,
+      "local memory (stack, spills)": 5
+    },
+    "star_gpu32": {
+      "constant loads": 49,
+      "integer units": 624,
+      "other": 48,
+      "moves, special registers": 154,
+      "uniform datapath": 28,
+      "control flow": 296,
+      "global memory": 5,
+      "warp-wide": 6,
+      "atomics (L2)": 2,
+      "conversions": 25,
+      "FP32 cores": 247,
+      "special function unit (MUFU)": 12,
+      "local memory (stack, spills)": 20,
+      "FP64 units": 4
+    }
+  }
+}

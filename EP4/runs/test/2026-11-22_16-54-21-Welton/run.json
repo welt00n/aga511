@@ -1,0 +1,38 @@
+{
+  "kind": "test",
+  "label": "Welton",
+  "command": [
+    "python",
+    "main.py",
+    "test",
+    "--yes"
+  ],
+  "asked": {
+    "photons": 10000000,
+    "tests": [
+      "build",
+      "rng cpu",
+      "rng gpu",
+      "run cpu64",
+      "run cpu32",
+      "run gpu64",
+      "run gpu32",
+      "split cpu64",
+      "split gpu64",
+      "passes gpu64",
+      "gpu = cpu",
+      "ep2"
+    ]
+  },
+  "code_hash": "72b86b63cbf7",
+  "host": "Welton",
+  "machine": [
+    "Intel(R) Core(TM) Ultra 7 255HX (one core)",
+    "NVIDIA GeForce RTX 5070 Laptop GPU (cc 12.0, 36 SMs)"
+  ],
+  "started": "2026-11-22T16:54:21",
+  "finished": "2026-11-22T16:54:34",
+  "status": "done",
+  "passed": true,
+  "headline": "all 12 tests passed"
+}

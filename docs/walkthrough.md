@@ -33,6 +33,9 @@ A guided tour of the EP4 sequential engine, one piece at a time, with the questi
 | 22 | The sweeps | `sweeps.py` | done |
 | 23 | The scaling analysis | `scaling.py` | done |
 | 24 | The showcase | `showcase.py` | done |
+| 25 | **The products:** one entrypoint, `test` / `make` / `measure` / `compare`, the minimum N, the report | `main.py`, `lab/` | done |
+
+**Pieces 1–24 name the files as they were then** (one engine folder, one script per job). Where everything lives now, and which command replaced which script: [piece 25's map](#the-map-from-the-old-names).
 
 ---
 
@@ -1515,7 +1518,10 @@ GPU: 8.5 GB, 7.34 GB free (7.07 GB for the image), L2 32 MB, peak bandwidth ≈ 
 | SAVE | **20.2 s** | 10 GB with `fsync`, ~0.5 GB/s |
 
 - **At this size the disk is the serial part:** 20 s of saving against 0.12 s of photons. Amdahl's serial fraction grows with the image ([scaling_laws.md §3](scaling_laws.md#3-why-gustafson-matters-for-us)); for the showcase, N must be large enough for the photons to dominate.
-- **To check:** pass 2's kernel took 0.100 s, pass 1's 0.021 s. Most likely the GPU dropped back to its idle clock during the 12 s save and started the next kernel slowly. The `nvidia-smi` sampling (step 6) will show it.
+- **Checked 2026-11-22 (Q3): not the idle clock; not reproduced.** Pass 2's kernel took 0.100 s here, pass 1's 0.021 s. Re-run with the clock sampled every 50 ms (1k, 300 frames, 8 and 12 observers, 4 per pass, N = 10⁷):
+  - the clock does fall to ~520 MHz a few seconds into the saves, but a pass that starts after the drop (pass 3, at 11 s) was the fastest of the three (26.7 ms vs 30.2 and 29.8): the clock comes back within one sample;
+  - pass 2 vs pass 1 over 12 runs at N = 10⁷ (kernels of ~30 ms): 0.71 to 1.37, in cycles too, either order of the observers; at N = 10⁸ (~170 ms): equal within 1%;
+  - so the 5× was one sample of a 20 ms kernel, where run-to-run noise is ±30%. **Kernels shorter than ~0.1 s are not timed reliably**; the sweeps calibrated N for seconds.
 
 ### Checks
 
@@ -1549,13 +1555,14 @@ The map of [hpc_architecture.md §7](hpc_architecture.md#7-the-code-mapped-to-wh
 | atomics (L2) | 2 | 2 |
 | constant loads; Scene operands (`c[0x3]`) | 46; 16 | 49; 18 |
 | local memory (stack) | 5 | 20 |
-| control flow (incl. `NOP` padding) | 1261 | 296 |
+| control flow (incl. `NOP`s) | 1261 | 296 |
 | total | 2744 | 1520 |
 
 - **Integer work is the largest class in both:** Philox (multiply-high, XOR: `IMAD`, `LOP3`) and the index arithmetic. It does not get cheaper in FP32.
 - **Two atomic sites:** the image (`count_photon_atomic`) and the queue; the tallies' and the SM counters' atomics run once per thread.
 - **The Scene is read straight from the constant bank** as instruction operands (`c[0x3]`): 16–18 places.
-- **To explain:** 4 FP64 instructions remain in the FP32 kernel; and the FP64 kernel's 1063 `NOP`s (probably padding around its long software math routines).
+- **The 4 FP64 instructions in the FP32 kernel (Q1, checked 2026-11-22)** are inside CUDA's `sinf` and `cosf`, at the four calls in `photon.cuh` (lines 36–37 and 56–57, through `real_sin`/`real_cos`). Each is the same triple, `I2F.F64.S64` → `DMUL` by π/2·2⁻⁶⁴ → `F2F.F32.F64`: the **slow path of the argument reduction** (Payne–Hanek), which reads a table of the bits of 2/π from local memory, hence part of the FP32 kernel's 20 local-memory instructions. It runs only for |x| above ~10⁵; our angles stay within [0, 2π], so it **never runs**. Found with `-Xptxas --warn-on-double-precision-use` and the PTX's `.loc` lines. *(An idea, not done: `sincospif(2u)` for an azimuth 2πu needs no reduction at all; it would change the FP32 image's last bits.)*
+- **The 1063 `NOP`s of the FP64 kernel (Q2, checked 2026-11-22) are not padding: they are waits.** They come in runs of 4, between FP64 instructions that depend on each other (e.g. `MUFU.RCP64H` → `DFMA` → `DFMA` …, the Newton steps of a division): 233 of the 303 runs have 4 `NOP`s, and the FP32 kernel's runs of 4 sit exactly around its 4 FP64 instructions. On a 1:64 GPU an FP64 result arrives late, and the compiler makes the warp wait for it with `NOP`s. They are executed; while one warp waits, the SM runs another, which is one reason FP64 is 17× slower here and not 64× (my first guess, alignment padding, was wrong).
 
 ### The experiments (the whole GPU, N = 5·10⁸ FP64 / 5·10⁹ FP32, 3 repeats, spread < 1%)
 
@@ -1593,7 +1600,10 @@ The map of [hpc_architecture.md §7](hpc_architecture.md#7-the-code-mapped-to-wh
 1. **It is limited by arithmetic** (roots, trigonometry), not by memory: constant vs global makes no difference, and the image's atomics are 13–15% of the time.
 2. **FP64 is 17× slower than FP32 per photon, not 64×,** on a GPU whose FP64 units run at 1:64: a large part of the work is integer and control (Philox, indices, branches), which costs the same in both. Amdahl's law inside the kernel: only the FP64 fraction slows down.
 3. **The clock depends on the work:** the FP32 kernel ran at a median 2310 MHz drawing ~72 W, the FP64 one at 2812 MHz drawing ~55 W. FP32 keeps more units busy, so it hits the power limit sooner (medians of a few 200 ms samples: indicative).
-4. **Still open:** pass 2 of piece 20 ran 5× slower after a 12 s save (idle clock?). The sweeps' warm-up run and clock sampling will show it.
+   - **Not the spills (checked 2026-11-22):** the baseline has no spills and still drops its clock; across the variants the clock follows the power, not the spill bytes (FP32 with 80 B of spills ran at 2467 MHz, above the baseline's 2310).
+   - **The driver says why** (`nvidia-smi`'s `clocks_event_reasons`, sampled under load): FP64 on 36 SMs and FP32 on 1 SM sit at 2880–2895 MHz at 36–56 W with only `reliability` active, the top of the voltage–frequency curve. FP32 on 36 SMs reaches the power limit: `sw_power_cap` active, and the enforced limit itself moved between 85 and 115 W within one run (the laptop sharing its power between CPU and GPU; likely NVIDIA's Dynamic Boost, not confirmed). That run reached only 7.4·10⁹ photons/s, against 9–11·10⁹ on other days.
+   - **Why FP64 draws less:** its warps spend much of their time waiting for the two FP64 units per SM (the `NOP`s above), so fewer transistors switch per cycle.
+4. **Closed 2026-11-22:** pass 2 of piece 20 running 5× slower was noise on a 20 ms kernel, not the idle clock (piece 20, "Checked").
 
 ---
 
@@ -1700,7 +1710,7 @@ def parallel_fraction(speedup):      # p from two points (1 and 36 SMs): Amdahl 
 | GPU FP64 | 5.9·10⁸ | 0.52 s | **82×** | **28×** |
 | GPU FP32 | 9.0·10⁹ | 0.33 s | **850×** | **29×** |
 
-- The CPU ran slower here (7.1·10⁶) than alone earlier (9.5·10⁶): the laptop's CPU and GPU share one power and thermal budget, and `nvidia-smi` polls next to it. *(Likely; not measured.)*
+- **The CPU ran slower here (7.0–8.0·10⁶, the three repeats) than on other days (8.8–9.5·10⁶). Checked 2026-11-22 (Q4): the cause is not found, and my first explanation (the shared power budget) is not supported.** N = 10⁸ FP64 on the CPU gave 8.8–9.1·10⁶ under every condition tried: pinned to each of the 20 vCPUs (`taskset`; WSL does not show which are P- or E-cores, and Windows moves the vCPUs anyway), for 11 s, right after 37 s of the GPU at full load, and with `nvidia-smi` polling every 200 ms. Nothing else was running during the sweep (it was the first). What WSL cannot see (Windows' power mode, AC or battery, other Windows programs) is left. **So the one-core baseline varies by ~25% between sessions,** and the speedups with it: against today's CPU, FP64's 82× would be ~65×.
 - **The whole-run speedup is ~28× in both precisions:** at N = 10⁸, the GPU's run is mostly setup, which does not depend on the precision.
 
 ### The full results (strong and weak; medians of 3)
@@ -1793,3 +1803,75 @@ python showcase.py --size 1024 --frames 300 --snr 10 --precision 32
 ### The files
 
 - `observer_…_frame_0.png` (1.3 MB each) and `observer_….mp4` (~49 MB each, 10 s): in `runs/…-showcase-1024-f300-snr10-gpu32/`. The videos stay out of git (`*.mp4` in `.gitignore`), as the 5 GB of raw images do (`*.bin`); the stills, the records and `showcase.json` are committed.
+
+---
+
+## Piece 25: the products (`main.py`, `lab/`)
+
+By piece 24 the engine worked and was measured, but using it meant knowing seven scripts, each with its own N and its own folder layout, and nothing said whether a run was a valid experiment. Piece 25 rebuilds the outside around **what you want to do**:
+
+```
+python main.py test        does it work here?
+python main.py make        pictures and videos
+python main.py measure     every measurement on this machine, at valid N, with its report
+python main.py compare     two machines side by side
+```
+
+### One shape for every product
+
+1. **Check the environment** (`lab/environment.py`): the compiler, the GPU, other processes on the GPU, disk, the packages, uncommitted engine code, whether this host's speeds have been measured. A failure stops; a warning is shown.
+2. **Plan and predict** (`lab/plan.py`): every engine run it will make, with its predicted seconds (N over the speed measured here, plus the serial part), the passes, the device memory and the disk; and whether each run is **valid**.
+3. **Ask** (`--plan` stops here, `--yes` doesn't ask).
+4. **Run, then analyse, then write** the run's folder.
+
+### Valid runs: the minimum N
+
+A speed is a measurement only if the GPU was busy long enough and evenly enough:
+
+N_min = max(1 s × the speed, 32 chunks × the resident threads × 1024 photons per chunk)
+
+- **1 s:** below it, the launch and the clock's ramp-up dominate.
+- **32 chunks per resident thread:** the work queue hands out whole chunks; with too few, some SMs get one more chunk than others and the slowest decides the time. At 10⁷ on the laptop there are 9 766 chunks for 27 648 threads, and the same pass took 0.6–1.6× as long from one run to the next ([research.md, Q3](research.md)).
+
+On the laptop, on all SMs: FP64 9·10⁸ (set by the work), FP32 1.1·10¹⁰ (set by time). The A30 will compute its own.
+
+### The unit of speed is the SM, not the CPU
+
+A whole GPU against one core of a sequential CPU program is the classic unfair comparison: it credits the GPU with every core the CPU didn't use and every optimization the CPU code never got (Lee et al., *Debunking the 100X GPU vs. CPU myth*, ISCA 2010). Our first report did exactly that ("70× one core"). So the products measure the GPU against **itself**: one SM, then all of them (35.2× FP64, 32.9× FP32 on 36 SMs, 35.9× in cycles). The sequential CPU engine stays only as the correctness reference. Comparing EP4 with EP2 is a different question, left for the TCD.
+
+### No small N
+
+Every timed run in `measure` is above the minimum N. The small-N strong sweep (N = 10⁸) and the bottom of p(N) (10⁵…10⁹) were there "below the minimum by design" to show Amdahl's ceiling; they are gone (2026-11-22). At 1k they said nothing (36 SMs: 1.07×), and the ceiling shows at valid N anyway: on 36 SMs a run is 6.0 s of photons and 5.6 s of setup, copying back and saving the 5 GB image, so the whole run is 19× (FP64) where the photons are 36×, and its ceiling is 1/s ≈ 40. The serial part of a high-resolution picture is the image. p(N) now runs at 0.4×, 1× and 2× the reference N (FP32), all valid.
+
+### `measure`: the runs are shared, the report explains them
+
+- **Parts:** `validation` (GPU = CPU bit for bit; the GPU vs the sequential CPU with independent photons, χ²; FP32 vs FP64; and image digests at a fixed N), `speed` (one SM and all SMs: the SM is the unit, the CPU's speed isn't compared), `kernel` (resources, instruction mix, variants), `occupancy` (registers → warps → occupancy, the register caps interleaved and compared in cycles, the A30 compiled), `scaling` (strong and weak, FP64 and FP32, Amdahl's ceiling and p(N), all at valid N), `costs` (no runs: resolution vs image size, what each costs in photons, time, memory and passes, and the blur the bins leave; from the measured speed and the GPU's memory).
+- **A run is a point** (`lab/points.py`): one engine process, one `points/<binary>-<variant>-<sms>-<N>-<repeat>.json`. Parts that need the same run share it: the reference run on all SMs is at once the speed row, the kernel's baseline, the uncapped register run and the strong sweep's last point. `--continue` runs only the missing points.
+- **The report** (`lab/explainer.py`, `lab/report.py`): a notebook built from the data and executed (nbclient), then a PDF (nbconvert → LaTeX → tectonic). Each section has the question, the method, the raw table (read from `parts/*.json` when the notebook runs), the figure, what it means with the numbers, the caveats and where the data is. An appendix describes every field. The notebook is meant to grow into the scientific report.
+
+### The map from the old names
+
+| Then | Now |
+|---|---|
+| `engine/*.cu*` (one folder) | `engine/physics/`, `random/`, `run/`, `cpu/`, `gpu/`; `main.cu` and `processor.cuh` at the top |
+| `engine.py`, `analysis.py`, `gpu_monitor.py`, `instruction_mix.py`, `scaling.py`, `showcase.py` | the same modules in `lab/` |
+| `star.py -n …` (a picture) | `main.py make -n …` (or `--snr`) |
+| `star.py --check-split`, `--check-passes`, `--compare-gpu` | `main.py test` (at 10⁷), and `measure`'s validation part (at valid N) |
+| `star.py --compare-ep2` (EP4 vs EP2's own program, χ², no spots) | **removed (2026-11-22):** the GPU is compared with EP4's sequential CPU engine instead, with independent photons of the same star (the same seed, different chunks), χ²; spots stay on |
+| `star.py --compare-precision` | `measure`'s validation part |
+| `instruction_mix.py`, `kernel_experiments.py` | `measure --parts kernel` (`kernel_experiments.py` is gone; its variants are points) |
+| the register caps (scratch) | `measure --parts occupancy`, and `research/register_sweep.py` |
+| `sweeps.py all` + `scaling.py` | `measure --parts scaling` (`sweeps.py` is gone; the sweeps are points) |
+| `showcase.py --size 1024 --frames 300 --snr 10` | `main.py make --size 1024 --frames 300 --snr 10` |
+| a gif per observer (or an mp4 when `ffmpeg` was there) | **mp4 only**: `make` needs `ffmpeg` and stops if it's missing (2026-11-22) |
+| `showcase.py` (N from the SNR, the videos, the SNR check) | `lab/snr.py` (N from the SNR, the SNR check) and `lab/videos.py` (the videos) |
+| one 10 s video per observer, playing one rotation once | per observer, plus `observers_grid.mp4` (all side by side) and `observers_around.mp4` (each view placed around a drawing of the star at its inclination from the rotation axis, pole-on at the top); every video repeats the rotation `--loops` times (default 5) |
+
+### The videos
+
+- **One rotation is exactly `--frames` frames.** The engine bins each photon's azimuth over the full 2π into `--frames` frames, so the last frame is one step before the first (checked on the 1k showcase: frame 299 differs from frame 0 as much as two neighbouring frames do, 12.5 vs 12.4, against 14–16 half a turn away). At 30 fps, 300 frames are 10 s: short, and the player stops at the end, which made it look like less than a rotation.
+- **Repeating without re-encoding:** each video is encoded once (one rotation), then `ffmpeg -stream_loop` copies it `--loops` times. The size grows with the loops (~0.15 bytes per pixel per frame); `make` predicts it before running.
+- **Around the star:** the views sit on a circle around a drawing of the star and its rotation axis, at their inclination (the angle from the axis). The circle is fixed; when two observers are close in inclination, the views shrink so that they don't overlap.
+- **Both hemispheres:** `make`'s default is 7 observers, i = 0°, 30°, 60°, 90°, 120°, 150°, 180°: the three from the pole to the equator, mirrored through the equator. In the around video they make a half circle from the north pole (top) to the south pole (bottom). `measure` keeps its 4 observers, so measurements stay comparable. 7 observers of 1024² × 300 frames need 8.8 GB, so they run in 2 passes, and each pass traces all N photons again: the time doubles (the plan's prediction now counts the passes).
+| `engine.py --arch 80` | `main.py build --arch 80` |
+| `runs/<stamp>-<kind>/` | `runs/<product>/<stamp>-<label>/`, with `run.json`, `summary.md`, and `runs/index.md` |

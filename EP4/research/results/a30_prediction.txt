@@ -1,0 +1,23 @@
+# a30_prediction.py
+# 2026-11-23 00:29 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+The A30, predicted from the laptop's 1k measurement and the two chips' units per SM (datasheet).
+  laptop SM: 128 FP32/INT32 lanes, 2 FP64 units; A30 SM: 64 FP32 + 64 INT32 lanes, 32 FP64 units, ~1.41 GHz, 56 SMs
+
+== FP32
+  laptop, measured: one SM 3.15e+08/s (0.1087 photons per cycle per SM), 36 SMs 1.11e+10/s
+  A30, predicted:   56 SMs 4.3e+09–8.6e+09/s = 0.4–0.8× the laptop; one SM 7.7e+07–1.5e+08/s
+  A30, compiled:    76 registers → occupancy at most 0.39, 44800 resident threads; minimum N ≈ 4.3e+09
+== FP64
+  laptop, measured: one SM 1.84e+07/s (0.0064 photons per cycle per SM), 36 SMs 6.69e+08/s
+  A30, predicted:   56 SMs 2.6e+09–7.3e+09/s = 3.8–10.9× the laptop; one SM 4.6e+07–1.3e+08/s
+  A30, compiled:    96 registers → occupancy at most 0.33, 37632 resident threads; minimum N ≈ 2.6e+09
+
+What today's runs would take on the A30 (the range comes from the speed range):
+  the 1k showcase, SNR 10: N = 3.9e+12, 1 pass(es): 8 min – 15 min
+  the 2k showcase, SNR 10: N = 1.6e+13, 1 pass(es): 31 min – 61 min
+  2k, 7 observers, SNR 10: N = 1.6e+13, 2 pass(es): 61 min – 2.0 h
+  1k at N = 1e14: N = 1e+14, 1 pass(es): 3.2 h – 6.5 h
+
+Found on 2026-11-23 (a prediction, to replace with the measurement): FP32 about 0.4–0.8× the laptop,
+FP64 about 4–10× the laptop (full FP64 units, but this kernel is mostly integer and FP32 work).

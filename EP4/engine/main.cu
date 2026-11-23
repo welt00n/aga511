@@ -2,15 +2,15 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-#include "scene.cuh"
-#include "image.cuh"
-#include "options.cuh"
-#include "observers.cuh"
+#include "physics/scene.cuh"
+#include "run/image.cuh"
+#include "run/options.cuh"
+#include "physics/observers.cuh"
 #include "processor.cuh"
-#include "rng_test.cuh"
-#include "run.cuh"
-#include "report.cuh"
-#include "files.cuh"
+#include "random/rng_test.cuh"
+#include "run/run.cuh"
+#include "run/report.cuh"
+#include "run/files.cuh"
 
 static Scene scene;
 static ObserverList observers;

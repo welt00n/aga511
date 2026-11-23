@@ -1,0 +1,159 @@
+{
+  "processor": "gpu",
+  "precision": 32,
+  "sms": null,
+  "photons": 15000000000,
+  "variant": "sections",
+  "repeat": 1,
+  "star": {},
+  "IMAGE_DIGEST": "22765f6f10199ba4",
+  "PROCESS_TIME": 1.901965533994371,
+  "SUMMARY": {
+    "PROCESSOR": "GPU",
+    "PROCESSOR_NAME": "NVIDIA_GeForce_RTX_5070_Laptop_GPU",
+    "COMPUTE_CAPABILITY": 12.0,
+    "COMPUTE_UNITS": 36,
+    "COMPUTE_UNITS_TOTAL": 36,
+    "UNIT": "sm",
+    "MEMORY_TOTAL": 8518369280,
+    "MEMORY_FREE": 7338983424,
+    "MEMORY_FOR_IMAGE": 7070547968,
+    "L2_BYTES": 33554432,
+    "PEAK_BANDWIDTH": 379200000000.0,
+    "FP32_PER_FP64": 64,
+    "MAX_THREADS_PER_UNIT": 1536,
+    "CUDA_RUNTIME": 13030,
+    "CUDA_DRIVER": 13050,
+    "REGISTERS_PER_THREAD": 69,
+    "LOCAL_BYTES_PER_THREAD": 32,
+    "CONSTANT_BYTES": 17256,
+    "THREADS_PER_BLOCK": 896,
+    "BLOCKS_PER_UNIT": 1,
+    "BLOCKS": 36,
+    "OCCUPANCY": 0.583,
+    "HOST": "Welton",
+    "PRECISION": 32,
+    "N": 15000000000,
+    "SEED": 42,
+    "A": 1,
+    "SPOTS": 3,
+    "UMBRA_RADIUS": 0.05,
+    "PENUMBRA_RADIUS": 0.1,
+    "SIZE": 200,
+    "FRAMES": 150,
+    "NMU": 47,
+    "OBSERVERS": 4,
+    "OBSERVERS_PER_PASS": 4,
+    "PASSES": 1,
+    "CHUNK_SIZE": 1024,
+    "CHUNKS": 14648438,
+    "FIRST_CHUNK": 0,
+    "LAST_CHUNK": 14648438,
+    "PHOTONS": 15000000000,
+    "BLOCKED": 61835418,
+    "MISSED": 13672311103,
+    "RECORDED": 1265853479,
+    "RECORD": 1,
+    "IMAGE_BYTES": 96000000,
+    "SETUP_TIME": 0.131198,
+    "ZERO_TIME": 2.1e-05,
+    "PHOTONS_TIME": 1.567908,
+    "COPY_TIME": 0.006214,
+    "SAVE_TIME": 0.125931,
+    "TIME": 1.834867,
+    "PHOTONS_PER_SECOND": 9566886000.0,
+    "OUTPUT_DIR": "/home/welto/aga511/EP4/runs/measure/2026-11-22_16-54-40-Welton-all/scratch"
+  },
+  "KERNEL": [
+    {
+      "PASS": 1,
+      "KERNEL_TIME": 1.567143,
+      "SCENE_MEMORY": "constant",
+      "SECTION_TIMERS": 1
+    }
+  ],
+  "SMS": [
+    {
+      "PASS": 1,
+      "SMS_USED": 36,
+      "CYCLES": 4138849957
+    }
+  ],
+  "SECTIONS": [
+    {
+      "PASS": 1,
+      "NAME": "surface",
+      "CYCLES": 36854038832291,
+      "SHARE": 0.2764
+    },
+    {
+      "PASS": 1,
+      "NAME": "direction",
+      "CYCLES": 54337558472131,
+      "SHARE": 0.4075
+    },
+    {
+      "PASS": 1,
+      "NAME": "spots",
+      "CYCLES": 12205208033890,
+      "SHARE": 0.0915
+    },
+    {
+      "PASS": 1,
+      "NAME": "bin",
+      "CYCLES": 11150197713863,
+      "SHARE": 0.0836
+    },
+    {
+      "PASS": 1,
+      "NAME": "pixel",
+      "CYCLES": 1213335495377,
+      "SHARE": 0.0091
+    },
+    {
+      "PASS": 1,
+      "NAME": "chunk",
+      "CYCLES": 19607166444,
+      "SHARE": 0.0001
+    },
+    {
+      "PASS": 1,
+      "NAME": "record",
+      "CYCLES": 17552588137120,
+      "SHARE": 0.1316
+    }
+  ],
+  "GPU_MONITOR": {
+    "GPU_SAMPLES": 9,
+    "SM_CLOCK_MHZ_MIN": 2100.0,
+    "SM_CLOCK_MHZ_MEDIAN": 2662.0,
+    "SM_CLOCK_MHZ_MAX": 2827.0,
+    "MEMORY_CLOCK_MHZ_MIN": 11851.0,
+    "MEMORY_CLOCK_MHZ_MEDIAN": 11851.0,
+    "MEMORY_CLOCK_MHZ_MAX": 11851.0,
+    "POWER_W_MIN": 49.64,
+    "POWER_W_MEDIAN": 82.47,
+    "POWER_W_MAX": 116.17,
+    "POWER_LIMIT_W_MIN": 115.0,
+    "POWER_LIMIT_W_MEDIAN": 115.0,
+    "POWER_LIMIT_W_MAX": 115.0,
+    "TEMPERATURE_C_MIN": 64.5,
+    "TEMPERATURE_C_MEDIAN": 80.6,
+    "TEMPERATURE_C_MAX": 82.6,
+    "UTILIZATION_PERCENT_MIN": 5.0,
+    "UTILIZATION_PERCENT_MEDIAN": 100.0,
+    "UTILIZATION_PERCENT_MAX": 100.0,
+    "MEMORY_USED_MIB_MIN": 3147.0,
+    "MEMORY_USED_MIB_MEDIAN": 3370.0,
+    "MEMORY_USED_MIB_MAX": 3370.0,
+    "POWER_CAP_SHARE": 0.8888888888888888,
+    "VOLTAGE_CEILING_SHARE": 0.1111111111111111,
+    "THERMAL_SLOWDOWN_SHARE": 0.0,
+    "HARDWARE_SLOWDOWN_SHARE": 0.0
+  },
+  "parts": [
+    "kernel"
+  ],
+  "validity": "valid",
+  "predicted_seconds": 2.058327290957689
+}

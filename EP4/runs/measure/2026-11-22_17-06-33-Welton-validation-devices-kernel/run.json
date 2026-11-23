@@ -1,0 +1,47 @@
+{
+  "kind": "measure",
+  "label": "Welton-validation-devices-kernel",
+  "command": [
+    "python",
+    "main.py",
+    "measure",
+    "--parts",
+    "validation,devices,kernel",
+    "--seconds",
+    "0.3",
+    "--repeats",
+    "1",
+    "--allow-invalid",
+    "--yes"
+  ],
+  "asked": {
+    "parts": [
+      "validation",
+      "devices",
+      "kernel"
+    ],
+    "seconds": 0.3,
+    "repeats": 1,
+    "targets": [
+      "80"
+    ],
+    "allow_invalid": true,
+    "photons": {
+      "cpu64": 8000000,
+      "cpu32": 15000000,
+      "gpu64": 1000000000,
+      "gpu32": 15000000000
+    }
+  },
+  "code_hash": "72b86b63cbf7",
+  "host": "Welton",
+  "machine": [
+    "NVIDIA GeForce RTX 5070 Laptop GPU (cc 12.0, 36 SMs)",
+    "Intel(R) Core(TM) Ultra 7 255HX (one core)"
+  ],
+  "started": "2026-11-22T17:06:33",
+  "finished": "2026-11-22T17:07:54",
+  "status": "done",
+  "passed": true,
+  "headline": "GPU 6.4e+08/s FP64 (69\u00d7 one core), 1.1e+10/s FP32; validation passed"
+}

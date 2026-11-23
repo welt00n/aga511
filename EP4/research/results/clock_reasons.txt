@@ -1,0 +1,36 @@
+# clock_reasons.py
+# 2026-11-22 16:17 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+Why does the GPU's clock fall? The driver's own reasons (nvidia-smi clocks_event_reasons) during runs.
+
+== FP32, 36 SMs: 1.07e+10 photons/s, 75 busy samples of 76
+           MHz     max MHz           W     limit W          °C   power cap  sw thermal     hw slow  hw thermal power brake       board reliability
+          2017        3090      133.08      113.29       59.40      Active  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active
+          2692        3090      114.61      115.00       78.10      Active  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active
+          2617        3090      115.07      115.00       77.80      Active  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active
+          2632        3090      115.26      115.00       79.00      Active  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active
+          2647        3090      114.82      115.00       79.90      Active  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active
+          2655        3090      114.48      115.00       80.60      Active  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active
+          2640        3090      114.57      115.00       80.70      Active  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active
+== FP64, 36 SMs: 6.49e+08 photons/s, 74 busy samples of 75
+           MHz     max MHz           W     limit W          °C   power cap  sw thermal     hw slow  hw thermal power brake       board reliability
+          2647        3090       96.07      115.00       80.70  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       56.73      115.00       70.90  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       56.59      115.00       70.30  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       56.49      115.00       70.20  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       56.90       94.06       70.90  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       57.03      103.07       71.40  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       55.93       97.22       71.80  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+== FP32, 1 SM: 3.21e+08 photons/s, 74 busy samples of 76
+           MHz     max MHz           W     limit W          °C   power cap  sw thermal     hw slow  hw thermal power brake       board reliability
+          2182        3090       37.03       92.36       65.60  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       36.99      105.11       67.80  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       36.85      108.19       67.50  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       36.78      103.89       67.50  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       36.80      112.09       67.10  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       36.60      114.98       66.50  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+          2880        3090       36.45      114.98       66.00  Not Active  Not Active  Not Active  Not Active  Not Active  Not Active      Active
+
+Found on 2026-11-22: FP64, and FP32 on 1 SM, run at ~2880-2895 MHz, held by 'reliability' (the voltage
+ceiling). FP32 on 36 SMs hits the software power cap: the enforced limit moves between 85 and 115 W
+(Dynamic Boost) and the clock follows it down. Register spills are not the cause.

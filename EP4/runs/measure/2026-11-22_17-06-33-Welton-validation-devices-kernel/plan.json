@@ -1,0 +1,359 @@
+{
+  "points": [
+    {
+      "key": "gpu64-n1.00e08-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 100000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "digests"
+      ],
+      "by_design": true,
+      "prediction": {
+        "seconds": 0.8515037278908687,
+        "speed": 643071400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "below the minimum by design"
+    },
+    {
+      "key": "gpu32-n1.00e08-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 100000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "digests"
+      ],
+      "by_design": true,
+      "prediction": {
+        "seconds": 0.7050875301819596,
+        "speed": 11004090000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "below the minimum by design"
+    },
+    {
+      "key": "cpu64-n1.00e08-r1",
+      "point": {
+        "processor": "cpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 100000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "digests"
+      ],
+      "by_design": true,
+      "prediction": {
+        "seconds": 13.196,
+        "speed": 8000000.0,
+        "speed_source": "the laptop's figure (not measured here)",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "cpu64-n8.00e06-r1",
+      "point": {
+        "processor": "cpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 8000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "devices"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 1.6960000000000002,
+        "speed": 8000000.0,
+        "speed_source": "the laptop's figure (not measured here)",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-n1.00e09-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 1000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "devices",
+        "kernel"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 2.2510372789086874,
+        "speed": 643071400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "cpu32-n1.50e07-r1",
+      "point": {
+        "processor": "cpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 15000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "devices"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 1.9460000000000002,
+        "speed": 12000000.0,
+        "speed_source": "the laptop's figure (not measured here)",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n1.50e10-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 15000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "devices",
+        "kernel"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 2.0591295272939427,
+        "speed": 11004090000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-scene_in_global-n1.00e09-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 1000000000,
+        "variant": "scene_in_global",
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "kernel"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 2.2510372789086874,
+        "speed": 643071400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-no_fma-n1.00e09-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 1000000000,
+        "variant": "no_fma",
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "kernel"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 2.2510372789086874,
+        "speed": 643071400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sections-n1.00e09-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 1000000000,
+        "variant": "sections",
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "kernel"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 2.2510372789086874,
+        "speed": 643071400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-scene_in_global-n1.50e10-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 15000000000,
+        "variant": "scene_in_global",
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "kernel"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 2.0591295272939427,
+        "speed": 11004090000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-no_fma-n1.50e10-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 15000000000,
+        "variant": "no_fma",
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "kernel"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 2.0591295272939427,
+        "speed": 11004090000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sections-n1.50e10-r1",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 15000000000,
+        "variant": "sections",
+        "repeat": 1,
+        "star": {}
+      },
+      "parts": [
+        "kernel"
+      ],
+      "by_design": false,
+      "prediction": {
+        "seconds": 2.0591295272939427,
+        "speed": 11004090000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 96000000,
+        "disk_bytes": 96000000
+      },
+      "validity": "valid"
+    }
+  ],
+  "tasks": [
+    {
+      "part": "validation",
+      "name": "ep2-gpu64",
+      "seconds": 17.245819410401346,
+      "detail": "compare_with_ep2 at N = 1.0e+08 (N set by the statistics)"
+    },
+    {
+      "part": "validation",
+      "name": "precision-gpu64",
+      "seconds": 3.6459125807282833,
+      "detail": "compare_precision at N = 1.0e+09 (N set by the statistics)"
+    },
+    {
+      "part": "validation",
+      "name": "gpu-gpu64",
+      "seconds": 14.655503727890869,
+      "detail": "compare_gpu at N = 1.0e+08 (N set by the statistics)"
+    },
+    {
+      "part": "validation",
+      "name": "gpu-gpu32",
+      "seconds": 10.342420863515294,
+      "detail": "compare_gpu at N = 1.0e+08 (N set by the statistics)"
+    }
+  ],
+  "total_seconds": 81.52491506541915,
+  "minimum_rule": "A run measures speed only if the GPU is busy long enough and evenly enough. Two rules, the larger wins: (1) at least 1 s of photons, so that the launch and the clock's ramp-up don't dominate; (2) at least 32 chunks per resident thread, so that every SM gets a fair share and the slowest one doesn't decide the time (at 10\u2077 photons on the laptop: 9 766 chunks for ~28 800 threads, and pass times varied 0.6\u20131.6\u00d7; research/pass_order.py)."
+}

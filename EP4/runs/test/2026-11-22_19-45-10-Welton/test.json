@@ -1,0 +1,447 @@
+{
+  "environment": [
+    {
+      "status": "ok",
+      "name": "nvcc",
+      "detail": "Build cuda_13.3.r13.3/compiler.38244171_0"
+    },
+    {
+      "status": "ok",
+      "name": "disk",
+      "detail": "999 GB free under runs/"
+    },
+    {
+      "status": "warn",
+      "name": "engine code",
+      "detail": "31 uncommitted change(s): code 72b86b63cbf7 matches no commit"
+    },
+    {
+      "status": "ok",
+      "name": "GPU",
+      "detail": "NVIDIA GeForce RTX 5070 Laptop GPU, driver 621.14, 4.8 GiB free"
+    },
+    {
+      "status": "warn",
+      "name": "other GPU work",
+      "detail": "2 other process(es) on the GPU: they would skew the times (9, /python3.10, [N/A]; 14208, /python3.10, [N/A])"
+    },
+    {
+      "status": "ok",
+      "name": "GPU power",
+      "detail": "now 712 MHz, 9.97 W of a 115.00 W limit, 55.40 \u00b0C (read only: clocks and limits are not changed)"
+    },
+    {
+      "status": "ok",
+      "name": "Python packages",
+      "detail": "numpy, matplotlib"
+    },
+    {
+      "status": "ok",
+      "name": "speeds",
+      "detail": "measured on this machine"
+    }
+  ],
+  "results": [
+    {
+      "name": "build",
+      "proves": "every engine compiles here",
+      "passed": true,
+      "detail": "4 binaries built",
+      "seconds": 0.00014705897774547338,
+      "data": {
+        "binaries": [
+          "star_cpu64",
+          "star_cpu32",
+          "star_gpu64",
+          "star_gpu32"
+        ]
+      }
+    },
+    {
+      "name": "rng cpu",
+      "proves": "Philox on the CPU gives the published numbers",
+      "passed": true,
+      "detail": "the numbers match the reference",
+      "seconds": 0.0008605199982412159,
+      "data": {}
+    },
+    {
+      "name": "rng gpu",
+      "proves": "cuRAND's Philox on the GPU = the CPU's, bit for bit",
+      "passed": true,
+      "detail": "cuRAND = the CPU's copy",
+      "seconds": 0.19016860102419741,
+      "data": {}
+    },
+    {
+      "name": "run cpu64",
+      "proves": "the CPU engine runs (FP64)",
+      "passed": true,
+      "detail": "843339 of 1e+07 photons recorded",
+      "seconds": 1.3370548530074302,
+      "data": {
+        "summary": {
+          "PROCESSOR": "CPU",
+          "PROCESSOR_NAME": "Intel(R)_Core(TM)_Ultra_7_255HX",
+          "COMPUTE_CAPABILITY": "none",
+          "COMPUTE_UNITS": 1,
+          "COMPUTE_UNITS_TOTAL": 20,
+          "UNIT": "core",
+          "MEMORY_TOTAL": 33353785344,
+          "MEMORY_FREE": 5238374400,
+          "MEMORY_FOR_IMAGE": 0,
+          "L2_BYTES": 0,
+          "PEAK_BANDWIDTH": 0,
+          "FP32_PER_FP64": 0,
+          "MAX_THREADS_PER_UNIT": 1,
+          "CUDA_RUNTIME": 0,
+          "CUDA_DRIVER": 0,
+          "REGISTERS_PER_THREAD": 0,
+          "LOCAL_BYTES_PER_THREAD": 0,
+          "CONSTANT_BYTES": 0,
+          "THREADS_PER_BLOCK": 0,
+          "BLOCKS_PER_UNIT": 0,
+          "BLOCKS": 0,
+          "OCCUPANCY": 0.0,
+          "HOST": "Welton",
+          "PRECISION": 64,
+          "N": 10000000,
+          "SEED": 42,
+          "A": 1,
+          "SPOTS": 3,
+          "UMBRA_RADIUS": 0.05,
+          "PENUMBRA_RADIUS": 0.1,
+          "SIZE": 200,
+          "FRAMES": 150,
+          "NMU": 47,
+          "OBSERVERS": 4,
+          "OBSERVERS_PER_PASS": 4,
+          "PASSES": 1,
+          "CHUNK_SIZE": 1024,
+          "CHUNKS": 9766,
+          "FIRST_CHUNK": 0,
+          "LAST_CHUNK": 9766,
+          "PHOTONS": 10000000,
+          "BLOCKED": 41308,
+          "MISSED": 9115353,
+          "RECORDED": 843339,
+          "RECORD": 1,
+          "IMAGE_BYTES": 96000000,
+          "SETUP_TIME": 0.028948,
+          "ZERO_TIME": 0.001838,
+          "PHOTONS_TIME": 1.089928,
+          "COPY_TIME": 2e-06,
+          "SAVE_TIME": 0.127218,
+          "TIME": 1.251304,
+          "PHOTONS_PER_SECOND": 9174920.0,
+          "OUTPUT_DIR": "/home/welto/aga511/EP4/runs/test/2026-11-22_19-45-10-Welton/checks/run-cpu64"
+        }
+      }
+    },
+    {
+      "name": "run cpu32",
+      "proves": "the CPU engine runs (FP32)",
+      "passed": true,
+      "detail": "843339 of 1e+07 photons recorded",
+      "seconds": 0.9243238900089636,
+      "data": {
+        "summary": {
+          "PROCESSOR": "CPU",
+          "PROCESSOR_NAME": "Intel(R)_Core(TM)_Ultra_7_255HX",
+          "COMPUTE_CAPABILITY": "none",
+          "COMPUTE_UNITS": 1,
+          "COMPUTE_UNITS_TOTAL": 20,
+          "UNIT": "core",
+          "MEMORY_TOTAL": 33353785344,
+          "MEMORY_FREE": 5280301056,
+          "MEMORY_FOR_IMAGE": 0,
+          "L2_BYTES": 0,
+          "PEAK_BANDWIDTH": 0,
+          "FP32_PER_FP64": 0,
+          "MAX_THREADS_PER_UNIT": 1,
+          "CUDA_RUNTIME": 0,
+          "CUDA_DRIVER": 0,
+          "REGISTERS_PER_THREAD": 0,
+          "LOCAL_BYTES_PER_THREAD": 0,
+          "CONSTANT_BYTES": 0,
+          "THREADS_PER_BLOCK": 0,
+          "BLOCKS_PER_UNIT": 0,
+          "BLOCKS": 0,
+          "OCCUPANCY": 0.0,
+          "HOST": "Welton",
+          "PRECISION": 32,
+          "N": 10000000,
+          "SEED": 42,
+          "A": 1,
+          "SPOTS": 3,
+          "UMBRA_RADIUS": 0.05,
+          "PENUMBRA_RADIUS": 0.1,
+          "SIZE": 200,
+          "FRAMES": 150,
+          "NMU": 47,
+          "OBSERVERS": 4,
+          "OBSERVERS_PER_PASS": 4,
+          "PASSES": 1,
+          "CHUNK_SIZE": 1024,
+          "CHUNKS": 9766,
+          "FIRST_CHUNK": 0,
+          "LAST_CHUNK": 9766,
+          "PHOTONS": 10000000,
+          "BLOCKED": 41308,
+          "MISSED": 9115353,
+          "RECORDED": 843339,
+          "RECORD": 1,
+          "IMAGE_BYTES": 96000000,
+          "SETUP_TIME": 0.029113,
+          "ZERO_TIME": 0.00214,
+          "PHOTONS_TIME": 0.743775,
+          "COPY_TIME": 2e-06,
+          "SAVE_TIME": 0.097427,
+          "TIME": 0.874478,
+          "PHOTONS_PER_SECOND": 13444920.0,
+          "OUTPUT_DIR": "/home/welto/aga511/EP4/runs/test/2026-11-22_19-45-10-Welton/checks/run-cpu32"
+        }
+      }
+    },
+    {
+      "name": "run gpu64",
+      "proves": "the GPU engine runs (FP64)",
+      "passed": true,
+      "detail": "843339 of 1e+07 photons recorded",
+      "seconds": 0.3397151480021421,
+      "data": {
+        "summary": {
+          "PROCESSOR": "GPU",
+          "PROCESSOR_NAME": "NVIDIA_GeForce_RTX_5070_Laptop_GPU",
+          "COMPUTE_CAPABILITY": 12.0,
+          "COMPUTE_UNITS": 36,
+          "COMPUTE_UNITS_TOTAL": 36,
+          "UNIT": "sm",
+          "MEMORY_TOTAL": 8518369280,
+          "MEMORY_FREE": 7338983424,
+          "MEMORY_FOR_IMAGE": 7070547968,
+          "L2_BYTES": 33554432,
+          "PEAK_BANDWIDTH": 379200000000.0,
+          "FP32_PER_FP64": 64,
+          "MAX_THREADS_PER_UNIT": 1536,
+          "CUDA_RUNTIME": 13030,
+          "CUDA_DRIVER": 13050,
+          "REGISTERS_PER_THREAD": 80,
+          "LOCAL_BYTES_PER_THREAD": 40,
+          "CONSTANT_BYTES": 18048,
+          "THREADS_PER_BLOCK": 768,
+          "BLOCKS_PER_UNIT": 1,
+          "BLOCKS": 36,
+          "OCCUPANCY": 0.5,
+          "HOST": "Welton",
+          "PRECISION": 64,
+          "N": 10000000,
+          "SEED": 42,
+          "A": 1,
+          "SPOTS": 3,
+          "UMBRA_RADIUS": 0.05,
+          "PENUMBRA_RADIUS": 0.1,
+          "SIZE": 200,
+          "FRAMES": 150,
+          "NMU": 47,
+          "OBSERVERS": 4,
+          "OBSERVERS_PER_PASS": 4,
+          "PASSES": 1,
+          "CHUNK_SIZE": 1024,
+          "CHUNKS": 9766,
+          "FIRST_CHUNK": 0,
+          "LAST_CHUNK": 9766,
+          "PHOTONS": 10000000,
+          "BLOCKED": 41308,
+          "MISSED": 9115353,
+          "RECORDED": 843339,
+          "RECORD": 1,
+          "IMAGE_BYTES": 96000000,
+          "SETUP_TIME": 0.13846,
+          "ZERO_TIME": 6e-06,
+          "PHOTONS_TIME": 0.028019,
+          "COPY_TIME": 0.006955,
+          "SAVE_TIME": 0.086695,
+          "TIME": 0.264045,
+          "PHOTONS_PER_SECOND": 356902000.0,
+          "OUTPUT_DIR": "/home/welto/aga511/EP4/runs/test/2026-11-22_19-45-10-Welton/checks/run-gpu64"
+        }
+      }
+    },
+    {
+      "name": "run gpu32",
+      "proves": "the GPU engine runs (FP32)",
+      "passed": true,
+      "detail": "843339 of 1e+07 photons recorded",
+      "seconds": 0.32474187199841253,
+      "data": {
+        "summary": {
+          "PROCESSOR": "GPU",
+          "PROCESSOR_NAME": "NVIDIA_GeForce_RTX_5070_Laptop_GPU",
+          "COMPUTE_CAPABILITY": 12.0,
+          "COMPUTE_UNITS": 36,
+          "COMPUTE_UNITS_TOTAL": 36,
+          "UNIT": "sm",
+          "MEMORY_TOTAL": 8518369280,
+          "MEMORY_FREE": 7338983424,
+          "MEMORY_FOR_IMAGE": 7070547968,
+          "L2_BYTES": 33554432,
+          "PEAK_BANDWIDTH": 379200000000.0,
+          "FP32_PER_FP64": 64,
+          "MAX_THREADS_PER_UNIT": 1536,
+          "CUDA_RUNTIME": 13030,
+          "CUDA_DRIVER": 13050,
+          "REGISTERS_PER_THREAD": 67,
+          "LOCAL_BYTES_PER_THREAD": 32,
+          "CONSTANT_BYTES": 17256,
+          "THREADS_PER_BLOCK": 896,
+          "BLOCKS_PER_UNIT": 1,
+          "BLOCKS": 36,
+          "OCCUPANCY": 0.583,
+          "HOST": "Welton",
+          "PRECISION": 32,
+          "N": 10000000,
+          "SEED": 42,
+          "A": 1,
+          "SPOTS": 3,
+          "UMBRA_RADIUS": 0.05,
+          "PENUMBRA_RADIUS": 0.1,
+          "SIZE": 200,
+          "FRAMES": 150,
+          "NMU": 47,
+          "OBSERVERS": 4,
+          "OBSERVERS_PER_PASS": 4,
+          "PASSES": 1,
+          "CHUNK_SIZE": 1024,
+          "CHUNKS": 9766,
+          "FIRST_CHUNK": 0,
+          "LAST_CHUNK": 9766,
+          "PHOTONS": 10000000,
+          "BLOCKED": 41308,
+          "MISSED": 9115353,
+          "RECORDED": 843339,
+          "RECORD": 1,
+          "IMAGE_BYTES": 96000000,
+          "SETUP_TIME": 0.13079,
+          "ZERO_TIME": 7e-06,
+          "PHOTONS_TIME": 0.002902,
+          "COPY_TIME": 0.005351,
+          "SAVE_TIME": 0.098378,
+          "TIME": 0.242043,
+          "PHOTONS_PER_SECOND": 3445529000.0,
+          "OUTPUT_DIR": "/home/welto/aga511/EP4/runs/test/2026-11-22_19-45-10-Welton/checks/run-gpu32"
+        }
+      }
+    },
+    {
+      "name": "split cpu64",
+      "proves": "any split of the chunks gives the same image (CPU)",
+      "passed": true,
+      "detail": "two halves = the full run, bit for bit",
+      "seconds": 3.0200372819963377,
+      "data": {
+        "identical": true,
+        "chunks": 9766,
+        "recorded": {
+          "first": 421877,
+          "second": 421462,
+          "full": 843339
+        }
+      }
+    },
+    {
+      "name": "split gpu64",
+      "proves": "any split of the chunks gives the same image (GPU)",
+      "passed": true,
+      "detail": "two halves = the full run, bit for bit",
+      "seconds": 1.1538635949837044,
+      "data": {
+        "identical": true,
+        "chunks": 9766,
+        "recorded": {
+          "first": 421877,
+          "second": 421462,
+          "full": 843339
+        }
+      }
+    },
+    {
+      "name": "passes gpu64",
+      "proves": "any number of passes gives the same image (GPU)",
+      "passed": true,
+      "detail": "1 pass = 4 passes, bit for bit",
+      "seconds": 0.8425327199802268,
+      "data": {
+        "identical": true,
+        "same_counts": true,
+        "passes": 4
+      }
+    },
+    {
+      "name": "gpu = cpu",
+      "proves": "the GPU's image = the CPU's, bit for bit (FP64)",
+      "passed": true,
+      "detail": "the GPU vs the sequential CPU: the images are identical, bit for bit",
+      "seconds": 1.9728475369920488,
+      "data": {
+        "photons": 10000000,
+        "precision": 64,
+        "identical": true,
+        "differing_pixels": 0,
+        "moved": 0.0,
+        "same_counts": true
+      }
+    },
+    {
+      "name": "gpu ~ cpu",
+      "proves": "the GPU and the sequential CPU agree with independent photons (\u03c7\u00b2)",
+      "passed": true,
+      "detail": "\u03c7\u00b2/dof = 1.0106: the same physics within noise",
+      "seconds": 2.1245297220011707,
+      "data": {
+        "photons": 10000000,
+        "precision": 64,
+        "seed": 42,
+        "chunks": {
+          "cpu": [
+            0,
+            9766
+          ],
+          "gpu": [
+            9766,
+            19532
+          ]
+        },
+        "chi2_per_dof": 1.0106466431968488,
+        "dof": 9684,
+        "sigma_from_1": 0.7408411415478979,
+        "observer_totals": [
+          {
+            "observer": 0,
+            "gpu": 211517,
+            "cpu": 212903,
+            "difference_sigma": -2.127479136352171
+          },
+          {
+            "observer": 1,
+            "gpu": 211350,
+            "cpu": 210697,
+            "difference_sigma": 1.0051543870463011
+          },
+          {
+            "observer": 2,
+            "gpu": 210490,
+            "cpu": 209787,
+            "difference_sigma": 1.0843950170078855
+          },
+          {
+            "observer": 3,
+            "gpu": 209560,
+            "cpu": 209991,
+            "difference_sigma": -0.6654032073027704
+          }
+        ]
+      }
+    }
+  ]
+}

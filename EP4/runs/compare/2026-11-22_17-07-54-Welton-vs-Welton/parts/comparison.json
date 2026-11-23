@@ -1,0 +1,142 @@
+{
+  "machines": [
+    {
+      "name": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)",
+      "folder": "measure/2026-11-22_16-54-40-Welton-all",
+      "host": "Welton",
+      "code": "72b86b63cbf7",
+      "started": "2026-11-22T16:54:40",
+      "sms": 36,
+      "cc": 120,
+      "threads_per_sm": 1536,
+      "registers_per_sm": 65536,
+      "cpu": "Intel(R) Core(TM) Ultra 7 255HX",
+      "driver": "621.14",
+      "nvcc": "Build cuda_13.3.r13.3/compiler.38244171_0"
+    },
+    {
+      "name": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 17:06)",
+      "folder": "measure/2026-11-22_17-06-33-Welton-validation-devices-kernel",
+      "host": "Welton",
+      "code": "72b86b63cbf7",
+      "started": "2026-11-22T17:06:33",
+      "sms": 36,
+      "cc": 120,
+      "threads_per_sm": 1536,
+      "registers_per_sm": 65536,
+      "cpu": "Intel(R) Core(TM) Ultra 7 255HX",
+      "driver": "621.14",
+      "nvcc": "Build cuda_13.3.r13.3/compiler.38244171_0"
+    }
+  ],
+  "speeds": [
+    {
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)",
+      "precision": 64,
+      "photons_per_second": 610756700.0,
+      "per_sm": 16965463.888888888,
+      "per_sm_per_ghz": 6089251.853210321,
+      "clock_mhz": 2786.1327299090954,
+      "power_w": 38.185,
+      "power_cap_share": 0.0,
+      "cpu_core": 8827387.0
+    },
+    {
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)",
+      "precision": 32,
+      "photons_per_second": 10074510000.0,
+      "per_sm": 279847500.0,
+      "per_sm_per_ghz": 107805739.14391099,
+      "clock_mhz": 2595.849740675018,
+      "power_w": 112.02,
+      "power_cap_share": 0.7777777777777778,
+      "cpu_core": 13655730.0
+    },
+    {
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 17:06)",
+      "precision": 64,
+      "photons_per_second": 643889400.0,
+      "per_sm": 17885816.666666668,
+      "per_sm_per_ghz": 6215781.279412612,
+      "clock_mhz": 2877.4848828588233,
+      "power_w": 37.754999999999995,
+      "power_cap_share": 0.0,
+      "cpu_core": 9291973.0
+    },
+    {
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 17:06)",
+      "precision": 32,
+      "photons_per_second": 10843250000.0,
+      "per_sm": 301201388.8888889,
+      "per_sm_per_ghz": 110579733.7777179,
+      "clock_mhz": 2723.8389766279374,
+      "power_w": 73.63499999999999,
+      "power_cap_share": 0.75,
+      "cpu_core": 13960110.0
+    }
+  ],
+  "scaling": [
+    {
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)",
+      "precision": 64,
+      "sms": 36,
+      "strong_speedup": 35.634055919668384,
+      "strong_p": 0.9999446101599385,
+      "whole_p": 0.9953052026151021,
+      "cycles_speedup": 35.73009765083277,
+      "weak_efficiency": 0.9904074541642313,
+      "s_prime": 0.1545501305605059
+    },
+    {
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)",
+      "precision": 32,
+      "sms": 36,
+      "strong_speedup": 33.1565652902198,
+      "strong_p": 0.9991699878529199,
+      "whole_p": 0.9931113582664953,
+      "cycles_speedup": 35.64362625437697,
+      "weak_efficiency": 0.9172231154955383,
+      "s_prime": 0.21679899725080848
+    }
+  ],
+  "occupancy": [
+    {
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)",
+      "precision": "fp64",
+      "registers": 80,
+      "occupancy": 0.5,
+      "best_registers": 72,
+      "best_occupancy": 0.583,
+      "best_cycles": 0.9984805131880494
+    },
+    {
+      "machine": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)",
+      "precision": "fp32",
+      "registers": 67,
+      "occupancy": 0.583,
+      "best_registers": 67,
+      "best_occupancy": 0.583,
+      "best_cycles": 1.0
+    }
+  ],
+  "digests": [
+    {
+      "binary": "cpu64",
+      "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)": "ee9af07f55ed409a",
+      "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 17:06)": "ee9af07f55ed409a",
+      "identical": true
+    },
+    {
+      "binary": "gpu32",
+      "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)": "4829b43062c435b8",
+      "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 17:06)": "4829b43062c435b8",
+      "identical": true
+    },
+    {
+      "binary": "gpu64",
+      "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54)": "ee9af07f55ed409a",
+      "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 17:06)": "ee9af07f55ed409a",
+      "identical": true
+    }
+  ]
+}

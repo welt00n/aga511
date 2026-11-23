@@ -1,0 +1,21 @@
+# pass_order.py
+# 2026-11-22 16:17 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+Q3: is the second pass slower than the first? (2 passes of 4 observers, FP64, all SMs)
+Each pass's kernel time and its cycles; the same cycles at a different time means the clock moved.
+
+N=1e+07 equator side first  pass 1    40.01 ms 1.156e+08 cycles   pass 2    29.03 ms 8.383e+07 cycles   pass 2 / pass 1 0.726
+N=1e+07 equator side first  pass 1    27.25 ms 7.868e+07 cycles   pass 2    43.57 ms 1.259e+08 cycles   pass 2 / pass 1 1.599
+N=1e+07 equator side first  pass 1    27.24 ms 7.863e+07 cycles   pass 2    25.43 ms 7.342e+07 cycles   pass 2 / pass 1 0.934
+N=1e+07 pole side first     pass 1    29.05 ms 8.390e+07 cycles   pass 2    31.07 ms 8.973e+07 cycles   pass 2 / pass 1 1.069
+N=1e+07 pole side first     pass 1    43.56 ms 1.258e+08 cycles   pass 2    27.25 ms 7.868e+07 cycles   pass 2 / pass 1 0.625
+N=1e+07 pole side first     pass 1    36.29 ms 1.048e+08 cycles   pass 2    31.08 ms 8.977e+07 cycles   pass 2 / pass 1 0.856
+N=1e+08 equator side first  pass 1   156.34 ms 4.514e+08 cycles   pass 2   156.29 ms 4.513e+08 cycles   pass 2 / pass 1 1.000
+N=1e+08 equator side first  pass 1   159.75 ms 4.613e+08 cycles   pass 2   157.94 ms 4.560e+08 cycles   pass 2 / pass 1 0.989
+N=1e+08 equator side first  pass 1   158.02 ms 4.563e+08 cycles   pass 2   157.92 ms 4.560e+08 cycles   pass 2 / pass 1 0.999
+N=1e+08 pole side first     pass 1   157.93 ms 4.560e+08 cycles   pass 2   157.96 ms 4.562e+08 cycles   pass 2 / pass 1 1.000
+N=1e+08 pole side first     pass 1   157.94 ms 4.561e+08 cycles   pass 2   156.26 ms 4.513e+08 cycles   pass 2 / pass 1 0.989
+N=1e+08 pole side first     pass 1   156.29 ms 4.513e+08 cycles   pass 2   156.33 ms 4.514e+08 cycles   pass 2 / pass 1 1.000
+
+Found on 2026-11-22: the 5x was not reproduced. Kernels of ~30 ms (N=1e7) vary by about +-30%;
+kernels of ~170 ms (N=1e8) agree within 1%. Short kernels are noise, not a slow pass.

@@ -1,0 +1,47 @@
+{
+  "kind": "measure",
+  "label": "Welton-all",
+  "command": [
+    "python",
+    "main.py",
+    "measure",
+    "--seconds",
+    "0.3",
+    "--repeats",
+    "1",
+    "--allow-invalid",
+    "--yes"
+  ],
+  "asked": {
+    "parts": [
+      "validation",
+      "kernel",
+      "occupancy",
+      "devices",
+      "scaling"
+    ],
+    "seconds": 0.3,
+    "repeats": 1,
+    "targets": [
+      "80"
+    ],
+    "allow_invalid": true,
+    "photons": {
+      "cpu64": 8000000,
+      "cpu32": 15000000,
+      "gpu64": 1000000000,
+      "gpu32": 15000000000
+    }
+  },
+  "code_hash": "72b86b63cbf7",
+  "host": "Welton",
+  "machine": [
+    "NVIDIA GeForce RTX 5070 Laptop GPU (cc 12.0, 36 SMs)",
+    "Intel(R) Core(TM) Ultra 7 255HX (one core)"
+  ],
+  "started": "2026-11-22T16:54:40",
+  "finished": "2026-11-22T17:06:31",
+  "status": "done",
+  "passed": true,
+  "headline": "GPU 6.1e+08/s FP64 (69\u00d7 one core), 1e+10/s FP32; strong FP64 35.6\u00d7 on 36 SMs; FP64 fastest at 72 registers (occupancy 0.58); validation passed"
+}

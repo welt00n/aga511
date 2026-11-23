@@ -1,0 +1,58 @@
+{
+  "kind": "make",
+  "label": "ladder-256-f300-gpu32-n1e08-n1e11",
+  "command": [
+    "python",
+    "main.py",
+    "make",
+    "--size",
+    "256",
+    "--ladder",
+    "1e8:1e11",
+    "--loops",
+    "2",
+    "--yes"
+  ],
+  "asked": {
+    "photons": 1,
+    "seed": 42,
+    "limb": 1.0,
+    "spots": 3,
+    "observers": [
+      0.0,
+      0.5236,
+      1.0472,
+      1.5708,
+      2.0944,
+      2.618,
+      3.1416
+    ],
+    "size": 256,
+    "frames": 300,
+    "nmu": null,
+    "chunk_size": 1024,
+    "observers_per_pass": null,
+    "sms": null,
+    "variant": null,
+    "processor": "gpu",
+    "precision": 32,
+    "ladder": [
+      100000000,
+      1000000000,
+      10000000000,
+      100000000000
+    ],
+    "loops": 2,
+    "ladder_inclination": 1.0472
+  },
+  "code_hash": "72b86b63cbf7",
+  "host": "Welton",
+  "machine": [
+    "NVIDIA GeForce RTX 5070 Laptop GPU (cc 12.0, 36 SMs)"
+  ],
+  "started": "2026-11-22T20:23:46",
+  "finished": "2026-11-22T20:24:47",
+  "status": "done",
+  "passed": null,
+  "headline": "4 rungs, N = 1e+08 \u2026 1e+11: SNR at the limb 0.23 \u2026 7.5"
+}

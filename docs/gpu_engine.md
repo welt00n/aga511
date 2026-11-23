@@ -79,7 +79,7 @@ command = nvcc -O2 -std=c++17 -Xcompiler -Wall <architecture> [-DSTAR_FP32] <sou
 - **Rebuild only when something changed:** the **build hash** = a hash of the engine's sources (`*.cu`, `*.cuh`) + the `nvcc` command + `nvcc --version`. It is stored next to the binary (`build/star_gpu64.hash`); a different hash means rebuild. This is the **code hash** the records carry ([jobs_and_passes.md §5](jobs_and_passes.md#code-changes-decided)): one hash, two uses.
 - **Binaries in `engine/build/`**, ignored by git.
 - **The names say what they are:** device and precision (`star_gpu32`), replacing `star` and `star32`.
-- **By hand:** `python engine.py` builds all four and prints each `nvcc` command, which can also be copied and run directly. Handy to show the build in class.
+- **By hand:** `python main.py build` builds all four and prints each `nvcc` command, which can also be copied and run directly. Handy to show the build in class. Since the engine has folders, `nvcc` runs in `engine/` with `-I.`, the sources are paths such as `physics/scene.cu`, and the code hash covers each file's relative path too.
 - **Remote:** the driver sends the same `nvcc` command over SSH. The server needs neither Python nor `make`.
 
 ## 4. A pass on the GPU
@@ -132,6 +132,8 @@ trace_photons (one per thread, persistent):
 | `--compare-ep2` with `--processor gpu` | EP2 vs the GPU | χ²/dof ≈ 1 |
 
 ## 7. The sweeps (today) [to review]
+
+> **Since 2026-11-22** the sweeps are the `scaling` part of `python main.py measure`: each point is a shared run in the measurement's `points/`, and `sweeps.py` is gone ([walkthrough piece 25](walkthrough.md#piece-25-the-products-mainpy-lab)). The design below (what a point is, the four sweeps, interleaved repeats, resuming) still holds; the commands at the end are the old ones. What changed: **N is no longer calibrated to 5 s by a first run** but taken from the speeds measured on this host, rounded up, and never below the minimum N of [§10](#10-valid-runs-the-minimum-n-decided-2026-11-22).
 
 A **sweep** is a set of engine runs that vary **one thing**, to measure how the time responds. `sweeps.py` runs them; `scaling.py` analyses them.
 
@@ -278,3 +280,23 @@ EP3 was built in other Claude Code sessions (on the Ubuntu instances, project `c
 - [x] **A new phase, `COPY`** (GPU → host), measured apart from the disk. *(agreed)*
 - [x] **Separate binaries** (`star_cpu64`, `star_gpu64`, …); CPU vs GPU compared by `star.py`. *(agreed)*
 - [x] **Named by the hardware itself (option B):** `processor.cuh` (what the pass loop asks of a processor), `cpu.cu`, `gpu.cu`, next to `cpu_cores.cu`, `gpu_sms.cu`, `gpu_image.cu`, `gpu_device.cu`. Not "machine": that is the laptop or the A30, which both have a CPU and a GPU (the driver's `machines/`). Option A was by the role (`tracer.cuh`, `cpu_tracer.cu`, `gpu_tracer.cu`). *(decided 2026-11-21; the whole architecture follows the hardware: [hpc_architecture.md](hpc_architecture.md))*
+- [x] **Folders by layer** (`physics/`, `random/`, `run/`, `cpu/`, `gpu/`), includes that carry their folder, and **one entrypoint** (`main.py`) with four products. *(decided 2026-11-22; [walkthrough piece 25](walkthrough.md#piece-25-the-products-mainpy-lab))*
+
+## 10. Valid runs: the minimum N [decided 2026-11-22]
+
+A run's speed is a measurement only if the GPU was busy long enough and evenly enough. The plan (`lab/plan.py`) computes, for each binary and SM count, before anything runs:
+
+N_min = max(1 s × speed, 32 × resident threads × chunk size)
+
+| Rule | Why | Where it was seen |
+|---|---|---|
+| at least 1 s of photons | the launch and the clock's ramp-up are fixed costs; below ~1 s they are a visible part of the time | kernels of ~30 ms varied ±30% between runs, kernels of ~170 ms within 1% ([research.md, Q3](research.md)) |
+| at least 32 chunks per resident thread | the queue hands out whole chunks of 1024 photons; with fewer chunks than a few per thread, some SMs get one more than others, and the slowest decides | 10⁷ photons = 9 766 chunks for 27 648 threads: the slow kernels took more *cycles*, so it was the work, not the clock |
+
+- **Resident threads** = SMs × threads per block × blocks per SM, from the engine's `--describe` (the launch the occupancy API picks). The CPU has one, so its minimum is set by time alone.
+- **On the laptop, all SMs:** FP64 9.1·10⁸ (the work rule), FP32 1.1·10¹⁰ (the time rule). On one SM both rules ask for less (one SM's threads, one SM's speed), and the same N simply runs longer. The A30 has 56 SMs and a different launch: `measure` computes its own minimum there.
+- **The image measured is high-resolution:** 1024² × 300 frames × 4 observers (5 GB per run), the showcase's own image, never smaller (`--size` 1024–2048). The minimum N is about the photon work and doesn't change with the image; what changes is the serial part of every run (zeroing, copying back and saving 5 GB), so Amdahl's p is that of a real picture. *(decided 2026-11-22; the first full measurement used 200² × 150 frames.)*
+- **The CPU's speed isn't measured:** the unit of comparison is the SM. The sequential CPU engine is only the correctness reference.
+- **The N actually used** is the larger of the minimum and `--seconds` × the speed (5 s by default), rounded up to 1, 1.5, 2, 3, 4, 5, 6 or 8 × 10ᵏ.
+- **Nothing timed below the minimum** *(since 2026-11-22)*: the small-N strong sweep and the bottom of p(N) (10⁵…10⁹) are gone; p(N) runs at 0.4×, 1× and 2× the reference N, and Amdahl's ceiling is shown at valid N, where the high-resolution image makes it real (the whole run's ceiling ~40× at 1k). The only runs at N = 10⁸ are the validation checks against the sequential CPU: they compare images, not times.
+- **Anything else below the minimum** makes `measure` refuse, unless `--allow-invalid`, and then the report says on its first page that it is not a valid measurement.

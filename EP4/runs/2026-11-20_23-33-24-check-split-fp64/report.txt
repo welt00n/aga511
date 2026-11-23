@@ -1,4 +1,0 @@
-Chunks [0, 4883) + [4883, 9766) vs the full run [0, 9766)
-  N = 1e+07, 200x200 pixels, nphi = 150, nmu = 150, 4 observers, 3 spots, chunk size 1024
-  recorded: 132451 + 132307 = 264758 vs 264758
-  images: IDENTICAL, bit for bit

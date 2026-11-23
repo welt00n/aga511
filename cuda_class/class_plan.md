@@ -18,7 +18,122 @@ Working plan for the CUDA class. It changes as we learn; the concepts are collec
   - The hardware: an RTX 5070 Laptop GPU, 36 SMs, CUDA 13.3.
   - The profilers: Nsight Systems and Nsight Compute.
 
-## The arc (first draft)
+## The professor's syllabus (whiteboard, read 2026-11-23)
+
+Written for two presenters; now one. In the original Portuguese headings:
+
+1. **História** (5 min): problemas, evolução, ciência.
+2. **Arquitetura** (divisão): multiprocessadores; arquitetura antiga vs atual; núcleos FP32, FP64, INT32, tensor; precisão numérica.
+3. **Terminologia básica:** host/device, thread, bloco, grid → modelo de memória.
+4. **Fluxo de execução:** transferência de dados, lançamento do kernel, execução, retorno → latência; CPU (flops) vs memória.
+5. **Modelo de programação:** SIMD/SIMT; exemplo prático, *redução paralela* (distribuição, resultados parciais, combinação, resultado final); cooperação entre threads, sincronização, shared memory, limitações; comparação.
+6. **Buffon:** EP3 → Amdahl; comparações.
+7. **Plano de aula** (for each project): intro → detalhes do código serial → paralelização → Amdahl e discussão. Sketch: a fork-join (S, then P P P P, then the join).
+
+## The sequence (draft, 2026-11-23)
+
+The projects drive the class; the foundations come first (the syllabus' 2–5), then EP3, then the harder concepts, then the star. Each EP follows the board's four steps (intro → serial code → parallelization → Amdahl). **EP3 stays as delivered:** only its Amdahl analysis. **The A30 enters as a prediction** (measured at IAG on Monday 2026-11-23; the slides switch to the measurement if it is ready).
+
+| # | min | Block | Syllabus | Content |
+|---|---|---|---|---|
+| 0 | 7 | Prelude: history | 1 | the problems GPUs were made for; graphics → science; GPUs in science and industry today |
+| 1 | 3 | The hook | — | the star's video: 3.9·10¹² photons, 6 min on this GPU, 3.5 h on one of its SMs |
+| 2 | 10 | Architecture | 2 | CPU vs GPU (latency vs throughput); the SM and its units (FP32, FP64, INT32, tensor); precision |
+| 3 | 10 | Terminology and memory | 3 | host/device, thread → block → grid, warps; registers, shared, global, constant |
+| 4 | 8 | Execution flow | 4 | copy in → launch → execute → copy back; latency; flops vs memory |
+| 5 | 17 | Programming model | 5 | SIMD vs SIMT; parallel reduction as the practical example; cooperation, synchronization, shared memory, limitations |
+| 6 | 15 | EP3: Buffon | 6, 7 | intro → serial code → parallelization → Amdahl over SMs (as delivered) |
+| 7 | 12 | Going deeper | — | warps and latency hiding; registers → occupancy (and why more is not faster here); FP64 vs FP32 |
+| 8 | 15 | EP4: the star, the code | 7 | the physics → EP2's serial algorithm → chunks with their own random streams, atomics on the image, constant memory, GPU = CPU bit for bit |
+| 9 | 12 | EP4: Amdahl and discussion | 7 | photons 36× vs whole run 19× at 1k: the image is the serial part; the curve toward ideal at large N; fair benchmarks; **the A30: predicted, then measured** |
+| 10 | 6 | Result and closing | — | the SNR ladder; three takeaways |
+| | 5 | Questions | | |
+
+## Block by block
+
+For each block: the **message** (what the room must leave with, also the slide titles' voice), the **board**, the **slides** (only what can't be drawn), the **numbers**, and a **checkpoint** (a question to the room). **⟨A30⟩** marks a space filled after the IAG run on Monday: the class is written with the comparison in it. Figures: `M/` = `EP4/runs/measure/2026-11-22_20-25-24-Welton-all/figures/`, `S/` = `EP4/runs/make/2026-11-22_20-07-02-1024-f300-gpu32-snr10/`, `E3/` = `EP3/runs/2026-11-08_20-36-22-gpu-fp64/`. The class notes (a text to study from, one section per block) come after this plan.
+
+### 0. Prelude: history (7 min)
+- **Message:** GPUs were built to draw pixels; science found that "many independent small jobs" is the same problem.
+- **Board:** a timeline, filled while talking.
+- **Points (to verify before the class):** 1999 GeForce 256, sold as "the first GPU"; ~2001 programmable shaders; 2003–2006 scientists computing through graphics APIs (GPGPU); 2006–2007 unified shaders and CUDA; ~2010 FP64, ECC and caches (Fermi): GPUs for science; 2012 AlexNet trained on two gaming GPUs; 2017 tensor cores; today the largest supercomputers are GPU machines, and AI training is the industry's GPU market. Science: Monte Carlo radiative transfer (the professor's field), N-body, climate, molecular dynamics, lattice QCD.
+- **Slides:** 2–3 photos (an old card, a supercomputer), a Top500 share chart.
+- **Checkpoint:** "What does drawing a frame have in common with throwing 10¹⁰ needles?"
+
+### 1. The hook (3 min)
+- **Message:** a picture made of 3.9·10¹² photons, in 6 minutes on a laptop.
+- **Slides:** `S/observers_around.mp4` (7 observers, both hemispheres, 1k): play one loop.
+- **Numbers:** N = 3.9·10¹² for SNR 10; 6.3 min on the GPU's 36 SMs, 3.5 h on one of them. ⟨A30: the 2k version, N = 1.6·10¹³, time⟩.
+- **Checkpoint:** "How?" (left open; answered by block 9.)
+
+### 2. Architecture (10 min)
+- **Message:** a CPU spends its transistors on finishing one thing fast (latency), a GPU on finishing many things at once (throughput).
+- **Board:** the two chips side by side (a few big cores + caches vs many small lanes); then one SM: its units (FP32, INT32, FP64, special functions, tensor), warp schedulers, the register file, L1/shared.
+- **Slides:** our two GPUs side by side:
+
+  | | RTX 5070 Laptop (Blackwell, cc 12.0) | A30 (Ampere, cc 8.0) |
+  |---|---|---|
+  | SMs | 36 | 56 |
+  | per SM | 128 FP32/INT32 lanes, 2 FP64 units | 64 FP32 + 64 INT32 lanes, 32 FP64 units |
+  | FP64 : FP32 | 1 : 64 | 1 : 2 |
+  | memory | 8 GB | 24 GB HBM2 |
+- **Precision:** FP32 has 24 bits of mantissa, FP64 53. In the star, FP32 moves 7·10⁻⁴ of the photons to a neighbouring pixel, below the noise.
+- **Checkpoint:** "Which GPU wins in FP64? In FP32?" (answered in block 9 with ⟨A30⟩.)
+
+### 3. Terminology and memory (10 min)
+- **Message:** host and device are two computers with two memories; the work is a grid of blocks of threads, run 32 at a time (a warp).
+- **Board:** the hierarchy, built step by step (thread → warp → block → grid → SMs); the memory spaces next to it (registers per thread, shared per block, global for all, constant broadcast to all).
+- **Numbers:** our GPU holds 48 warps (1536 threads) per SM and 65 536 registers per SM.
+- **Checkpoint:** "If a block has 768 threads, how many warps is that?"
+
+### 4. Execution flow (8 min)
+- **Message:** copy in → launch → run → copy back, and every arrow costs time.
+- **Board:** the four arrows on a time axis, with what each costs.
+- **Numbers (measured):** creating the CUDA context ~0.15 s (EP3, seen in `nsys`); copying a 5 GB image back ~0.4 s (~13 GB/s); saving it to disk ~4.5 s. Flops are cheap, moving data is not.
+- **Slides:** the `nsys` timeline of Buffon ([nsight.md](nsight.md)).
+- **Checkpoint:** "Where would you expect the serial part of a GPU program to hide?"
+
+### 5. Programming model (17 min)
+- **Message:** one instruction, 32 threads (SIMT); threads cooperate inside a block (shared memory, `__syncthreads`), and across blocks only through global memory and atomics.
+- **Board:** SIMD vs SIMT, and divergence (an `if` splits a warp).
+- **The practical example, a parallel reduction** (sum of N numbers): distribute (each thread its share), partial results (in registers), combine (a tree in shared memory, one `__syncthreads` per level), the final result (one atomic per block, or a second kernel). Its limits: synchronization only inside a block; shared memory is small; the tree's last levels leave threads idle.
+- **Slides:** the reduction kernel (~15 lines); a figure of the tree.
+- **Comparison:** serial N steps; parallel N/p + log p: a first glimpse of Amdahl.
+- **Checkpoint:** "Buffon counts the needles that cross a line. What kind of operation is that?" (a reduction: the bridge to block 6)
+
+### 6. EP3: Buffon (15 min), as delivered
+- **Board's four steps:** intro (needles, π) → the serial code (one loop) → the parallelization (each thread its own random stream, counting in registers, one atomic at the end: block 5's reduction; persistent threads taking work from a queue) → **Amdahl over SMs**.
+- **Slides:** `E3/amdahl.png` (the speedup over SMs and p vs N).
+- **Numbers:** at N = 3.2·10¹⁰ (FP64): **34.3× on 36 SMs, p = 0.9986**; the serial part is 0.15 s (the CUDA context); the needle loop alone p = 0.9997. p grows with N: 0.07 at 10⁶, 0.78 at 10⁸, 0.997 at 10¹⁰. π to 14 decimals would take 2.7·10¹¹ years on this GPU.
+- **Checkpoint (predict first):** "On 36 SMs, how much faster?"
+
+### 7. Going deeper: warps, registers, occupancy (12 min)
+- **Message:** an SM hides latency by switching between warps, and how many warps fit is decided by the registers.
+- **Board:** 65 536 registers per SM ÷ (registers per thread × 32) = warps that fit. FP64: 80 registers → 25 warps allowed, 24 launched (whole blocks), occupancy 0.50; FP32: 67 → 28 warps, 0.58.
+- **Slides:** `M/registers_and_occupancy.png`.
+- **The result:** capping the registers raises the occupancy but is not faster: the compiler adds instructions (+5% before any spill), then spills to local memory (which lives in DRAM). FP64 is 17× slower than FP32 here, not 64×: the warps wait on the few FP64 units (the `NOP`s in the code are those waits).
+- **⟨A30:⟩** 96 registers (FP64) → 21 of 64 warps, occupancy ⟨measured⟩; does more occupancy help there ⟨register sweep⟩?
+- **Checkpoint:** "If we halve the registers per thread, do we go twice as fast?"
+
+### 8. EP4: the star, the code (15 min)
+- **Board's four steps:** intro (a spotted, limb-darkened star seen by observers at different inclinations; each frame is one phase of the rotation) → the serial code (EP2's algorithm: a photon leaves the surface, maybe hits a spot, escapes in a direction that picks its frame and observer, lands in a pixel) → the parallelization: Buffon's skeleton with a new body: chunks with their own random streams (the same numbers on CPU and GPU), one photon function compiled for both (`__host__ __device__`), atomic adds into a large image in global memory, the star's description in constant memory → correctness.
+- **Numbers:** **the GPU's image equals the CPU's, bit for bit (FP64)**; FP32 moves 7·10⁻⁴ of the photons (below the noise). Statistically: GPU vs CPU with independent photons, χ²/dof = 0.99.
+- **Slides:** the kernel's loop (~10 lines); one still frame.
+- **Checkpoint:** "Why can two different processors give the *same bits*?"
+
+### 9. EP4: Amdahl and discussion (12 min)
+- **Message:** the same law as Buffon, a different serial part: for a high-resolution picture, the image itself.
+- **Slides:** `M/amdahl_ceiling_fp64.png`; the phase table (FP64, N = 4·10⁹): photons 216.9 s → 6.0 s on 36 SMs (36×), setup + copy + save 5.6 s → 5.6 s, the whole run 223.5 s → 11.6 s (**19×**, p = 0.974, ceiling ~40). Then `M/costs_large_n.png`: the larger N, the closer to 36× (measured points on the predicted curve).
+- **Contrast with EP3:** serial 0.15 s (context) → 34×; serial 5.6 s (a 5 GB image) → 19×.
+- **Fair benchmarks:** the unit is the SM, not "a GPU vs one CPU core" (the 100× myth, Lee et al. 2010).
+- **⟨A30:⟩** strong scaling over 56 SMs ⟨speedup, p⟩; the laptop vs the A30 per SM per GHz ⟨⟩; FP64 vs FP32 on each ⟨the flip⟩; the 1k run's serial part on IAG's disk ⟨⟩.
+- **Checkpoint (predict first):** "With a 2k image, does the whole run scale better or worse?"
+
+### 10. Result and closing (6 min)
+- **Slides:** the SNR ladder (spots appear between 10⁹ and 10¹⁰ photons; SNR ∝ √N); ⟨A30: the 2k image⟩.
+- **Three takeaways:** (1) GPUs win when the work is many independent pieces; (2) correctness first: the same bits on CPU and GPU; (3) Amdahl decides: find the serial part (the context, the image), measure the whole run, and name the baseline of every speedup.
+
+## The arc (first draft, 2026-11-20; replaced by the sequence above)
 
 The broad idea: **history → foundations → programming model → Buffon → the star**, with the tools (Nsight) as a thread through all of it. The order and weights will change.
 
@@ -68,4 +183,5 @@ The broad idea: **history → foundations → programming model → Buffon → t
 - 2026-11-20: class language set: Portuguese.
 - 2026-11-21: Buffon profiled with `nsys`; `ncu` waits for the GPU performance counters to be enabled on Windows.
 - 2026-11-21: all docs kept in English; only the class and slides will be translated.
+- 2026-11-23: the professor's syllabus transcribed; the sequence drafted around it (foundations, EP3 as delivered, the harder concepts, the star); presenting alone. The A30 enters as a prediction, measured at IAG on Monday.
 - 2026-11-21: date set: Tuesday 2026-11-24, 2 hours, CUDA + EP3 + EP4. The build plan up to it: [roadmap.md §0](../docs/roadmap.md#0-today-all-of-ep4-saturday-2026-11-21-to-review). EP4 is built on Saturday, the class prepared on Sunday, from [ep4_concepts.md](ep4_concepts.md).

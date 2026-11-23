@@ -33,7 +33,7 @@ Running notes, filled while EP4 is built: each concept we use, where EP4 uses it
 | Execution space vs memory space (Kokkos' terms) | `processor.cuh`; `Image` vs `GpuImage` | — | 4 |
 | Hybrid CPUs: 8 P-cores + 12 E-cores, no hyper-threading | the laptop's CPU | WSL shows 20 identical CPUs: the hardware is hidden from us | 2, 7 |
 | GPU clocks change: 825 MHz idle, 3090 MHz boost | the laptop's GPU | report clocks with every timing | 7 |
-| Fair benchmarking: state the baseline of every speedup (Hoefler & Belli 2015, after Bailey 1991) | `devices` sweep: vs one core and vs all cores | — | 7, 10 |
+| Fair benchmarking: state the baseline of every speedup (Hoefler & Belli 2015, after Bailey 1991) | `measure`'s `speed` part: the GPU against itself, one SM vs all SMs | the whole GPU vs one CPU core was dropped as unfair (2026-11-22, below) | 7, 10 |
 | The roofline: compute-bound vs memory-bound | FP64 (1:64) vs FP32 (atomics) | to draw at the board | 2, 9 |
 | Where each line runs: integer units (Philox), FP64 units vs FP32 cores, the special function unit (`MUFU`), L2 atomics (`RED`), the constant cache | [hpc_architecture.md §7](../docs/hpc_architecture.md#7-the-code-mapped-to-where-it-runs-the-gpu-one-photon) | EP3's kernel: IMAD 302, LOP3 209, IADD 136 (Philox is integer work), DFMA 13, FFMA 19, HFMA2 23 | 3, 8 |
 | Reading the compiled code: SASS, `cuobjdump`, the compiler's resource report | `instruction_mix.py`, `nvcc -Xptxas -v` | EP3's kernel: 58 registers, 72-byte stack, no spills | 3 |
@@ -85,8 +85,10 @@ Running notes, filled while EP4 is built: each concept we use, where EP4 uses it
 | Where the cycles go, per piece of the photon | `sections` variant | direction 33–41%, surface 20–28%, atan2 22% (FP64), atomics 13–15% | 8, 9 |
 | Amdahl inside the kernel: only the FP64 part slows down | FP64 vs FP32 per photon | 17×, not 64× | 7, 9 |
 | The clock depends on the work (power limit) | `gpu_monitor.py` | FP32 2310 MHz at 72 W, FP64 2812 MHz at 55 W | 7 |
+| **Ask the driver why the clock is low:** `clocks_event_reasons` | `nvidia-smi --query-gpu=…` under load | FP64, or 1 SM: the voltage ceiling (`reliability`) at 2880–2895 MHz; FP32 on 36 SMs: `sw_power_cap`, with the enforced limit moving 85–115 W in one run (the laptop shares power between CPU and GPU). Not the spills | 7 |
 | **p(N): Amdahl's parallel fraction depends on the problem size** (EP3's result, for the star) | `problem-size` sweep, `scaling.py` | FP32 photon phase: 0.14 (10⁵) → 0.9993 (10⁹); whole run: ≈ 0 → 0.987 (10¹⁰) | 7 |
-| Speedups at the same precision, the baseline named | `devices` sweep | GPU vs one core: 82× (FP64), 850× (FP32) on the photons; ~28× on the whole run at 10⁸ | 7, 9 |
+| Speedups at the same precision, the baseline named | `devices` sweep (2026-11-21) | GPU vs one core: 82× (FP64), 850× (FP32) on the photons; ~28× on the whole run at 10⁸. **Withdrawn:** see "the unfair comparison" below | 7, 9 |
+| **The unfair comparison** (Lee et al., *Debunking the 100X GPU vs. CPU myth*, ISCA 2010): a whole GPU against one core of an untuned sequential program credits the GPU with every core the CPU didn't use | our own "70× / 777× one core" (2026-11-22) | like for like it was 2.0× (FP64) and 23.6× (FP32) per SM vs per core, and ≥ 3.5× / ≥ 39× against a 20-core bound. Now the unit is the SM: all 36 SMs = **35.2× one SM** (FP64), **32.9×** (FP32; 35.9× in cycles). The CPU checks correctness only | 7, 9, 10 |
 | **Strong scaling over SMs, measured:** FP64 35.9× on 36 SMs, p = 0.9998 | `strong_fp64` | the clock steady at 2880 MHz | 7 |
 | **The clock in the speedup:** FP32 36.0× in cycles, 33.1× in seconds | `strong_fp32` | 2895 → 2636 MHz on 36 SMs | 7 |
 | **Weak scaling and Gustafson, measured:** flat time, s′ fitted 0.054 vs measured 0.058 (FP64) | `weak_fp64` | — | 7 |
@@ -95,5 +97,8 @@ Running notes, filled while EP4 is built: each concept we use, where EP4 uses it
 | **The showcase:** 3.9·10¹² photons in 6.4 min on the laptop's GPU (~4 days on one CPU core) | `showcase.py` | 1k, 300 frames, 4 observers, one pass | 9 |
 | Planning from physics, checked by measurement: N ↔ SNR | `showcase.py` | SNR measured = predicted: 14.1 center, 11.7 limb ring | 9 |
 | Reading a 1.3 GB file frame by frame (`np.memmap`) | the video writer | never loaded whole | (aside) |
-| A laptop's CPU and GPU share one power budget | the CPU ran at 7.1·10⁶ in the sweep vs 9.5·10⁶ alone | (likely) | 7 |
+| **The baseline itself varies:** the one-core CPU rate differs by ~25% between sessions | the `devices` sweep vs re-runs on 2026-11-22 | 7.0–8.0·10⁶ in the sweep, 8.8–9.1·10⁶ in every re-run (each vCPU, long runs, after the GPU, with `nvidia-smi`); cause not found; "shared power" not supported. A speedup is only as good as its baseline (82× vs ~65×) | 7, 9 |
+| **`NOP`s are waits:** the compiler makes a warp wait for a slow FP64 result | `cuobjdump -sass` of the FP64 kernel | 1063 `NOP`s, in runs of 4 between dependent FP64 instructions; other warps run meanwhile: latency hiding, and part of why FP64 is 17× and not 64× | 3, 8 |
+| Static vs dynamic instruction counts | `instruction_mix.py` | 4 FP64 instructions in the FP32 kernel are `sinf`/`cosf`'s slow argument reduction, never run for angles in [0, 2π] | 8 |
+| Short kernels cannot be timed | Q3 re-runs | ~30 ms kernels vary ±30% run to run; ~170 ms ones within 1%: the "5× slower pass" was one noisy sample | 7 |
 | FMA: faster and (in FP32) a different last bit | `no_fma` variant | FP64 +7% speed, identical images; FP32 30 689 pixels differ at 5·10⁹ | 7, 9 |

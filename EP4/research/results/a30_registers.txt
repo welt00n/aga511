@@ -1,0 +1,12 @@
+# a30_registers.py
+# 2026-11-22 16:17 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+How many registers will the kernel use on the A30? Compile only (ptxas -v), no A30 needed.
+
+this GPU  NVIDIA GeForce RTX 5070 Laptop GPU   FP64:  80 registers, 0 B spilled -> 2560 per warp, 25 of 48 warps (800 threads per SM), occupancy at most 0.52
+this GPU  NVIDIA GeForce RTX 5070 Laptop GPU   FP32:  67 registers, 0 B spilled -> 2304 per warp, 28 of 48 warps (896 threads per SM), occupancy at most 0.58
+A30       A30 (Ampere tuning guide)            FP64:  96 registers, 0 B spilled -> 3072 per warp, 21 of 64 warps (672 threads per SM), occupancy at most 0.33
+A30       A30 (Ampere tuning guide)            FP32:  76 registers, 0 B spilled -> 2560 per warp, 25 of 64 warps (800 threads per SM), occupancy at most 0.39
+
+Found on 2026-11-22: sm_80 uses 96 (FP64) and 76 (FP32) registers, no spills, against 80 / 67 on
+sm_120: occupancy at most 0.33 / 0.39 on the A30 (672 / 800 threads per SM). Why: front_end_registers.py.

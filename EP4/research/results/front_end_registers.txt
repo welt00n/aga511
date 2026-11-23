@@ -1,0 +1,63 @@
+# front_end_registers.py
+# 2026-11-22 16:15 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+Why does sm_80 need more registers than sm_120? Separate the front end (C++ -> PTX, NVVM) from the
+back end (PTX -> SASS, ptxas): compile the PTX for each compute_XX and assemble it for each SM.
+
+Build cuda_13.3.r13.3/compiler.38244171_0
+
+== FP64: PTX made for compute_XX, then ptxas for sm_120 and for sm_XX
+  PTX           on sm_120  on sm_XX  branches  selects  PTX version
+  compute_75           98        96       107       33  9.3
+  compute_80           98        96       107       33  9.3
+  compute_86           98        96       107       33  9.3
+  compute_89           98        96       107       33  9.3
+  compute_90           98        96       107       33  9.3
+  compute_100          80        84        90       41  9.3
+  compute_103          80        84        90       41  9.3
+  compute_110          80        84        90       41  9.3
+  compute_120          80        80        90       41  9.3
+  opcodes that differ most, compute_90 -> compute_120:
+    mov.u32                         75 ->     1 (-74)
+    mov.b32                          0 ->    63 (+63)
+    mov.f64                         56 ->     0 (-56)
+    mov.b64                         39 ->    85 (+46)
+    setp.eq.s32                     33 ->     0 (-33)
+    setp.eq.b32                      0 ->    30 (+30)
+    setp.ne.b32                      0 ->    30 (+30)
+    setp.ne.s32                     25 ->     0 (-25)
+    mov.u64                         27 ->     2 (-25)
+    add.s32                         61 ->    81 (+20)
+    ld.param.b64                     0 ->    15 (+15)
+    ld.global.nc.v2.b64              0 ->    12 (+12)
+
+== FP32: PTX made for compute_XX, then ptxas for sm_120 and for sm_XX
+  PTX           on sm_120  on sm_XX  branches  selects  PTX version
+  compute_75           71        74       112       49  9.3
+  compute_80           71        76       112       49  9.3
+  compute_86           71        72       112       49  9.3
+  compute_89           71        72       112       49  9.3
+  compute_90           71        72       112       49  9.3
+  compute_100          67        70        91       47  9.3
+  compute_103          67        70        91       47  9.3
+  compute_110          67        70        91       47  9.3
+  compute_120          67        67        91       47  9.3
+  opcodes that differ most, compute_90 -> compute_120:
+    mov.u32                         83 ->     1 (-82)
+    mov.b32                         11 ->    82 (+71)
+    mov.f32                         53 ->     0 (-53)
+    setp.eq.s32                     41 ->     0 (-41)
+    setp.ne.s32                     32 ->     0 (-32)
+    setp.ne.b32                      0 ->    32 (+32)
+    mov.b64                          0 ->    31 (+31)
+    setp.eq.b32                      0 ->    30 (+30)
+    mov.u64                         30 ->     2 (-28)
+    add.s64                         45 ->    25 (-20)
+    ld.const.b32                     0 ->    14 (+14)
+    shf.l.wrap.b32                   0 ->    12 (+12)
+
+nvcc accepts -nvvm-latest (the newer front end for older targets): False
+
+Found on 2026-11-22: the jump is at compute_100. PTX for compute_75...90 needs 96-98 registers (FP64),
+compute_100...120 80-84, whatever SM ptxas assembles it for. CUDA 13 uses a newer NVVM (LLVM 18) for
+Blackwell and later; its PTX has fewer branches and more selects. ptxas adds only ~2.

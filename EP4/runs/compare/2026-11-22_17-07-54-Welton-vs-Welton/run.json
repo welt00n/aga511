@@ -1,0 +1,25 @@
+{
+  "kind": "compare",
+  "label": "Welton-vs-Welton",
+  "command": [
+    "python",
+    "main.py",
+    "compare",
+    "runs/measure/2026-11-22_16-54-40-Welton-all",
+    "runs/measure/2026-11-22_17-06-33-Welton-validation-devices-kernel"
+  ],
+  "asked": {
+    "measurements": [
+      "measure/2026-11-22_16-54-40-Welton-all",
+      "measure/2026-11-22_17-06-33-Welton-validation-devices-kernel"
+    ]
+  },
+  "code_hash": "72b86b63cbf7",
+  "host": "Welton",
+  "machine": [],
+  "started": "2026-11-22T17:07:54",
+  "finished": "2026-11-22T17:07:57",
+  "status": "done",
+  "passed": null,
+  "headline": "NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 16:54) vs NVIDIA GeForce RTX 5070 Laptop GPU (2026-11-22 17:06): see the report"
+}

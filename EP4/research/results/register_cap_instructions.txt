@@ -1,0 +1,26 @@
+# register_cap_instructions.py
+# 2026-11-22 21:24 on Welton, engine code 72b86b63cbf7, Build cuda_13.3.r13.3/compiler.38244171_0
+
+What does a register cap do to the kernel's code? The machine instructions of trace_photons (static: in the
+code, not executed) for each -maxrregcount cap: all of them without the NOPs, and the spill stores and loads
+(STL / LDL: local memory, which is private to the thread but lives in device memory, cached by L1 and L2).
+
+== FP64
+  cap none:  80 registers,   0 B spilled,  1681 instructions (1.000×), STL   2, LDL   3
+  cap   72:  72 registers,   0 B spilled,  1717 instructions (1.021×), STL   2, LDL   3
+  cap   64:  64 registers,  24 B spilled,  1773 instructions (1.055×), STL   5, LDL   5
+  cap   56:  56 registers,  84 B spilled,  1820 instructions (1.083×), STL  13, LDL  12
+  cap   48:  48 registers, 164 B spilled,  1851 instructions (1.101×), STL  25, LDL  20
+  cap   40:  40 registers, 344 B spilled,  1939 instructions (1.153×), STL  68, LDL  48
+  cap   32:  32 registers, 444 B spilled,  1967 instructions (1.170×), STL  89, LDL  66
+== FP32
+  cap none:  67 registers,   0 B spilled,  1433 instructions (1.000×), STL   8, LDL  12
+  cap   64:  55 registers,   0 B spilled,  1503 instructions (1.049×), STL   8, LDL  12
+  cap   56:  52 registers,   0 B spilled,  1538 instructions (1.073×), STL   8, LDL  12
+  cap   48:  48 registers,  24 B spilled,  1554 instructions (1.084×), STL  11, LDL  14
+  cap   40:  40 registers,  80 B spilled,  1575 instructions (1.099×), STL  18, LDL  20
+  cap   32:  32 registers, 156 B spilled,  1593 instructions (1.112×), STL  28, LDL  28
+
+Found on 2026-11-22: fewer registers mean more instructions even before anything spills (FP32 at 55
+registers, 0 B spilled: +4.9%): the compiler recomputes values instead of keeping them and overlaps less.
+Then the spills add stores and loads (FP64 at 40 registers: 68 STL, 48 LDL, +15% instructions).

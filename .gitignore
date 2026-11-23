@@ -4,3 +4,4 @@
 # EP4 build outputs
 EP4/engine/build/
 __pycache__/
+/EP4/observer_*

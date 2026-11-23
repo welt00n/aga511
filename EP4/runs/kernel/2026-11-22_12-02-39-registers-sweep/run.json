@@ -1,0 +1,58 @@
+{
+  "kind": "kernel",
+  "label": "registers-sweep",
+  "command": [
+    "python",
+    "main.py",
+    "(scratch) registers sweep"
+  ],
+  "asked": {
+    "caps": {
+      "64": [
+        "none",
+        72,
+        64,
+        56,
+        48,
+        40,
+        32
+      ],
+      "32": [
+        "none",
+        64,
+        56,
+        48,
+        40,
+        32
+      ]
+    },
+    "photons": {
+      "64": 1000000000,
+      "32": 10000000000
+    },
+    "repeats": 3,
+    "sm_limits": {
+      "NAME": "NVIDIA GeForce RTX 5070 Laptop GPU",
+      "COMPUTE_CAPABILITY": "12.0",
+      "SMS": "36",
+      "REGISTERS_PER_SM": "65536",
+      "REGISTERS_PER_BLOCK": "65536",
+      "MAX_THREADS_PER_SM": "1536",
+      "MAX_THREADS_PER_BLOCK": "1024",
+      "MAX_BLOCKS_PER_SM": "24",
+      "WARP_SIZE": "32",
+      "SHARED_MEMORY_PER_SM": "102400"
+    },
+    "register_allocation_per_thread": 8
+  },
+  "code_hash": "72b86b63cbf7",
+  "host": "Welton",
+  "machine": [
+    "NVIDIA GeForce RTX 5070 Laptop GPU (cc 12.0, 36 SMs)"
+  ],
+  "started": "2026-11-22T12:02:39",
+  "finished": "2026-11-22T12:04:40",
+  "status": "done",
+  "passed": null,
+  "headline": "FP64: fastest at 72 registers (occupancy 0.58); occupancy 1.00 at 40 registers is 9% slower (344 B spilled); FP32: fastest at 67 registers (occupancy 0.58); occupancy 1.00 at 40 registers is 29% slower (80 B spilled)"
+}

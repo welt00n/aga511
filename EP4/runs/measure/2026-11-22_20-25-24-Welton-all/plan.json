@@ -1,0 +1,4875 @@
+{
+  "points": [
+    {
+      "key": "gpu64-n2.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 20000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "digests"
+      ],
+      "prediction": {
+        "seconds": 36.81139640811707,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n2.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 20000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "digests",
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 7.45240674007599,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "kernel",
+        "occupancy",
+        "strong-fp64",
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms01-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 1,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 230.11643237844288,
+        "speed": 17818700.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "kernel",
+        "occupancy",
+        "strong-fp32",
+        "weak-fp32",
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "strong-fp32",
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 169.36493940683908,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "kernel",
+        "occupancy",
+        "strong-fp64",
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms01-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 1,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 230.11643237844288,
+        "speed": 17818700.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "kernel",
+        "occupancy",
+        "strong-fp32",
+        "weak-fp32",
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "strong-fp32",
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 169.36493940683908,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "kernel",
+        "occupancy",
+        "strong-fp64",
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms01-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 1,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 230.11643237844288,
+        "speed": 17818700.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "kernel",
+        "occupancy",
+        "strong-fp32",
+        "weak-fp32",
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "speed",
+        "strong-fp32",
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 169.36493940683908,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-scene_in_global-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "scene_in_global",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-no_fma-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "no_fma",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sections-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "sections",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-scene_in_global-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "scene_in_global",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-no_fma-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "no_fma",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sections-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "sections",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-scene_in_global-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "scene_in_global",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-no_fma-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "no_fma",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sections-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "sections",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-scene_in_global-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "scene_in_global",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-no_fma-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "no_fma",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sections-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "sections",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-scene_in_global-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "scene_in_global",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-no_fma-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "no_fma",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sections-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "sections",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-scene_in_global-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "scene_in_global",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-no_fma-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "no_fma",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sections-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "sections",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "kernel"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_72-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_72",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_64-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_64",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_56-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_56",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_48-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_48",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_40-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_40",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_32-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_32",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_64-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_64",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_56-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_56",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_48-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_48",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_40-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_40",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_32-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_32",
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_32-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_32",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_40-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_40",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_48-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_48",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_56-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_56",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_64-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_64",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_72-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_72",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_32-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_32",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_40-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_40",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_48-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_48",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_56-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_56",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_64-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_64",
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_72-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_72",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_64-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_64",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_56-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_56",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_48-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_48",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_40-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_40",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-registers_32-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": null,
+        "photons": 4000000000,
+        "variant": "registers_32",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 641473200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_64-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_64",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_56-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_56",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_48-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_48",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_40-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_40",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-registers_32-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 50000000000,
+        "variant": "registers_32",
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "occupancy"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms01-n1.11e08-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 1,
+        "photons": 111111111,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 17818700.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms02-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 2,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 117.87479858922143,
+        "speed": 35637400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms02-n2.22e08-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 2,
+        "photons": 222222222,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 35637400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms03-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 3,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 80.46092065948095,
+        "speed": 53456100.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms03-n3.33e08-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 3,
+        "photons": 333333333,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 53456100.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms04-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 4,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 61.75398169461072,
+        "speed": 71274800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms04-n4.44e08-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 4,
+        "photons": 444444444,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 71274800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms06-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 6,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 43.04704272974048,
+        "speed": 106912200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms06-n6.67e08-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 6,
+        "photons": 666666666,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 106912200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms09-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 9,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 30.575750086493656,
+        "speed": 160368300.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms09-n1.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 9,
+        "photons": 1000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 160368300.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms12-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 12,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 24.340103764870243,
+        "speed": 213824400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms12-n1.33e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 12,
+        "photons": 1333333333,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.8688111200645,
+        "speed": 213824400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms18-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 18,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 18.104457443246826,
+        "speed": 320736600.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms18-n2.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 18,
+        "photons": 2000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 320736600.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms24-n4.00e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 24,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 14.98663428243512,
+        "speed": 427648800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms24-n2.67e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 24,
+        "photons": 2666666666,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.8688111200645,
+        "speed": 427648800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n1.39e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 1388888888,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269647279187,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms02-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 2,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 87.49905210341953,
+        "speed": 610755000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms02-n2.78e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 2,
+        "photons": 2777777777,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269648916505,
+        "speed": 610755000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms03-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 3,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 60.2104230022797,
+        "speed": 916132500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms03-n4.17e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 3,
+        "photons": 4166666666,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269649462276,
+        "speed": 916132500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms04-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 4,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 46.56610845170977,
+        "speed": 1221510000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms04-n5.56e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 4,
+        "photons": 5555555555,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269649735164,
+        "speed": 1221510000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms06-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 6,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 32.92179390113985,
+        "speed": 1832265000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms06-n8.33e09-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 6,
+        "photons": 8333333333,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.18126965000805,
+        "speed": 1832265000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms09-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 9,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 23.8255842007599,
+        "speed": 2748397500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms09-n1.25e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 9,
+        "photons": 12500000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 2748397500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms12-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 12,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 19.277479350569923,
+        "speed": 3664530000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms12-n1.67e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 12,
+        "photons": 16666666666,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.18126965000805,
+        "speed": 3664530000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms18-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 18,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 14.729374500379947,
+        "speed": 5496795000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms18-n2.50e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 18,
+        "photons": 25000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 5496795000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms24-n5.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 24,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 12.455322075284961,
+        "speed": 7329060000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms24-n3.33e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 24,
+        "photons": 33333333333,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650144493,
+        "speed": 7329060000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n2.00e10-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 20000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 71.12587464273562,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n1.00e11-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 100000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 333.0967140136782,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n1.00e11-r1-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 100000000000,
+        "variant": null,
+        "repeat": 1,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 14.729374500379947,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms01-n1.11e08-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 1,
+        "photons": 111111111,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 17818700.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms02-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 2,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 117.87479858922143,
+        "speed": 35637400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms02-n2.22e08-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 2,
+        "photons": 222222222,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 35637400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms03-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 3,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 80.46092065948095,
+        "speed": 53456100.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms03-n3.33e08-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 3,
+        "photons": 333333333,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 53456100.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms04-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 4,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 61.75398169461072,
+        "speed": 71274800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms04-n4.44e08-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 4,
+        "photons": 444444444,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 71274800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms06-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 6,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 43.04704272974048,
+        "speed": 106912200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms06-n6.67e08-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 6,
+        "photons": 666666666,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 106912200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms09-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 9,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 30.575750086493656,
+        "speed": 160368300.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms09-n1.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 9,
+        "photons": 1000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 160368300.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms12-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 12,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 24.340103764870243,
+        "speed": 213824400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms12-n1.33e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 12,
+        "photons": 1333333333,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.8688111200645,
+        "speed": 213824400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms18-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 18,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 18.104457443246826,
+        "speed": 320736600.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms18-n2.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 18,
+        "photons": 2000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 320736600.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms24-n4.00e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 24,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 14.98663428243512,
+        "speed": 427648800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms24-n2.67e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 24,
+        "photons": 2666666666,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.8688111200645,
+        "speed": 427648800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n1.39e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 1388888888,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269647279187,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms02-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 2,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 87.49905210341953,
+        "speed": 610755000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms02-n2.78e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 2,
+        "photons": 2777777777,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269648916505,
+        "speed": 610755000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms03-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 3,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 60.2104230022797,
+        "speed": 916132500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms03-n4.17e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 3,
+        "photons": 4166666666,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269649462276,
+        "speed": 916132500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms04-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 4,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 46.56610845170977,
+        "speed": 1221510000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms04-n5.56e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 4,
+        "photons": 5555555555,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269649735164,
+        "speed": 1221510000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms06-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 6,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 32.92179390113985,
+        "speed": 1832265000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms06-n8.33e09-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 6,
+        "photons": 8333333333,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.18126965000805,
+        "speed": 1832265000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms09-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 9,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 23.8255842007599,
+        "speed": 2748397500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms09-n1.25e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 9,
+        "photons": 12500000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 2748397500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms12-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 12,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 19.277479350569923,
+        "speed": 3664530000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms12-n1.67e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 12,
+        "photons": 16666666666,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.18126965000805,
+        "speed": 3664530000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms18-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 18,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 14.729374500379947,
+        "speed": 5496795000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms18-n2.50e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 18,
+        "photons": 25000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 5496795000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms24-n5.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 24,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 12.455322075284961,
+        "speed": 7329060000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms24-n3.33e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 24,
+        "photons": 33333333333,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650144493,
+        "speed": 7329060000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n2.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 20000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 71.12587464273562,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n2.00e10-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 20000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 7.45240674007599,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n1.00e11-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 100000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 333.0967140136782,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n1.00e11-r2-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 100000000000,
+        "variant": null,
+        "repeat": 2,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 14.729374500379947,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms01-n1.11e08-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 1,
+        "photons": 111111111,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 17818700.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms02-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 2,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 117.87479858922143,
+        "speed": 35637400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms02-n2.22e08-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 2,
+        "photons": 222222222,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 35637400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms03-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 3,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 80.46092065948095,
+        "speed": 53456100.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms03-n3.33e08-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 3,
+        "photons": 333333333,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 53456100.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms04-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 4,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 61.75398169461072,
+        "speed": 71274800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms04-n4.44e08-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 4,
+        "photons": 444444444,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 71274800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms06-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 6,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 43.04704272974048,
+        "speed": 106912200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms06-n6.67e08-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 6,
+        "photons": 666666666,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811115387766,
+        "speed": 106912200.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms09-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 9,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 30.575750086493656,
+        "speed": 160368300.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms09-n1.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 9,
+        "photons": 1000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 160368300.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms12-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 12,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 24.340103764870243,
+        "speed": 213824400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms12-n1.33e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 12,
+        "photons": 1333333333,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.8688111200645,
+        "speed": 213824400.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms18-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 18,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 18.104457443246826,
+        "speed": 320736600.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms18-n2.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 18,
+        "photons": 2000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.868811121623413,
+        "speed": 320736600.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms24-n4.00e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 24,
+        "photons": 4000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp64"
+      ],
+      "prediction": {
+        "seconds": 14.98663428243512,
+        "speed": 427648800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu64-sms24-n2.67e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 64,
+        "sms": 24,
+        "photons": 2666666666,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp64"
+      ],
+      "prediction": {
+        "seconds": 11.8688111200645,
+        "speed": 427648800.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n1.39e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 1388888888,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269647279187,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms02-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 2,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 87.49905210341953,
+        "speed": 610755000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms02-n2.78e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 2,
+        "photons": 2777777777,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269648916505,
+        "speed": 610755000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms03-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 3,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 60.2104230022797,
+        "speed": 916132500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms03-n4.17e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 3,
+        "photons": 4166666666,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269649462276,
+        "speed": 916132500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms04-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 4,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 46.56610845170977,
+        "speed": 1221510000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms04-n5.56e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 4,
+        "photons": 5555555555,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269649735164,
+        "speed": 1221510000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms06-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 6,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 32.92179390113985,
+        "speed": 1832265000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms06-n8.33e09-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 6,
+        "photons": 8333333333,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.18126965000805,
+        "speed": 1832265000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms09-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 9,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 23.8255842007599,
+        "speed": 2748397500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms09-n1.25e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 9,
+        "photons": 12500000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 2748397500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms12-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 12,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 19.277479350569923,
+        "speed": 3664530000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms12-n1.67e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 12,
+        "photons": 16666666666,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.18126965000805,
+        "speed": 3664530000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms18-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 18,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 14.729374500379947,
+        "speed": 5496795000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms18-n2.50e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 18,
+        "photons": 25000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650189973,
+        "speed": 5496795000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms24-n5.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 24,
+        "photons": 50000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "strong-fp32"
+      ],
+      "prediction": {
+        "seconds": 12.455322075284961,
+        "speed": 7329060000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms24-n3.33e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 24,
+        "photons": 33333333333,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "weak-fp32"
+      ],
+      "prediction": {
+        "seconds": 10.181269650144493,
+        "speed": 7329060000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n2.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 20000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 71.12587464273562,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n2.00e10-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 20000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 7.45240674007599,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-sms01-n1.00e11-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": 1,
+        "photons": 100000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 333.0967140136782,
+        "speed": 305377500.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    },
+    {
+      "key": "gpu32-n1.00e11-r3-frames300-size1024",
+      "point": {
+        "processor": "gpu",
+        "precision": 32,
+        "sms": null,
+        "photons": 100000000000,
+        "variant": null,
+        "repeat": 3,
+        "star": {
+          "size": 1024,
+          "frames": 300
+        }
+      },
+      "parts": [
+        "problem-size-fp32"
+      ],
+      "prediction": {
+        "seconds": 14.729374500379947,
+        "speed": 10993590000.0,
+        "speed_source": "measured here",
+        "passes": 1,
+        "device_bytes": 5033164800,
+        "disk_bytes": 5033164800
+      },
+      "validity": "valid"
+    }
+  ],
+  "tasks": [
+    {
+      "part": "validation",
+      "name": "independent-gpu64",
+      "seconds": 14.655891158040586,
+      "detail": "compare_independent at N = 1.0e+08 (N set by the statistics)"
+    },
+    {
+      "part": "validation",
+      "name": "precision-gpu64",
+      "seconds": 8.599494709638611,
+      "detail": "compare_precision at N = 4.0e+09 (N set by the statistics)"
+    },
+    {
+      "part": "validation",
+      "name": "gpu-gpu64",
+      "seconds": 14.655891158040586,
+      "detail": "compare_gpu at N = 1.0e+08 (N set by the statistics)"
+    },
+    {
+      "part": "validation",
+      "name": "gpu-gpu32",
+      "seconds": 10.342429543033713,
+      "detail": "compare_gpu at N = 1.0e+08 (N set by the statistics)"
+    }
+  ],
+  "total_seconds": 5854.919603452831,
+  "minimum_rule": "A run measures speed only if the GPU is busy long enough and evenly enough. Two rules, the larger wins: (1) at least 1 s of photons, so that the launch and the clock's ramp-up don't dominate; (2) at least 32 chunks per resident thread, so that every SM gets a fair share and the slowest one doesn't decide the time (at 10\u2077 photons on the laptop: 9 766 chunks for 27 648 threads, and pass times varied 0.6\u20131.6\u00d7; research/pass_order.py)."
+}

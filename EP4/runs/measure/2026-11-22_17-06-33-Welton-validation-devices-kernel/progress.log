@@ -1,0 +1,14 @@
+2026-11-22T17:06:33 0 of 13 runs already done; 13 to go, ~36 s
+2026-11-22T17:06:36   1/13 gpu64-n1.00e08-r1: 0.4 s (predicted 0.9 s); ~35 s left
+2026-11-22T17:06:37   2/13 gpu32-n1.00e08-r1: 0.4 s (predicted 0.7 s); ~34 s left
+2026-11-22T17:06:48   3/13 cpu64-n1.00e08-r1: 11.1 s (predicted 13.2 s); ~21 s left
+2026-11-22T17:06:49   4/13 cpu64-n8.00e06-r1: 1.1 s (predicted 1.7 s); ~19 s left
+2026-11-22T17:06:51   5/13 gpu64-n1.00e09-r1: 2.1 s (predicted 2.3 s); ~17 s left
+2026-11-22T17:06:52   6/13 cpu32-n1.50e07-r1: 1.3 s (predicted 1.9 s); ~15 s left
+2026-11-22T17:06:54   7/13 gpu32-n1.50e10-r1: 1.7 s (predicted 2.1 s); ~13 s left
+2026-11-22T17:06:56   8/13 gpu64-scene_in_global-n1.00e09-r1: 2.1 s (predicted 2.3 s); ~11 s left
+2026-11-22T17:06:59   9/13 gpu64-no_fma-n1.00e09-r1: 2.1 s (predicted 2.3 s); ~8 s left
+2026-11-22T17:07:00   10/13 gpu64-sections-n1.00e09-r1: 1.9 s (predicted 2.3 s); ~6 s left
+2026-11-22T17:07:02   11/13 gpu32-scene_in_global-n1.50e10-r1: 1.9 s (predicted 2.1 s); ~4 s left
+2026-11-22T17:07:04   12/13 gpu32-no_fma-n1.50e10-r1: 1.7 s (predicted 2.1 s); ~2 s left
+2026-11-22T17:07:06   13/13 gpu32-sections-n1.50e10-r1: 1.9 s (predicted 2.1 s); ~-0 s left

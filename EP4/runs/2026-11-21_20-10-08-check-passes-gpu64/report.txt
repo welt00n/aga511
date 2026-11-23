@@ -1,6 +1,0 @@
-4 observers in 1 pass vs 4 passes of 1 observer
-  N = 1e+07, 200x200 pixels, 150 frames, nmu = odd nearest frames/pi, observers at 1.5708, 1.0472, 0.5236, 0 rad, 3 spots
-  1 pass:   GPU 64-bit, 1e+07 photons, 1 pass(es), in 0.027 s (3.64e+08 photons/s); setup 0.161 s, zero 0.000 s, copy 0.005 s, save 0.110 s; recorded 843339 (8.43%), blocked by spots 41308
-  4 passes: GPU 64-bit, 1e+07 photons, 4 pass(es), in 0.125 s (3.2e+08 photons/s); setup 0.182 s, zero 0.000 s, copy 0.006 s, save 0.169 s; recorded 843339 (8.43%), blocked by spots 41308
-  counts: the same
-  images: IDENTICAL, bit for bit
