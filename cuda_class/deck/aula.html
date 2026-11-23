@@ -193,6 +193,36 @@
   <aside class="notes">A transferência radiativa Monte Carlo é exatamente o EP4. O limite de potência aparece nas nossas medidas: FP32 em 36 SMs roda a 2730 MHz em vez de ~2890.</aside>
 </section>
 
+<section>
+  <h2>De extensão do C a ecossistema</h2>
+  <svg class="d" viewBox="0 0 1180 400" width="1180">
+    <circle class="device-solid" cx="590" cy="200" r="78"/><text class="big mid on-dark bold" x="590" y="208">CUDA</text>
+    <path class="line-muted" d="M520 165L400 110M660 165L780 110M520 235L400 290M660 235L780 290"/>
+    <rect class="device" x="20" y="40" width="380" height="140" rx="10"/>
+    <text class="bold" x="40" y="74">linguagens</text>
+    <text class="small" x="40" y="104">C, C++, Fortran</text>
+    <text class="small" x="40" y="130">Python: CuPy, Numba</text>
+    <text class="small" x="40" y="156">diretivas: OpenACC (outro grupo da turma)</text>
+    <rect class="good" x="780" y="40" width="380" height="140" rx="10"/>
+    <text class="bold" x="800" y="74">bibliotecas</text>
+    <text class="small" x="800" y="104">cuBLAS (álgebra), cuFFT (Fourier)</text>
+    <text class="small" x="800" y="130"><tspan class="bold">cuRAND</tspan> (números aleatórios: o nosso Philox)</text>
+    <text class="small" x="800" y="156">cuDNN (redes neurais), Thrust (algoritmos)</text>
+    <rect class="gray" x="20" y="220" width="380" height="140" rx="10"/>
+    <text class="bold" x="40" y="254">ferramentas</text>
+    <text class="small" x="40" y="284"><tspan class="bold">Nsight Systems</tspan>: a linha do tempo (o EP3)</text>
+    <text class="small" x="40" y="310">Nsight Compute: um kernel por dentro</text>
+    <text class="small" x="40" y="336">cuda-gdb, compute-sanitizer</text>
+    <rect class="host" x="780" y="220" width="380" height="140" rx="10"/>
+    <text class="bold" x="800" y="254">aplicações</text>
+    <text class="small" x="800" y="284">IA, processamento de imagem, FFT</text>
+    <text class="small" x="800" y="310">simulação: clima, N-corpos, dinâmica molecular</text>
+    <text class="small" x="800" y="336">Monte Carlo: transporte de radiação (o EP4)</text>
+  </svg>
+  <p class="concept fragment"><strong>O conceito:</strong> uma plataforma é mais que uma linguagem. É por isso que CUDA dura 20 anos.</p>
+  <aside class="notes">Em negrito, o que nós usamos: o cuRAND (o Philox do EP3 e do EP4) e o Nsight Systems (o perfil do EP3). Os outros grupos da turma usam MPI, OpenMP e OpenACC: OpenACC é a forma "por diretivas" de chegar à GPU.</aside>
+</section>
+
 <!-- ================================================================ o gancho -->
 
 <section>
@@ -412,6 +442,27 @@ soma&lt;&lt;&lt;(n + 255) / 256, 256&gt;&gt;&gt;(a, b, c, n);           // bloco
     <text class="mid" x="590" y="150">no desenho blockDim.x = 8: o thread pintado calcula i = 2 · 8 + 5 = <tspan class="bold">21</tspan></text>
   </svg>
   <aside class="notes">Cada thread executa o MESMO código; só o índice muda. O if (i &lt; n) existe porque o último bloco pode passar do fim. Esta é a forma de todo kernel: "quem sou eu, qual é o meu pedaço".</aside>
+</section>
+
+<section>
+  <h2>O programa inteiro: o lado do host</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|1-4|6-7|9|11|13">
+float *a, *b, *c;                                        // ponteiros do device
+cudaMalloc(&amp;a, n * sizeof(float));                      // reservar na GPU
+cudaMalloc(&amp;b, n * sizeof(float));
+cudaMalloc(&amp;c, n * sizeof(float));
+
+cudaMemcpy(a, a_host, n * sizeof(float), cudaMemcpyHostToDevice);   // copiar para lá
+cudaMemcpy(b, b_host, n * sizeof(float), cudaMemcpyHostToDevice);
+
+soma&lt;&lt;&lt;(n + 255) / 256, 256&gt;&gt;&gt;(a, b, c, n);              // lançar: volta na hora
+
+cudaMemcpy(c_host, c, n * sizeof(float), cudaMemcpyDeviceToHost);   // copiar de volta: espera o kernel
+
+cudaFree(a); cudaFree(b); cudaFree(c);                   // liberar
+  </code></pre>
+  <p class="note">Cinco passos, sempre os mesmos: reservar, copiar, lançar, copiar de volta, liberar. O lançamento não espera; a cópia de volta espera o kernel terminar.</p>
+  <aside class="notes">Este é o esqueleto de todo programa CUDA, e o do EP3 e do EP4 também (com mais verificação de erros). Ponto sutil: o lançamento é assíncrono; é a cópia de volta que sincroniza.</aside>
 </section>
 
 <section>
@@ -657,6 +708,35 @@ __global__ void soma(const float *x, float *total, int n) {
   </svg>
   <p class="fragment note">O atômico é feito na cache L2, um endereço por vez. Muitos threads no mesmo endereço fazem fila; endereços diferentes andam em paralelo.</p>
   <aside class="notes">Uma condição de corrida: dois threads leem o mesmo valor antes de qualquer um escrever. O Buffon soma em registrador e faz UM atômico por thread (pouca fila). A estrela faz um atômico por fóton, mas em bilhões de pixels diferentes: quase nunca dois no mesmo endereço.</aside>
+</section>
+
+<section>
+  <h2>E se houver mais elementos que threads?</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2|3-4">
+__global__ void soma(const float *a, const float *b, float *c, long long n) {
+    long long passo = (long long) blockDim.x * gridDim.x;      // todos os threads do grid
+    for (long long i = blockIdx.x * blockDim.x + threadIdx.x; i &lt; n; i += passo)
+        c[i] = a[i] + b[i];
+}
+  </code></pre>
+  <svg class="d" viewBox="0 0 1180 120" width="1100">
+    <g>
+      <rect class="device-solid" x="20" y="20" width="64" height="44"/><rect class="device" x="90" y="20" width="64" height="44"/><rect class="good" x="160" y="20" width="64" height="44"/><rect class="host" x="230" y="20" width="64" height="44"/>
+      <rect class="device-solid" x="320" y="20" width="64" height="44"/><rect class="device" x="390" y="20" width="64" height="44"/><rect class="good" x="460" y="20" width="64" height="44"/><rect class="host" x="530" y="20" width="64" height="44"/>
+      <rect class="device-solid" x="620" y="20" width="64" height="44"/><rect class="device" x="690" y="20" width="64" height="44"/><rect class="good" x="760" y="20" width="64" height="44"/><rect class="host" x="830" y="20" width="64" height="44"/>
+      <rect class="device-solid" x="920" y="20" width="64" height="44"/><rect class="device" x="990" y="20" width="64" height="44"/><rect class="good" x="1060" y="20" width="64" height="44"/>
+    </g>
+    <text class="small mid on-dark" x="52" y="48">T0</text><text class="small mid" x="122" y="48">T1</text><text class="small mid" x="192" y="48">T2</text><text class="small mid" x="262" y="48">T3</text>
+    <text class="small mid on-dark" x="352" y="48">T0</text><text class="small mid" x="422" y="48">T1</text><text class="small mid" x="492" y="48">T2</text><text class="small mid" x="562" y="48">T3</text>
+    <text class="small mid on-dark" x="652" y="48">T0</text><text class="small mid" x="722" y="48">T1</text><text class="small mid" x="792" y="48">T2</text><text class="small mid" x="862" y="48">T3</text>
+    <text class="small mid on-dark" x="952" y="48">T0</text><text class="small mid" x="1022" y="48">T1</text><text class="small mid" x="1092" y="48">T2</text>
+    <text class="small muted" x="20" y="100">um grid de 4 threads e 15 elementos: o thread k faz k, k + 4, k + 8, …</text>
+  </svg>
+  <ul>
+    <li class="fragment">o <strong>grid-stride loop</strong>: um grid do tamanho da GPU, qualquer \(N\); a divisão é fixa</li>
+    <li class="fragment">no EP3 e no EP4 a divisão é <strong>dinâmica</strong>: cada thread pega o próximo pedaço de uma fila (<code>atomicAdd</code>); quem termina antes pega mais</li>
+  </ul>
+  <aside class="notes">O kernel mínimo lança um thread por elemento; isso quebra quando N passa do que um grid comporta, ou quando cada elemento custa um tempo diferente. O grid-stride loop resolve o primeiro problema. A fila de pedaços do EP3 e do EP4 resolve os dois: é o grid-stride loop com a divisão decidida em tempo de execução. Atenção: o passo é blockDim.x × gridDim.x (threads por bloco × blocos).</aside>
 </section>
 
 <section>
@@ -1033,6 +1113,44 @@ __global__ void throw_needles(...) {
 </section>
 
 <section>
+  <h2>Os blocos vão inteiros para um SM, e em qualquer ordem</h2>
+  <div class="columns top">
+    <div class="side">
+      <svg class="d" viewBox="0 0 560 420" width="560">
+        <text class="small muted" x="10" y="22">o grid</text>
+        <rect class="device" x="10" y="34" width="60" height="40"/><text class="small mid" x="40" y="60">B0</text>
+        <rect class="device" x="78" y="34" width="60" height="40"/><text class="small mid" x="108" y="60">B1</text>
+        <rect class="device" x="146" y="34" width="60" height="40"/><text class="small mid" x="176" y="60">B2</text>
+        <rect class="device" x="214" y="34" width="60" height="40"/><text class="small mid" x="244" y="60">B3</text>
+        <rect class="gray" x="282" y="34" width="60" height="40"/><text class="small mid" x="312" y="60">B4</text>
+        <rect class="gray" x="350" y="34" width="60" height="40"/><text class="small mid" x="380" y="60">B5</text>
+        <rect class="gray" x="418" y="34" width="60" height="40"/><text class="small mid" x="448" y="60">B6</text>
+        <rect class="gray" x="486" y="34" width="60" height="40"/><text class="small mid" x="516" y="60">B7</text>
+        <rect class="host" x="140" y="110" width="280" height="50" rx="4"/><text class="mid" x="280" y="141">escalonador de blocos</text>
+        <line class="line-muted" x1="140" y1="74" x2="200" y2="108" marker-end="url(#arrow-muted)"/><line class="line-muted" x1="420" y1="74" x2="360" y2="108" marker-end="url(#arrow-muted)"/>
+        <rect class="paper" x="10" y="200" width="255" height="170" rx="6"/><text class="bold" x="24" y="226">SM 0</text>
+        <rect class="device" x="24" y="240" width="105" height="110"/><text class="mid" x="76" y="300">B0</text>
+        <rect class="device" x="146" y="240" width="105" height="110"/><text class="mid" x="198" y="300">B1</text>
+        <rect class="paper" x="290" y="200" width="255" height="170" rx="6"/><text class="bold" x="304" y="226">SM 1</text>
+        <rect class="device" x="304" y="240" width="105" height="110"/><text class="mid" x="356" y="300">B2</text>
+        <rect class="device" x="426" y="240" width="105" height="110"/><text class="mid" x="478" y="300">B3</text>
+        <line class="line" x1="230" y1="160" x2="140" y2="196" marker-end="url(#arrow)"/><line class="line" x1="330" y1="160" x2="420" y2="196" marker-end="url(#arrow)"/>
+        <text class="small muted" x="10" y="402">cinza: esperam um lugar; entram quando um bloco termina</text>
+      </svg>
+    </div>
+    <div class="main">
+      <ul>
+        <li class="fragment">um bloco só entra num SM se couber <strong>inteiro</strong>: os seus threads podem chamar <code>__syncthreads()</code>, e então precisam estar todos vivos ao mesmo tempo</li>
+        <li class="fragment">por isso, com 80 registradores, cabem 25 warps e lançamos <strong>24</strong>: um bloco de 24 warps, inteiro</li>
+        <li class="fragment">os blocos rodam em <strong>qualquer ordem</strong>: um bloco nunca pode esperar outro</li>
+      </ul>
+      <p class="question fragment">o bloco 0 escreve uma flag; o bloco 1 espera por ela. Funciona?</p>
+    </div>
+  </div>
+  <aside class="notes">Resposta: depende da ordem. Se o bloco 1 ocupar o único lugar e ficar esperando, o bloco 0 nunca entra: a GPU trava. CUDA não garante ordem nem simultaneidade entre blocos. No EP3 e no EP4 os blocos só se comunicam por atômicos que nunca esperam (a fila, as somas). Ideia do exemplo: Stanford CS149, aula "GPU architecture and CUDA programming" (Fatahalian, 2023).</aside>
+</section>
+
+<section>
   <h2>Os registradores decidem quantos warps cabem</h2>
   <p class="formula">\(\text{warps que cabem} = \dfrac{65\,536}{\lceil r/8\rceil\cdot 8 \times 32}\qquad\text{ocupação} = \dfrac{\text{warps residentes}}{\text{máximo}}\)</p>
   <svg class="d" viewBox="0 0 1180 320" width="1180">
@@ -1063,6 +1181,29 @@ __global__ void throw_needles(...) {
   </ul>
   <p class="source">main.py (test, make, measure): environment.show_launch</p>
   <aside class="notes">Cada produto de GPU imprime esta linha antes de rodar. Lançamento cooperativo, um bloco por SM, threads persistentes. Na A30, com 96 registradores, a mesma API escolhe o lançamento dela: ver a linha impressa lá.</aside>
+</section>
+
+<section>
+  <h2>Threads persistentes: o padrão do EP3 e do EP4</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="1-3|4|6-8|9">
+cudaOccupancyMaxPotentialBlockSize(&amp;grid, &amp;threads_per_block, trace_photons, 0, 0);
+cudaOccupancyMaxActiveBlocksPerMultiprocessor(&amp;blocks_per_sm, trace_photons, threads_per_block, 0);
+blocks = blocks_per_sm * sms;                          // exatamente o que cabe na GPU
+cudaLaunchCooperativeKernel(trace_photons, blocks, threads_per_block, args, 0, 0);
+
+__global__ void trace_photons(...) {
+    if (!is_allowed(sm_id(), sm_work)) return;         // a máscara: só os n SMs escolhidos trabalham
+    take_chunks_until_none_left(...);                  // a fila: atomicAdd(&amp;next_chunk, 1)
+}
+  </code></pre>
+  <ul class="note">
+    <li class="fragment"><strong>o padrão</strong>: lançar só os blocos que cabem; o trabalho vem de uma fila, não do número de blocos (em Stanford, CS149, "persistent threads")</li>
+    <li class="fragment"><strong>o risco</strong>: o código supõe que todos os blocos rodam ao mesmo tempo, e CUDA não promete isso</li>
+    <li class="fragment"><strong>a garantia</strong>: o lançamento cooperativo falha, em vez de rodar, se os blocos não couberem todos juntos; então cada SM recebe exatamente os seus blocos, uma vez</li>
+    <li class="fragment"><strong>a medida</strong>: blocos num SM fora dos n escolhidos voltam na hora (<code>%smid</code>); é assim que o EP3 e o EP4 medem Amdahl em 1, 2, …, 36 SMs</li>
+  </ul>
+  <p class="source">EP4/engine/gpu/gpu.cu (choose_launch, run_kernel, trace_photons)</p>
+  <aside class="notes">O grid-stride loop da parte 5, levado ao limite: um grid do tamanho da GPU e a divisão do trabalho decidida em tempo de execução. A fila em si nunca espera ninguém, então não trava; o lançamento cooperativo é o que garante uma única leva de blocos, e com ela a máscara de SMs mede de fato n SMs.</aside>
 </section>
 
 <section>
