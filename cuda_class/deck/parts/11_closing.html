@@ -1,0 +1,67 @@
+<section class="divider" data-part="10">
+  <p class="promise">O fio de volta, e como reproduzir cada número desta aula.</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>O fio, de volta</h2>
+  <ul>
+    <li>pixels independentes (1999) → o kernel → <strong>um fóton por iteração</strong></li>
+    <li>o SM (2006) → blocos inteiros por SM → <strong>a unidade de toda aceleração</strong></li>
+    <li>FP64 (2008) → unidades separadas → <strong>16× aqui</strong>, <span class="a30">[A30]</span> lá</li>
+    <li>a hierarquia de memória (2010) → <strong>o fóton, a estrela, a imagem</strong></li>
+    <li>cooperar custa → atômicos → <strong>uma agulha não espera outra</strong></li>
+    <li>números aleatórios em paralelo → um fluxo por pedaço → <strong>a mesma imagem na CPU e na GPU</strong></li>
+    <li>Amdahl → a parte serial → <strong>o contexto no EP3, a imagem no EP4</strong></li>
+  </ul>
+  <aside class="notes">Voltar à tabela do começo: cada ponte foi atravessada.</aside>
+</section>
+
+<section>
+  <h2>Três lições</h2>
+  <ol>
+    <li class="fragment">A GPU vence quando o trabalho são muitos pedaços independentes.</li>
+    <li class="fragment">Primeiro a correção: os mesmos bits na CPU e na GPU.</li>
+    <li class="fragment">Amdahl decide: ache a parte serial (o contexto, a imagem), meça a execução inteira e diga contra o quê cada aceleração foi medida.</li>
+  </ol>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Cada número desta aula sai de um comando</h2>
+  <pre class="terminal"><code class="nohighlight" data-trim data-noescape>
+<span class="dim"># EP4/ (o engine em C++/CUDA, orquestrado em Python)</span>
+python main.py test                      <span class="dim"># ~20 s: o gerador, a GPU = a CPU, a divisão</span>
+python main.py make --snr 10             <span class="dim"># as imagens e os vídeos, N escolhido pela SNR</span>
+python main.py measure                   <span class="dim"># ~1,5 h: validação, velocidade, kernel, ocupação,</span>
+                                         <span class="dim">#   escala, custos → relatório PDF</span>
+python main.py compare A B               <span class="dim"># duas máquinas lado a lado (o laptop e a A30)</span>
+  </code></pre>
+  <ul class="note">
+    <li>antes de rodar, cada produto confere o ambiente, prevê tempo, memória e disco, e só aceita \(N\) válido</li>
+    <li>o EP3, como entregue: <code>python buffon.py</code></li>
+  </ul>
+  <aside class="notes">O engine é o projeto; o orquestrador é como ele é apresentado e analisado. Todos os gráficos desta aula foram feitos por estes comandos, no laptop e na A30.</aside>
+</section>
+
+<section>
+  <h2>Para levar: o guia, com o nosso código</h2>
+  <div class="columns top">
+    <div class="main">
+      <ul>
+        <li><strong>I. o modelo de execução</strong>: o nosso lançamento, linha por linha</li>
+        <li><strong>II. ponto flutuante</strong>: o Buffon em três precisões, a estrela bit a bit</li>
+        <li><strong>III. a memória</strong>: a tabela do guia com a coluna do EP4; a imagem como histograma</li>
+        <li><strong>IV. a ocupação</strong>: o que o guia recomenda e o que medimos</li>
+      </ul>
+      <p class="concept">Cada seção: a ideia do guia (com a seção para citar), o nosso código, o nosso número, e o comando que o reproduz.</p>
+    </div>
+  </div>
+  <p class="source">cuda_class/deck/guia.html · github.com/welt00n/aga511</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <p class="statement">Obrigado!<small>Perguntas?</small></p>
+  <aside class="notes"></aside>
+</section>

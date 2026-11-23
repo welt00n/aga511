@@ -1,16 +1,17 @@
 const PARTS = [
   'História: de onde vêm as ideias',
   'Arquitetura: o que há dentro de uma GPU',
-  'Terminologia e memória',
-  'O fluxo de execução',
-  'O modelo de programação',
+  'Guia I: o modelo de execução',
+  'Guia II: ponto flutuante',
   'Números aleatórios em paralelo',
   'EP3: a agulha de Buffon',
-  'Mais fundo: warps, registradores, ocupação',
+  'Guia III: a memória',
+  'Guia IV: a ocupação',
   'EP4: a estrela manchada',
-  'EP4: Amdahl e a comparação',
   'Fechamento',
 ];
+
+const PART_MINUTES = [3, 12, 6, 16, 8, 8, 14, 8, 10, 25, 5];
 
 const ERAS = ['1999', '2001–2006', '2006–2007', '2008–2010', '2012–2017', 'hoje'];
 
@@ -83,11 +84,49 @@ function drawWarpSlots(row) {
   group.appendChild(label);
 }
 
+const SM_GRID = { id: 'sm-grid', sms: 36, allowed: 12, columns: 6, width: 112, height: 64, step_x: 122, step_y: 76 };
+
+function smTile(group, sm) {
+  const x = 10 + (sm % SM_GRID.columns) * SM_GRID.step_x;
+  const y = 10 + Math.floor(sm / SM_GRID.columns) * SM_GRID.step_y;
+  const works = sm < SM_GRID.allowed;
+  group.appendChild(svgElement('rect', {
+    x, y, width: SM_GRID.width, height: SM_GRID.height, rx: 4, class: works ? 'device' : 'gray',
+  }));
+  const name = svgElement('text', { x: x + 10, y: y + 26, class: 'small bold' });
+  name.textContent = `SM ${sm}`;
+  const what = svgElement('text', { x: x + 10, y: y + 50, class: works ? 'tiny' : 'tiny muted' });
+  what.textContent = works ? '768 threads' : 'volta na hora';
+  group.appendChild(name);
+  group.appendChild(what);
+}
+
+function drawSmGrid() {
+  const svg = document.getElementById(SM_GRID.id);
+  if (!svg) return;
+  for (let sm = 0; sm < SM_GRID.sms; sm++) smTile(svg, sm);
+  const legend = svgElement('text', { x: 10, y: 490, class: 'small muted' });
+  legend.textContent = `azul: os ${SM_GRID.allowed} SMs de --sms ${SM_GRID.allowed} · cinza: o bloco lê %smid e sai`;
+  svg.appendChild(legend);
+}
+
+function partOfSlide(slides, index) {
+  for (let i = index; i >= 0; i--) {
+    if (slides[i].classList.contains('divider')) return Number(slides[i].dataset.part);
+  }
+  return 0;
+}
+
+function plannedEndMinute(part) {
+  return PART_MINUTES.slice(0, part + 1).reduce((sum, minutes) => sum + minutes, 0);
+}
+
 function buildDeck() {
   document.querySelectorAll('section.divider').forEach(fillDivider);
   document.querySelectorAll('.era-strip').forEach(fillEraStrip);
   document.querySelectorAll('.agenda-here').forEach((place) => place.replaceWith(agendaList(0)));
   OCCUPANCY_ROWS.forEach(drawWarpSlots);
+  drawSmGrid();
 }
 
 buildDeck();

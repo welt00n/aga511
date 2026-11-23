@@ -1,0 +1,130 @@
+<section class="divider" data-part="5">
+  <p class="promise">Monte Carlo precisa de números aleatórios. Em paralelo, cada pedaço do trabalho precisa dos seus, sem repetir os dos outros.</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Quantos números, e por que importa</h2>
+  <ul>
+    <li>Buffon: <strong>2</strong> por agulha (a posição, o ângulo)</li>
+    <li>a estrela: <strong>5 ou 6</strong> por fóton (o ponto na superfície: 2; a direção: 3; a mancha: 0 ou 1)</li>
+    <li>a imagem do gancho: \(3{,}9\times10^{12}\) fótons, ~\(2\times10^{13}\) números</li>
+  </ul>
+  <p class="concept fragment">Três exigências: <strong>qualidade</strong> (parecem independentes), <strong>independência entre threads</strong> (nenhum trecho repetido), <strong>reprodutibilidade</strong> (a mesma semente dá a mesma imagem, em qualquer processador).</p>
+  <aside class="notes">Os números por fóton estão em photon.cuh: superfície (z, φ), direção (μ, o ramo do escurecimento de limbo, φ local), mancha (só na penumbra).</aside>
+</section>
+
+<section>
+  <h2>O gerador clássico tem estado</h2>
+  <svg class="d" viewBox="0 0 1180 300" width="1180">
+    <text class="bold" x="10" y="30">com estado: um LCG (o <tspan class="mono">drand48</tspan> do EP3 na CPU)</text>
+    <circle class="device" cx="80" cy="95" r="34"/><text class="mid" x="80" y="102">x₀</text>
+    <circle class="device" cx="250" cy="95" r="34"/><text class="mid" x="250" y="102">x₁</text>
+    <circle class="device" cx="420" cy="95" r="34"/><text class="mid" x="420" y="102">x₂</text>
+    <circle class="device" cx="590" cy="95" r="34"/><text class="mid" x="590" y="102">x₃</text>
+    <text class="mid big" x="760" y="104">⋯</text>
+    <circle class="device-solid" cx="930" cy="95" r="40"/><text class="mid on-dark" x="930" y="102">x₁₀₀₀</text>
+    <line class="line" x1="116" y1="95" x2="212" y2="95" marker-end="url(#arrow)"/><line class="line" x1="286" y1="95" x2="382" y2="95" marker-end="url(#arrow)"/>
+    <line class="line" x1="456" y1="95" x2="552" y2="95" marker-end="url(#arrow)"/><line class="line" x1="626" y1="95" x2="722" y2="95" marker-end="url(#arrow)"/>
+    <line class="line" x1="795" y1="95" x2="886" y2="95" marker-end="url(#arrow)"/>
+    <text class="mono mid" x="500" y="170">x(n+1) = (a · x(n) + c) mod 2⁴⁸</text>
+    <g class="fragment">
+      <text class="small" x="10" y="222">• para chegar a x₁₀₀₀, é preciso passar por todos os anteriores: a sequência é <tspan class="bold">serial</tspan></text>
+      <text class="small" x="10" y="252">• em paralelo, quem usa qual trecho? sementes vizinhas (seed + thread) podem dar sequências correlacionadas</text>
+      <text class="small" x="10" y="282">• o resultado passa a depender de quantos threads havia e de quem pegou o quê</text>
+    </g>
+  </svg>
+  <aside class="notes">O drand48 do EP3 na CPU é um LCG de 48 bits. Funciona bem num thread. Em paralelo, é preciso dividir uma sequência serial entre threads, e a imagem final depende da divisão.</aside>
+</section>
+
+<section>
+  <h2>Um contador em vez de um estado: Philox</h2>
+  <svg class="d" viewBox="0 0 1180 190" width="1180">
+    <text class="bold" x="10" y="26">sem estado: o número n é uma função de n</text>
+    <g>
+      <rect class="gray" x="20" y="60" width="130" height="50"/><text class="small mid" x="85" y="91">(chave, 0)</text>
+      <line class="line" x1="150" y1="85" x2="185" y2="85" marker-end="url(#arrow)"/>
+      <rect class="device" x="190" y="60" width="70" height="50"/><text class="mid" x="225" y="92">f</text>
+      <line class="line" x1="260" y1="85" x2="295" y2="85" marker-end="url(#arrow)"/><text class="small" x="300" y="91">número 0</text>
+    </g>
+    <g>
+      <rect class="gray" x="420" y="60" width="130" height="50"/><text class="small mid" x="485" y="91">(chave, 1)</text>
+      <line class="line" x1="550" y1="85" x2="585" y2="85" marker-end="url(#arrow)"/>
+      <rect class="device" x="590" y="60" width="70" height="50"/><text class="mid" x="625" y="92">f</text>
+      <line class="line" x1="660" y1="85" x2="695" y2="85" marker-end="url(#arrow)"/><text class="small" x="700" y="91">número 1</text>
+    </g>
+    <g>
+      <rect class="gray" x="820" y="60" width="130" height="50"/><text class="small mid" x="885" y="91">(chave, 10⁹)</text>
+      <line class="line" x1="950" y1="85" x2="985" y2="85" marker-end="url(#arrow)"/>
+      <rect class="device" x="990" y="60" width="70" height="50"/><text class="mid" x="1025" y="92">f</text>
+      <line class="line" x1="1060" y1="85" x2="1095" y2="85" marker-end="url(#arrow)"/><text class="small" x="1100" y="91">nº 10⁹</text>
+    </g>
+    <text class="mid" x="590" y="160">qualquer n, direto, em qualquer ordem e em qualquer processador</text>
+  </svg>
+  <ul>
+    <li class="fragment"><strong>Philox4x32-10</strong> (Salmon et al., SC 2011): f embaralha um contador de 128 bits com uma chave de 64 bits; a cada contador, <strong>4 números de 32 bits</strong></li>
+    <li class="fragment">f é uma bijeção: contadores diferentes nunca dão a mesma saída; passa na bateria BigCrush (TestU01)</li>
+    <li class="fragment">é o mesmo algoritmo na nossa CPU (código nosso) e na GPU (cuRAND, <code>curandStatePhilox4_32_10_t</code>)</li>
+  </ul>
+  <aside class="notes">O nome: "Philox" de Feistel + multiplicação (mul-hi/lo) + XOR. Um gerador baseado em contador é como uma cifra: cifra o número n com a chave. Sem estado para carregar, sem sequência para dividir. O BigCrush é resultado publicado; nós não o rodamos.</aside>
+</section>
+
+<section>
+  <h2>Uma rodada de Philox</h2>
+  <svg class="d" viewBox="0 0 1180 340" width="1180">
+    <rect class="device" x="140" y="20" width="180" height="46"/><text class="mid mono" x="230" y="50">x</text>
+    <rect class="gray" x="390" y="20" width="180" height="46"/><text class="mid mono" x="480" y="50">y</text>
+    <rect class="device" x="640" y="20" width="180" height="46"/><text class="mid mono" x="730" y="50">z</text>
+    <rect class="gray" x="890" y="20" width="180" height="46"/><text class="mid mono" x="980" y="50">w</text>
+    <text class="small muted" x="10" y="48">contador</text>
+    <rect class="good" x="160" y="96" width="140" height="40"/><text class="small mid mono" x="230" y="121">× 0xD2511F53</text>
+    <rect class="good" x="660" y="96" width="140" height="40"/><text class="small mid mono" x="730" y="121">× 0xCD9E8D57</text>
+    <line class="line-thin" x1="230" y1="66" x2="230" y2="96"/><line class="line-thin" x1="730" y1="66" x2="730" y2="96"/>
+    <rect class="paper" x="140" y="166" width="80" height="40"/><text class="small mid mono" x="180" y="191">hi₀</text>
+    <rect class="paper" x="240" y="166" width="80" height="40"/><text class="small mid mono" x="280" y="191">lo₀</text>
+    <rect class="paper" x="640" y="166" width="80" height="40"/><text class="small mid mono" x="680" y="191">hi₁</text>
+    <rect class="paper" x="740" y="166" width="80" height="40"/><text class="small mid mono" x="780" y="191">lo₁</text>
+    <line class="line-thin" x1="210" y1="136" x2="180" y2="166"/><line class="line-thin" x1="250" y1="136" x2="280" y2="166"/>
+    <line class="line-thin" x1="710" y1="136" x2="680" y2="166"/><line class="line-thin" x1="750" y1="136" x2="780" y2="166"/>
+    <text class="small muted" x="10" y="191">64 bits</text>
+    <rect class="device" x="140" y="266" width="180" height="46"/><text class="small mid mono" x="230" y="295">hi₁ ⊕ y ⊕ k₀</text>
+    <rect class="gray" x="390" y="266" width="180" height="46"/><text class="small mid mono" x="480" y="295">lo₁</text>
+    <rect class="device" x="640" y="266" width="180" height="46"/><text class="small mid mono" x="730" y="295">hi₀ ⊕ w ⊕ k₁</text>
+    <rect class="gray" x="890" y="266" width="180" height="46"/><text class="small mid mono" x="980" y="295">lo₀</text>
+    <path class="line-muted" d="M680 206L230 266M480 66C480 160 300 200 250 266M780 206L480 266M180 206L700 266M980 66C980 160 800 200 760 266M280 206L980 266"/>
+    <text class="small muted" x="1090" y="48">entra</text><text class="small muted" x="1090" y="295">sai</text>
+  </svg>
+  <p class="note">10 rodadas; entre elas, a chave (k₀, k₁) = a semente soma constantes fixas. Só multiplicações de inteiros, XOR e trocas de lugar: tudo em <strong>INT32</strong>, idêntico em qualquer processador.</p>
+  <p class="source">EP4/engine/random/rng.cuh (philox_round)</p>
+  <aside class="notes">Para o professor de HPC: multiplicações 32×32→64 bits divididas em alto e baixo, XOR com a chave, e as palavras trocam de lugar. É aritmética inteira exata: por isso a CPU e a GPU dão os mesmos bits. As constantes são as do artigo e do cuRAND.</aside>
+</section>
+
+<section>
+  <h2>Um fluxo por pedaço de 1024 fótons</h2>
+  <svg class="d" viewBox="0 0 1180 250" width="1180">
+    <text class="bold" x="10" y="62">contador</text>
+    <rect class="device" x="120" y="30" width="500" height="54"/><text class="mid" x="370" y="56">pedaço (chunk): 64 bits</text><text class="small mid muted" x="370" y="76">palavras w, z</text>
+    <rect class="good" x="620" y="30" width="500" height="54"/><text class="mid" x="870" y="56">posição no pedaço: 64 bits</text><text class="small mid muted" x="870" y="76">palavras y, x (de 4 em 4 números)</text>
+    <text class="bold" x="10" y="146">chave</text>
+    <rect class="gray" x="120" y="116" width="500" height="50"/><text class="mid" x="370" y="148">a semente: 64 bits</text>
+    <text class="mid" x="590" y="212">1 pedaço usa ~6 000 números; cabem 2⁶⁶: os fluxos de dois pedaços <tspan class="bold">nunca</tspan> se encontram</text>
+  </svg>
+  <pre><code class="language-cpp" data-trim data-noescape>
+curand_init(seed, chunk, 0, &amp;rng);    // GPU: cuRAND
+philox_init(seed, chunk, 0, &amp;rng);    // CPU: a nossa Philox (rng.cuh)
+  </code></pre>
+  <p class="concept fragment">O pedaço, não o thread, escolhe os números. Então <strong>quem</strong> traça um pedaço (que SM, que thread, CPU ou GPU) não muda a imagem.</p>
+  <aside class="notes">Esta é a decisão central do EP4. O pedaço tem tamanho fixo (1024) porque ele É o fluxo aleatório: mudar o tamanho mudaria a imagem. O EP3 pode adaptar o tamanho porque só conta cruzamentos.</aside>
+</section>
+
+<section>
+  <h2>Os números viram uniformes em (0, 1]</h2>
+  <p class="formula">\(u_{\text{float}} = x\cdot 2^{-32} + 2^{-33}\qquad u_{\text{double}} = x\cdot 2^{-32} + 2^{-32}\)</p>
+  <ul>
+    <li>\(x\) é o inteiro de 32 bits do Philox; o resultado nunca é 0 e pode ser 1</li>
+    <li class="fragment">é a conversão do cuRAND; a nossa CPU repete a conta, e o nível 3 confere os bits</li>
+    <li class="fragment">limite conhecido: mesmo em FP64, há só \(2^{32}\) valores possíveis (passo \(2{,}3\times10^{-10}\)); para a estrela, muito abaixo do ruído</li>
+  </ul>
+  <p class="source">EP4/engine/random/rng.cuh (philox_uniform_float, philox_uniform_double)</p>
+  <aside class="notes">Um detalhe que um professor de HPC pode perguntar. A conversão é a mesma do cuRAND (curand_uniform, curand_uniform_double com Philox usam um único inteiro de 32 bits).</aside>
+</section>

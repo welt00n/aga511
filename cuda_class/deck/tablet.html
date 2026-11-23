@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#111111">
+  <title>Aula: notas</title>
+  <style>
+    :root {
+      --background: #101010;
+      --panel: #1c1c1c;
+      --ink: #f2f2f2;
+      --muted: #9a9a9a;
+      --accent: #4c8ee6;
+      --cue: #f0b429;
+      --late: #e5534b;
+      --on-time: #3fb950;
+      --notes-size: 22px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--background); color: var(--ink); }
+    body {
+      font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    header { display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+    #part { font-size: 17px; color: var(--muted); flex: 1 1 auto; }
+    #part b { color: var(--accent); }
+    #position { font-size: 17px; color: var(--muted); }
+    #clock { font-size: 26px; font-weight: 700; background: none; border: none; color: var(--muted); padding: 0; }
+    #clock.on-time { color: var(--on-time); }
+    #clock.late { color: var(--late); }
+    #plan { font-size: 15px; color: var(--muted); }
+    main { display: grid; grid-template-columns: 1.7fr 1fr; gap: 12px; min-height: 0; }
+    #left, #right { min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+    #title { font-size: 26px; font-weight: 700; line-height: 1.2; }
+    #notes {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      background: var(--panel);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: var(--notes-size);
+      line-height: 1.45;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    #notes p { margin: 0 0 0.6em; }
+    #notes strong { color: #ffffff; }
+    #notes:empty::before { content: "sem notas neste slide"; color: var(--muted); }
+    #notes.cues-view { font-size: calc(var(--notes-size) * 1.35); line-height: 1.35; }
+    #notes.cues-view p::before { content: "• "; color: var(--accent); }
+    #view { display: flex; gap: 8px; }
+    #view button { font-size: 16px; padding: 6px 14px; border-radius: 8px; border: 1px solid #333; background: var(--panel); color: var(--muted); }
+    #view button.on { background: var(--accent); color: white; border-color: var(--accent); }
+    #cues {
+      background: #2a2410;
+      border: 2px solid var(--cue);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 21px;
+      line-height: 1.35;
+      overflow-y: auto;
+      max-height: 55%;
+    }
+    #cues p { margin: 0 0 0.5em; }
+    #cues p::before { content: "▶ "; color: var(--cue); }
+    #cues:empty { display: none; }
+    #steps { font-size: 18px; color: var(--cue); font-weight: 700; min-height: 22px; }
+    #next { font-size: 18px; color: var(--muted); }
+    #next b { color: var(--ink); }
+    #connection { font-size: 15px; color: var(--late); }
+    #help { font-size: 14px; color: var(--muted); line-height: 1.4; margin-top: auto; }
+    footer { display: grid; grid-template-columns: 1fr 2.4fr 0.8fr 0.8fr 0.6fr 0.6fr; gap: 10px; }
+    footer button {
+      font-size: 22px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      height: 84px;
+      color: var(--ink);
+      background: var(--panel);
+    }
+    footer button:active { filter: brightness(1.5); }
+    #forward { background: var(--accent); font-size: 30px; }
+    #black.on { background: var(--cue); color: #111111; }
+    footer button.small { font-size: 16px; font-weight: 400; }
+    @media (orientation: portrait) {
+      main { grid-template-columns: 1fr; grid-template-rows: 1.6fr 1fr; }
+      footer { grid-template-columns: 1fr 2fr 1fr 1fr; }
+      #smaller, #bigger { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span id="part">conectando…</span>
+    <span id="position"></span>
+    <button id="clock" title="toque para começar ou zerar">00:00</button>
+    <span id="plan"></span>
+  </header>
+  <main>
+    <section id="left">
+      <div id="title"></div>
+      <div id="view"><button id="show-cues" class="on">pistas</button><button id="show-script">roteiro completo</button></div>
+      <div id="notes" class="cues-view"></div>
+    </section>
+    <section id="right">
+      <div id="cues"></div>
+      <div id="steps"></div>
+      <div id="next"></div>
+      <div id="connection"></div>
+      <div id="help">pistas: o que dizer, em poucas palavras · roteiro completo: o texto inteiro, se perder o fio · ▶ no quadro amarelo: o que fazer agora · relógio verde: dentro do plano da parte, amarelo: no limite, vermelho: atrasado · toque no relógio para começar ou zerar</div>
+    </section>
+  </main>
+  <footer>
+    <button id="back">◀</button>
+    <button id="forward">▶</button>
+    <button id="black" class="small">tela preta</button>
+    <button id="first" class="small">início</button>
+    <button id="smaller" class="small">A−</button>
+    <button id="bigger" class="small">A+</button>
+  </footer>
+
+<script>
+  const STATE_POLL_MS = 400;
+  const FONT_STEP = 2;
+  let classStart = null;
+  let latest = {};
+  let notesSize = 22;
+
+  function send(command) {
+    if (command === 'next' && classStart === null) classStart = Date.now();
+    if (navigator.vibrate) navigator.vibrate(15);
+    fetch('/comando', { method: 'POST', body: command }).catch(showDisconnected);
+  }
+
+  function twoDigits(number) {
+    return String(number).padStart(2, '0');
+  }
+
+  function minutesSinceStart() {
+    return classStart === null ? 0 : (Date.now() - classStart) / 60000;
+  }
+
+  function showClock() {
+    const clock = document.getElementById('clock');
+    const seconds = Math.floor(minutesSinceStart() * 60);
+    clock.textContent = `${twoDigits(Math.floor(seconds / 60))}:${twoDigits(seconds % 60)}`;
+    clock.className = '';
+    if (classStart === null || !latest.plannedEndMinute) return;
+    const left = latest.plannedEndMinute - minutesSinceStart();
+    clock.className = left < 0 ? 'late' : 'on-time';
+    clock.style.color = left >= 0 && left < 1 ? 'var(--cue)' : '';
+  }
+
+  function restartClock() {
+    classStart = classStart === null ? Date.now() : (confirm('Zerar o relógio?') ? null : classStart);
+    showClock();
+  }
+
+  let view = 'cues';
+
+  function splitNotes(html) {
+    const holder = document.createElement('div');
+    holder.innerHTML = html;
+    const part = (kind) => holder.querySelector(`.${kind}`)?.innerHTML || '';
+    return { cues: part('cues'), script: part('script'), actions: part('actions') };
+  }
+
+  function showNotes(force) {
+    const notesBox = document.getElementById('notes');
+    const raw = latest.notes || '';
+    if (!force && notesBox.dataset.raw === raw && notesBox.dataset.view === view) return;
+    const parts = splitNotes(raw);
+    const text = view === 'cues' ? (parts.cues || parts.script) : parts.script;
+    notesBox.innerHTML = text;
+    notesBox.className = view === 'cues' && parts.cues ? 'cues-view' : '';
+    notesBox.dataset.raw = raw;
+    notesBox.dataset.view = view;
+    notesBox.scrollTop = 0;
+    document.getElementById('cues').innerHTML = parts.actions;
+    document.getElementById('show-cues').classList.toggle('on', view === 'cues');
+    document.getElementById('show-script').classList.toggle('on', view === 'script');
+  }
+
+  function choose(newView) {
+    view = newView;
+    showNotes(true);
+  }
+
+  function showState(state) {
+    latest = state;
+    if (!state.total) {
+      document.getElementById('part').textContent = 'abra a aula no navegador do laptop';
+      return;
+    }
+    document.getElementById('part').innerHTML = state.part
+      ? `<b>Parte ${state.part} de ${state.parts}</b> · ${state.partName}` : `<b>${state.partName}</b>`;
+    document.getElementById('position').textContent = `slide ${state.number} de ${state.total}`;
+    document.getElementById('plan').textContent = `plano: esta parte até ${state.plannedEndMinute} min de ${state.classMinutes}`;
+    document.getElementById('title').textContent = state.title || '(sem título)';
+    if (document.getElementById('notes').dataset.raw !== state.notes) view = 'cues';
+    showNotes(false);
+    document.getElementById('steps').textContent = state.stepsLeftHere ? 'ainda há passos neste slide: ▶ revela' : '';
+    document.getElementById('next').innerHTML = state.next ? `depois: <b>${state.next}</b>` : 'último slide';
+    document.getElementById('black').classList.toggle('on', state.paused);
+    showClock();
+  }
+
+  function showDisconnected() {
+    document.getElementById('connection').textContent = 'sem conexão com o laptop: confira a rede e o apresentar.py';
+  }
+
+  async function followTheDeck() {
+    try {
+      const state = await (await fetch('/estado')).json();
+      document.getElementById('connection').textContent = '';
+      showState(state);
+    } catch (error) {
+      showDisconnected();
+    }
+  }
+
+  function resizeNotes(step) {
+    notesSize = Math.min(40, Math.max(14, notesSize + step));
+    document.documentElement.style.setProperty('--notes-size', `${notesSize}px`);
+  }
+
+  document.getElementById('forward').addEventListener('click', () => send('next'));
+  document.getElementById('back').addEventListener('click', () => send('prev'));
+  document.getElementById('black').addEventListener('click', () => send('black'));
+  document.getElementById('first').addEventListener('click', () => send('first'));
+  document.getElementById('clock').addEventListener('click', restartClock);
+  document.getElementById('show-cues').addEventListener('click', () => choose('cues'));
+  document.getElementById('show-script').addEventListener('click', () => choose('script'));
+  document.getElementById('smaller').addEventListener('click', () => resizeNotes(-FONT_STEP));
+  document.getElementById('bigger').addEventListener('click', () => resizeNotes(FONT_STEP));
+  setInterval(followTheDeck, STATE_POLL_MS);
+  setInterval(showClock, 1000);
+  followTheDeck();
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<section>
+  <h1>CUDA: programando a GPU</h1>
+  <p class="subtitle">e dois projetos: a agulha de Buffon (EP3) e a estrela manchada (EP4)</p>
+  <p class="byline">Welton<br>AGA 511 · Métodos Computacionais em Astronomia · IAG/USP<br>24 de novembro de 2026</p>
+  <aside class="notes">Uma aula de CUDA com os dois EPs dentro dela, não depois. Duas horas.</aside>
+</section>
+
+<section>
+  <h2>Roteiro</h2>
+  <div class="agenda-here"></div>
+  <p class="concept">Cada conceito <strong>nasce</strong> de um problema (história), é <strong>explicado</strong> (fundamentos) e é <strong>medido</strong> num projeto (EP3, EP4).</p>
+  <aside class="notes">Mostrar o mapa da aula. O fio condutor é a frase de baixo: história → fundamento → projeto.</aside>
+</section>
+
+<section>
+  <h2>O fio da aula: cada conceito, do problema à medida</h2>
+  <table class="compact threads-table">
+    <thead><tr><th>conceito</th><th>nasce (história)</th><th>é explicado</th><th>é medido</th></tr></thead>
+    <tbody>
+      <tr><td>paralelismo de dados</td><td>1999: pixels independentes</td><td>kernel, thread, bloco, grid</td><td>uma agulha, um fóton por iteração</td></tr>
+      <tr><td>o SM</td><td>2006: G80</td><td>o que há dentro de um SM</td><td>a unidade de toda aceleração: 1 SM vs n SMs</td></tr>
+      <tr><td>FP64 e o seu custo</td><td>2008: Tesla, Fermi</td><td>bits, unidades separadas</td><td>16× mais lento aqui; a A30 inverte</td></tr>
+      <tr><td>a hierarquia de memória</td><td>2010: Fermi</td><td>registradores, constante, global</td><td>o fóton, a estrela, a imagem</td></tr>
+      <tr><td>cooperar custa</td><td>—</td><td>redução, sincronização, atômicos</td><td>contar agulhas; somar fótons na imagem</td></tr>
+      <tr><td>números aleatórios em paralelo</td><td>(Monte Carlo: EP1, EP3)</td><td>contador em vez de estado</td><td>a mesma imagem na CPU e na GPU</td></tr>
+      <tr><td>a energia como limite</td><td>2022: exaescala</td><td>o <em>clock</em> não é fixo</td><td>FP32 em todos os SMs: 2730 MHz</td></tr>
+      <tr><td>Amdahl</td><td>(EP1, EP3)</td><td>a parte serial é o teto</td><td>EP3: o contexto; EP4: a imagem</td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">Não ler a tabela. Dizer: "cada linha desta tabela é uma ponte que vamos atravessar". Voltar a ela no fim.</aside>
+</section>

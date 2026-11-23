@@ -1,0 +1,164 @@
+<section class="divider" data-part="1">
+  <p class="promise">Cada parte de uma GPU responde a um problema que alguém teve. A história explica a arquitetura.</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Ciência e indústria, juntas</h2>
+  <svg class="d" viewBox="0 0 1180 400" width="1180">
+    <rect class="fragment" data-fragment-index="1" x="802" y="26" width="356" height="360" fill="#e3eefb" opacity="0.6" rx="8"/>
+    <text class="fragment bold device-ink end" data-fragment-index="1" x="1150" y="20">juntas, desde 2007</text>
+    <line class="line" x1="100" y1="210" x2="1160" y2="210" marker-end="url(#arrow)"/>
+    <g class="small muted">
+      <text class="small muted mid" x="80" y="236">1970</text><text class="small muted mid" x="275" y="236">1980</text>
+      <text class="small muted mid" x="470" y="236">1990</text><text class="small muted mid" x="665" y="236">2000</text>
+      <text class="small muted mid" x="860" y="236">2010</text><text class="small muted mid" x="1055" y="236">2020</text>
+    </g>
+    <text class="bold device-ink" x="10" y="150">ciência</text>
+    <text class="bold host-ink" x="10" y="300">indústria</text>
+    <!-- ciência -->
+    <line class="line-muted" x1="197" y1="210" x2="197" y2="150"/><circle class="dot-device" cx="197" cy="150" r="7"/>
+    <text class="mid bold" x="197" y="112">Cray-1, 1976</text><text class="small muted mid" x="197" y="133">um vetor por instrução</text>
+    <line class="line-muted" x1="372" y1="210" x2="372" y2="150"/><circle class="dot-device" cx="372" cy="150" r="7"/>
+    <text class="mid bold" x="390" y="72">Connection Machine, 1985</text><text class="small muted mid" x="390" y="93">65 536 processadores simples</text>
+    <line class="line-muted" x1="743" y1="210" x2="743" y2="150"/><circle class="dot-device" cx="743" cy="150" r="7"/>
+    <text class="mid bold" x="730" y="112">GPGPU, 2004</text><text class="small muted mid" x="730" y="133">ciência disfarçada de textura</text>
+    <line class="line-muted" x1="860" y1="210" x2="860" y2="90"/><circle class="dot-device" cx="860" cy="90" r="7"/>
+    <text class="mid bold" x="890" y="52">Fermi, 2010</text><text class="small muted mid" x="890" y="73">FP64, ECC, caches</text>
+    <line class="line-muted" x1="899" y1="210" x2="899" y2="165"/><circle class="dot-device" cx="899" cy="165" r="7"/>
+    <text class="small mid bold" x="960" y="160">AlexNet, 2012</text>
+    <line class="line-muted" x1="1094" y1="210" x2="1094" y2="90"/><circle class="dot-device" cx="1094" cy="90" r="7"/>
+    <text class="mid bold" x="1090" y="52">Frontier, 2022</text><text class="small muted mid" x="1090" y="73">exaescala</text>
+    <!-- indústria -->
+    <line class="line-muted" x1="645" y1="210" x2="645" y2="270"/><circle class="dot-host" cx="645" cy="270" r="7"/>
+    <text class="end bold" x="638" y="300">GeForce 256, 1999</text><text class="small muted end" x="638" y="321">pixels em paralelo</text>
+    <line class="line-muted" x1="684" y1="210" x2="684" y2="345"/><circle class="dot-host" cx="684" cy="345" r="7"/>
+    <text class="mid bold" x="684" y="375">GeForce 3, 2001: shaders</text>
+    <line class="line-muted" x1="792" y1="210" x2="792" y2="270"/><circle class="dot-host" cx="792" cy="270" r="7"/>
+    <text class="bold" x="772" y="300">G80 + CUDA, 2006–07</text>
+    <line class="line-muted" x1="996" y1="210" x2="996" y2="270"/><circle class="dot-host" cx="996" cy="270" r="7"/>
+    <text class="bold" x="990" y="300">Volta, 2017</text><text class="small muted" x="990" y="321">tensor cores</text>
+  </svg>
+  <p class="concept fragment"><strong>CUDA</strong> é a plataforma desses últimos 20 anos, e provavelmente de boa parte dos próximos.</p>
+  <aside class="notes">Não é notícia que a ciência "descobriu" a GPU. O paralelismo nasceu na ciência (máquinas vetoriais, Connection Machine), foi para a indústria (jogos), e desde 2007 as duas andam juntas: o mesmo chip serve a jogos, a IA e a supercomputadores.</aside>
+</section>
+
+<section>
+  <div class="era-strip" data-era="1"></div>
+  <h2>1999: milhões de pixels por quadro</h2>
+  <div class="columns">
+    <div class="main">
+      <ul>
+        <li>GeForce 256: um <em>pipeline</em> fixo de gráficos</li>
+        <li>cada pixel é calculado <strong>independentemente</strong> dos outros</li>
+        <li>muitas unidades simples em vez de poucas unidades rápidas</li>
+      </ul>
+    </div>
+    <div class="side">
+      <svg class="d" viewBox="0 0 380 260" width="380">
+        <g>
+          <rect class="device" x="10" y="10" width="60" height="45"/><rect class="device" x="80" y="10" width="60" height="45"/><rect class="device" x="150" y="10" width="60" height="45"/><rect class="device" x="220" y="10" width="60" height="45"/><rect class="device" x="290" y="10" width="60" height="45"/>
+          <rect class="device" x="10" y="65" width="60" height="45"/><rect class="device" x="80" y="65" width="60" height="45"/><rect class="device" x="150" y="65" width="60" height="45"/><rect class="device" x="220" y="65" width="60" height="45"/><rect class="device" x="290" y="65" width="60" height="45"/>
+          <rect class="device" x="10" y="120" width="60" height="45"/><rect class="device" x="80" y="120" width="60" height="45"/><rect class="device" x="150" y="120" width="60" height="45"/><rect class="device" x="220" y="120" width="60" height="45"/><rect class="device" x="290" y="120" width="60" height="45"/>
+        </g>
+        <text class="small mid mono" x="40" y="38">f(x,y)</text><text class="small mid mono" x="110" y="38">f(x,y)</text><text class="small mid mono" x="180" y="38">f(x,y)</text><text class="small mid mono" x="250" y="38">f(x,y)</text><text class="small mid mono" x="320" y="38">f(x,y)</text>
+        <text class="small mid mono" x="40" y="93">f(x,y)</text><text class="small mid mono" x="110" y="93">f(x,y)</text><text class="small mid mono" x="180" y="93">f(x,y)</text><text class="small mid mono" x="250" y="93">f(x,y)</text><text class="small mid mono" x="320" y="93">f(x,y)</text>
+        <text class="small mid mono" x="40" y="148">f(x,y)</text><text class="small mid mono" x="110" y="148">f(x,y)</text><text class="small mid mono" x="180" y="148">f(x,y)</text><text class="small mid mono" x="250" y="148">f(x,y)</text><text class="small mid mono" x="320" y="148">f(x,y)</text>
+        <text class="small muted mid" x="180" y="200">a mesma conta, em cada pixel,</text>
+        <text class="small muted mid" x="180" y="222">sem esperar pelos vizinhos</text>
+      </svg>
+    </div>
+  </div>
+  <p class="concept fragment"><strong>O conceito:</strong> paralelismo de dados; <strong>vazão</strong> (<em>throughput</em>) em vez de <strong>latência</strong></p>
+  <aside class="notes">Perguntar antes de revelar: o que esse problema pede do hardware? Resposta: muitas contas iguais e independentes. O que importa é quantas por segundo (vazão), não quanto demora cada uma (latência).</aside>
+</section>
+
+<section>
+  <div class="era-strip" data-era="2"></div>
+  <h2>2001–2006: um programa por pixel, e os cientistas pegam carona</h2>
+  <ul>
+    <li><em>shaders</em> programáveis (GeForce 3, 2001): um pequeno programa roda uma vez por pixel</li>
+    <li>GPGPU (BrookGPU, 2004): matrizes disfarçadas de texturas, resultados lidos como imagens</li>
+    <li>funcionava, mas era preciso fingir que tudo era gráfico</li>
+  </ul>
+  <p class="concept fragment"><strong>Os conceitos:</strong> o <strong>kernel</strong> (um programa, muitos elementos); e por que faltava um modelo de programação de verdade</p>
+  <aside class="notes">O shader já é um kernel: o mesmo programa executado uma vez por elemento. O que faltava era poder escrever isso sem a linguagem dos gráficos.</aside>
+</section>
+
+<section>
+  <div class="era-strip" data-era="3"></div>
+  <h2>2006–2007: CUDA</h2>
+  <ul>
+    <li><em>shaders</em> unificados (G80, 2006): núcleos iguais, agrupados em <strong>multiprocessadores</strong> (SMs)</li>
+    <li>CUDA (2007): programar a GPU em C, sem fingir que é gráfico</li>
+    <li>o maior salto de uma geração para a outra: o mesmo chip servia aos jogos e à ciência</li>
+  </ul>
+  <p class="concept fragment"><strong>Os conceitos:</strong> <strong>host</strong> e <strong>device</strong>; o lançamento de um kernel; o <strong>SM</strong></p>
+  <aside class="notes">O SM é a unidade desta aula inteira: nos dois EPs, comparamos um SM com todos.</aside>
+</section>
+
+<section>
+  <div class="era-strip" data-era="4"></div>
+  <h2>2008–2010: a ciência pede precisão e confiabilidade</h2>
+  <ul>
+    <li>precisão dupla (FP64) no GT200 (2008); memória com correção de erros (ECC) e caches L1/L2 no Fermi (2010)</li>
+    <li>FP32: 24 bits de mantissa; FP64: 53 bits</li>
+    <li>unidades FP64 <strong>separadas</strong>: quantas, depende do mercado do chip</li>
+  </ul>
+  <p class="concept fragment"><strong>Os conceitos:</strong> <strong>precisão numérica</strong>; a <strong>hierarquia de memória</strong></p>
+  <aside class="notes">Guardar: FP32 e FP64 são unidades diferentes. O nosso laptop tem 2 FP64 por SM; a A30 tem 32. Isso volta no fim.</aside>
+</section>
+
+<section>
+  <div class="era-strip" data-era="5"></div>
+  <h2>2012–2017: aprendizado de máquina</h2>
+  <ul>
+    <li>AlexNet (2012): uma rede neural treinada em duas GPUs de jogos (GTX 580)</li>
+    <li>redes neurais são produtos de matrizes: vazão pura</li>
+    <li><em>tensor cores</em> (Volta, 2017): unidades especializadas em produtos de matrizes</li>
+  </ul>
+  <p class="concept fragment"><strong>O conceito:</strong> um SM tem unidades diferentes: <strong>FP32, INT32, FP64, tensor</strong></p>
+  <aside class="notes">A partir daqui a GPU é um conjunto de unidades especializadas. O nosso kernel usa sobretudo inteiros e FP32 (o Philox é todo inteiro).</aside>
+</section>
+
+<section>
+  <div class="era-strip" data-era="6"></div>
+  <h2>Hoje: exaescala, IA, e a energia como limite</h2>
+  <ul>
+    <li>Frontier (2022): o primeiro supercomputador exaescala é uma máquina de GPUs</li>
+    <li>o limite passou a ser a energia por operação</li>
+    <li><strong>no nosso laptop:</strong> com todos os SMs em FP32, o <em>driver</em> baixa o <em>clock</em> para caber na potência</li>
+  </ul>
+  <p class="concept fragment"><strong>Usos na ciência:</strong> transferência radiativa Monte Carlo (o EP4), N-corpos, clima, dinâmica molecular, IA</p>
+  <aside class="notes">A transferência radiativa Monte Carlo é exatamente o EP4. O limite de potência aparece nas nossas medidas: FP32 em 36 SMs roda a 2730 MHz em vez de ~2890.</aside>
+</section>
+
+<section>
+  <h2>De extensão do C a ecossistema</h2>
+  <svg class="d" viewBox="0 0 1180 400" width="1180">
+    <circle class="device-solid" cx="590" cy="200" r="78"/><text class="big mid on-dark bold" x="590" y="208">CUDA</text>
+    <path class="line-muted" d="M520 165L400 110M660 165L780 110M520 235L400 290M660 235L780 290"/>
+    <rect class="device" x="20" y="40" width="380" height="140" rx="10"/>
+    <text class="bold" x="40" y="74">linguagens</text>
+    <text class="small" x="40" y="104">C, C++, Fortran</text>
+    <text class="small" x="40" y="130">Python: CuPy, Numba</text>
+    <text class="small" x="40" y="156">diretivas: OpenACC (outro grupo da turma)</text>
+    <rect class="good" x="780" y="40" width="380" height="140" rx="10"/>
+    <text class="bold" x="800" y="74">bibliotecas</text>
+    <text class="small" x="800" y="104">cuBLAS (álgebra), cuFFT (Fourier)</text>
+    <text class="small" x="800" y="130"><tspan class="bold">cuRAND</tspan> (números aleatórios: o nosso Philox)</text>
+    <text class="small" x="800" y="156">cuDNN (redes neurais), Thrust (algoritmos)</text>
+    <rect class="gray" x="20" y="220" width="380" height="140" rx="10"/>
+    <text class="bold" x="40" y="254">ferramentas</text>
+    <text class="small" x="40" y="284"><tspan class="bold">Nsight Systems</tspan>: a linha do tempo (o EP3)</text>
+    <text class="small" x="40" y="310">Nsight Compute: um kernel por dentro</text>
+    <text class="small" x="40" y="336">cuda-gdb, compute-sanitizer</text>
+    <rect class="host" x="780" y="220" width="380" height="140" rx="10"/>
+    <text class="bold" x="800" y="254">aplicações</text>
+    <text class="small" x="800" y="284">IA, processamento de imagem, FFT</text>
+    <text class="small" x="800" y="310">simulação: clima, N-corpos, dinâmica molecular</text>
+    <text class="small" x="800" y="336">Monte Carlo: transporte de radiação (o EP4)</text>
+  </svg>
+  <p class="concept fragment"><strong>O conceito:</strong> uma plataforma é mais que uma linguagem. É por isso que CUDA dura 20 anos.</p>
+  <aside class="notes">Em negrito, o que nós usamos: o cuRAND (o Philox do EP3 e do EP4) e o Nsight Systems (o perfil do EP3). Os outros grupos da turma usam MPI, OpenMP e OpenACC: OpenACC é a forma "por diretivas" de chegar à GPU.</aside>
+</section>

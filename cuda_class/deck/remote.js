@@ -23,15 +23,20 @@ function slideState() {
   const slides = Reveal.getSlides();
   const current = Reveal.getCurrentSlide();
   const index = slides.indexOf(current);
-  const fragments = Reveal.availableFragments();
+  const part = partOfSlide(slides, index);
   return {
     number: index + 1,
     total: slides.length,
     title: titleOf(current),
     next: titleOf(slides[index + 1]),
-    stepsLeftHere: fragments.next,
+    stepsLeftHere: Reveal.availableFragments().next,
     notes: Reveal.getSlideNotes(current) || '',
     paused: Reveal.isPaused(),
+    part,
+    parts: PARTS.length,
+    partName: part ? PARTS[part - 1] : 'Abertura',
+    plannedEndMinute: plannedEndMinute(part),
+    classMinutes: plannedEndMinute(PART_MINUTES.length - 1),
   };
 }
 

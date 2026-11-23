@@ -1,0 +1,144 @@
+<section class="divider" data-part="8">
+  <p class="promise">O guia, com o nosso código: quantos warps cabem num SM, e por que mais warps não foram mais rápidos aqui.</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Esconder a espera trocando de warp</h2>
+  <svg class="d" viewBox="0 0 1180 320" width="1180">
+    <text class="bold" x="110" y="30">1 warp: a unidade espera</text>
+    <text class="small" x="20" y="83">warp 0</text>
+    <path d="M110 64h28v26h-28zM220 64h28v26h-28zM330 64h28v26h-28zM440 64h28v26h-28z" fill="#2a78d6"/>
+    <path d="M138 64h82v26h-82zM248 64h82v26h-82zM358 64h82v26h-82zM468 64h82v26h-82z" fill="#e4e3df"/>
+    <text class="small" x="20" y="253">unidade</text>
+    <path d="M110 234h28v26h-28zM220 234h28v26h-28zM330 234h28v26h-28zM440 234h28v26h-28z" fill="#1b1b1b"/>
+    <text class="small muted" x="110" y="295">ocupada 25% do tempo</text>
+    <g class="fragment">
+      <text class="bold" x="690" y="30">4 warps: sempre alguém pronto</text>
+      <path d="M690 64h28v26h-28zM800 64h28v26h-28zM910 64h28v26h-28zM1020 64h28v26h-28z" fill="#2a78d6"/>
+      <path d="M718 104h28v26h-28zM828 104h28v26h-28zM938 104h28v26h-28zM1048 104h28v26h-28z" fill="#2a78d6"/>
+      <path d="M746 144h28v26h-28zM856 144h28v26h-28zM966 144h28v26h-28zM1076 144h28v26h-28z" fill="#2a78d6"/>
+      <path d="M774 184h28v26h-28zM884 184h28v26h-28zM994 184h28v26h-28zM1104 184h28v26h-28z" fill="#2a78d6"/>
+      <text class="small" x="620" y="83">w0</text><text class="small" x="620" y="123">w1</text><text class="small" x="620" y="163">w2</text><text class="small" x="620" y="203">w3</text>
+      <rect x="690" y="234" width="442" height="26" fill="#1b1b1b"/>
+      <text class="small muted" x="690" y="295">ocupada 100% do tempo</text>
+    </g>
+    <text class="tiny muted" x="20" y="315">azul: o warp emite uma instrução · cinza: espera o resultado (memória, uma unidade lenta)</text>
+  </svg>
+  <p class="note fragment">Mas isso só ajuda se a espera for <strong>latência</strong>. Se a unidade já está cheia (poucas unidades FP64, por exemplo), mais warps só fazem mais fila.</p>
+  <aside class="notes">A GPU não esconde latência com caches grandes (como a CPU), e sim com muitos warps prontos. Trocar de warp custa zero ciclos: o estado de todos fica nos registradores. Daí a pergunta: quantos warps cabem?</aside>
+</section>
+
+<section>
+  <h2>Os registradores decidem quantos warps cabem</h2>
+  <p class="formula">\(\text{warps que cabem} = \dfrac{65\,536}{\lceil r/8\rceil\cdot 8 \times 32}\qquad\text{ocupação} = \dfrac{\text{warps residentes}}{\text{máximo}}\)</p>
+  <svg class="d" viewBox="0 0 1180 320" width="1180">
+    <text class="bold" x="10" y="30">laptop, FP64</text><text class="small muted" x="10" y="52">80 registradores</text>
+    <g id="occupancy-fp64"></g>
+    <text class="bold" x="10" y="130">laptop, FP32</text><text class="small muted" x="10" y="152">67 → 72 registradores</text>
+    <g id="occupancy-fp32"></g>
+    <text class="bold" x="10" y="230">A30, FP64</text><text class="small muted" x="10" y="252">96 registradores</text>
+    <g id="occupancy-a30"></g>
+    <text class="tiny muted" x="250" y="312">cada quadrado: um warp · azul: residente · azul-claro: cabe nos registradores, mas o bloco não cabe inteiro · cinza: sem registradores</text>
+  </svg>
+  <p class="source">main.py measure → parts/occupancy.json (this_gpu, targets); a linha de lançamento de todo produto de GPU</p>
+  <aside class="notes">FP64: 80 registradores × 32 = 2560 por warp → 25 warps cabem; os blocos de 768 threads (24 warps) só cabem inteiros, então 24 → ocupação 0,50. FP32: 67 arredonda para 72 → 28 warps, 0,58. A30: 96 → 21 de 64, no máximo 0,33.</aside>
+</section>
+
+<section>
+  <h2>O nosso lançamento, como o orquestrador o imprime</h2>
+  <pre class="terminal"><code class="nohighlight" data-trim data-noescape>
+<span class="dim">$ python main.py measure --plan</span>
+  FP64: 80 registers per thread (they allow 25 warps per SM) → 768 threads per block × 1 block(s) per SM
+        = 24 warps per SM (blocks fit only whole), occupancy 0.50; 27 648 threads in all
+  FP32: 67 registers per thread (they allow 28 warps per SM) → 896 threads per block × 1 block(s) per SM
+        = 28 warps per SM, occupancy 0.58; 32 256 threads in all
+  </code></pre>
+  <ul>
+    <li>o tamanho do bloco vem da API de ocupação do CUDA (<code>cudaOccupancyMaxPotentialBlockSize</code>), não de um número fixo no código</li>
+    <li>na A30 a mesma chamada escolhe outro lançamento: <strong>nenhum <code>if</code> por GPU</strong></li>
+  </ul>
+  <p class="source">main.py (test, make, measure): environment.show_launch</p>
+  <aside class="notes">Cada produto de GPU imprime esta linha antes de rodar. Lançamento cooperativo, um bloco por SM, threads persistentes. Na A30, com 96 registradores, a mesma API escolhe o lançamento dela: ver a linha impressa lá.</aside>
+</section>
+
+<section>
+  <h2>O guia diz, nós medimos</h2>
+  <div class="columns top">
+    <div class="half">
+      <h3>o guia (2.3.7)</h3>
+      <p class="statement" style="margin-top: 0.6em; font-size: 1em; text-align: left">"é uma boa prática ter a ocupação tão alta quanto possível, o que esconde a latência e aumenta o desempenho"</p>
+      <p class="note">e limitar os registradores "pode resultar num ganho líquido de desempenho"</p>
+    </div>
+    <div class="half">
+      <h3>a nossa pergunta</h3>
+      <ul>
+        <li>limitar os registradores com <code>-maxrregcount</code> (80 → 72 → … → 32)</li>
+        <li>a ocupação sobe de 0,50 até 1,00</li>
+        <li>medir a velocidade <strong>em ciclos</strong>, para o <em>clock</em> não atrapalhar</li>
+      </ul>
+      <p class="question fragment">fica mais rápido?</p>
+    </div>
+  </div>
+  <p class="source">guia CUDA 2.3.7 (Kernel Launch and Occupancy); main.py measure → parts/occupancy.json</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Mais ocupação não é mais rápido (aqui)</h2>
+  <div class="figure"><img src="figures/registers_and_occupancy.png" style="max-height: 500px" alt="Ocupação e velocidade em ciclos em função do limite de registradores"></div>
+  <p class="source">main.py measure → figures/registers_and_occupancy.png</p>
+  <aside class="notes">Com -maxrregcount o compilador limita os registradores: a ocupação sobe (gráfico de cima), mas a velocidade em ciclos não melhora (gráfico de baixo). FP64: igual até 0,67, depois até 10% mais lento. FP32: o mais rápido é sem limite.</aside>
+</section>
+
+<section>
+  <h2>Por quê: tirar registradores custa instruções</h2>
+  <table class="compact">
+    <thead><tr><th>FP64, registradores</th><th>80</th><th>72</th><th>64</th><th>56</th><th>48</th><th>40</th></tr></thead>
+    <tbody>
+      <tr><td>ocupação</td><td>0,50</td><td>0,58</td><td>0,67</td><td>0,75</td><td>0,83</td><td>1,00</td></tr>
+      <tr><td>bytes derramados</td><td>0</td><td>0</td><td>24</td><td>84</td><td>164</td><td>344</td></tr>
+      <tr><td>instruções</td><td>1,000</td><td>1,015</td><td>1,035</td><td>1,070</td><td>1,090</td><td>1,131</td></tr>
+      <tr><td>ciclos</td><td>1,000</td><td><strong>0,999</strong></td><td>1,001</td><td>1,049</td><td>1,072</td><td>1,097</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li class="fragment"><strong>antes de derramar:</strong> o compilador recalcula valores em vez de guardá-los (FP32 a 55 registradores, 0 bytes derramados: +4,7% de instruções, +1,1% de ciclos)</li>
+    <li class="fragment"><strong>depois:</strong> cada valor derramado é uma escrita e uma leitura na memória "local", que mora na memória do device, atrás da L1</li>
+    <li class="fragment">mais warps só pagariam se o SM ficasse parado esperando; aqui não fica</li>
+  </ul>
+  <p class="source">main.py measure → parts/occupancy.json (rows: instructions_vs_uncapped, spill_bytes, cycles_vs_baseline)</p>
+  <aside class="notes">A ocupação em si não custa nada; tirar registradores custa. Não há sincronização envolvida: o kernel não tem __syncthreads, e os derramamentos são por thread.</aside>
+</section>
+
+<section>
+  <h2>FP64 é 16× mais lento que FP32 aqui, não 64×</h2>
+  <ul>
+    <li>o laptop tem 2 unidades FP64 por SM contra 128 faixas FP32: a razão de pico é 1:64</li>
+    <li class="fragment">medido: <strong>16,2×</strong>, porque o kernel não é só FP64: o Philox, os índices, os bins são inteiros; senos e cossenos usam outra unidade</li>
+    <li class="fragment">o código FP64 tem 1 063 <code>NOP</code>s em 2 744 instruções: o compilador faz o warp <strong>esperar</strong> o resultado das poucas unidades FP64</li>
+    <li class="fragment">por isso a ocupação não ajuda em FP64: a fila é na unidade, não na memória</li>
+  </ul>
+  <p class="question fragment">na A30 (32 FP64 por SM), FP64 deve custar quanto em relação a FP32?</p>
+  <p class="source">main.py measure → parts/validation.json (speed_ratio), parts/kernel.json (instruction_mix); a leitura dos NOPs: research/nop_runs.py</p>
+  <aside class="notes">A contagem de instruções é estática (o que está no código, não o que executa). Que os NOPs são esperas antes de DFMA/DMUL/DADD veio de uma investigação (research/nop_runs.py), não do orquestrador: dizer isso.</aside>
+</section>
+
+<section>
+  <h2>E a A30?</h2>
+  <ul>
+    <li>o mesmo código, compilado para ela: <strong>96 registradores</strong> em FP64, 76 em FP32</li>
+    <li>21 de 64 warps: ocupação no máximo <strong>0,33</strong> (0,39 em FP32)</li>
+    <li>mas FP64 rápido: a fila na unidade FP64 some, e a latência pode voltar a importar</li>
+  </ul>
+  <table class="compact">
+    <thead><tr><th></th><th>laptop</th><th>A30</th></tr></thead>
+    <tbody>
+      <tr><td>ocupação, FP64</td><td>0,50</td><td><span class="a30">[A30: medida]</span></td></tr>
+      <tr><td>registradores mais rápidos (varredura)</td><td>72 (≈ sem limite)</td><td><span class="a30">[A30]</span></td></tr>
+      <tr><td>FP32 / FP64</td><td>16,2×</td><td><span class="a30">[A30]</span></td></tr>
+    </tbody>
+  </table>
+  <p class="source">main.py measure --targets 80 → parts/occupancy.json (targets); na A30: main.py measure</p>
+  <aside class="notes">Por que 96 e não 80: o compilador do CUDA 13 usa um front end mais novo só para Blackwell em diante (compute_100+). Isso é pesquisa (research/front_end_registers.py), não dado do orquestrador.</aside>
+</section>

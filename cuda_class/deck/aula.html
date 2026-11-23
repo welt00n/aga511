@@ -22,20 +22,27 @@
 <div class="reveal">
 <div class="slides">
 
-<!-- ================================================================ abertura -->
-
+<!-- ================================ 00_opening -->
 <section>
   <h1>CUDA: programando a GPU</h1>
   <p class="subtitle">e dois projetos: a agulha de Buffon (EP3) e a estrela manchada (EP4)</p>
   <p class="byline">Welton<br>AGA 511 · Métodos Computacionais em Astronomia · IAG/USP<br>24 de novembro de 2026</p>
-  <aside class="notes">Uma aula de CUDA com os dois EPs dentro dela, não depois. Duas horas.</aside>
+  <aside class="notes">
+<div class="cues"><p>CUDA + os dois EPs dentro da aula</p><p>cada conceito chega quando um projeto precisa dele</p></div>
+<div class="script"><p>Boa tarde. Hoje a aula é de CUDA, a plataforma da NVIDIA para programar a GPU. E os dois projetos que fiz com ela, o EP3, a agulha de Buffon, e o EP4, a estrela manchada, não vêm no fim: eles estão dentro da aula.</p><p>A ideia é simples: cada conceito de CUDA aparece no momento em que um dos projetos precisa dele. Então, quando eu falar de blocos, de memória ou de ponto flutuante, vocês vão ver isso funcionando num código de verdade, com números medidos.</p></div>
+<div class="actions"><p>Ligar o relógio do tablet com o primeiro ▶.</p></div>
+</aside>
 </section>
 
 <section>
   <h2>Roteiro</h2>
   <div class="agenda-here"></div>
   <p class="concept">Cada conceito <strong>nasce</strong> de um problema (história), é <strong>explicado</strong> (fundamentos) e é <strong>medido</strong> num projeto (EP3, EP4).</p>
-  <aside class="notes">Mostrar o mapa da aula. O fio condutor é a frase de baixo: história → fundamento → projeto.</aside>
+  <aside class="notes">
+<div class="cues"><p>10 partes, 3 blocos</p><p>fundamentos → guia da NVIDIA com o nosso código → projetos</p><p>2 capítulos do guia antes do Buffon, 2 antes da estrela</p></div>
+<div class="script"><p>A aula tem dez partes, em três blocos. Primeiro os fundamentos: um pouco de história e a arquitetura da GPU.</p><p>Depois, o guia oficial da NVIDIA, o CUDA Programming Guide. Vou passar por quatro capítulos dele, mas sempre usando o nosso código como exemplo. Dois capítulos vêm antes do Buffon: o modelo de execução, com SPMD e SIMT, e o ponto flutuante. Os outros dois vêm antes da estrela: a memória e a ocupação.</p><p>E o fio de tudo está escrito embaixo: um conceito nasce de um problema, é explicado, e depois é medido num projeto.</p></div>
+<div class="actions"><p>Não ler a lista. Apontar os três blocos.</p></div>
+</aside>
 </section>
 
 <section>
@@ -53,14 +60,20 @@
       <tr><td>Amdahl</td><td>(EP1, EP3)</td><td>a parte serial é o teto</td><td>EP3: o contexto; EP4: a imagem</td></tr>
     </tbody>
   </table>
-  <aside class="notes">Não ler a tabela. Dizer: "cada linha desta tabela é uma ponte que vamos atravessar". Voltar a ela no fim.</aside>
+  <aside class="notes">
+<div class="cues"><p>cada linha: uma ponte</p><p>exemplo: o SM nasce em 2006 → por dentro → unidade de toda aceleração</p><p>voltamos aqui no fim</p></div>
+<div class="script"><p>Esta tabela é o mapa das pontes que vamos atravessar. Cada linha é um conceito: onde ele nasceu na história, onde vou explicá-lo, e onde ele aparece medido num dos projetos.</p><p>Um exemplo: o SM, o multiprocessador. Ele nasce em 2006, com a G80. Na parte 2 vamos ver o que há dentro dele. E no fim ele vira a unidade de toda aceleração que eu meço: um SM contra trinta e seis SMs.</p><p>Não vou ler a tabela agora. Vamos voltar a ela no fechamento, e aí cada linha vai fazer sentido.</p></div>
+<div class="actions"><p>Escolher uma linha (o SM) e contar a ponte inteira, como exemplo.</p></div>
+</aside>
 </section>
-
-<!-- ================================================================ 1. história -->
-
+<!-- ================================ 01_history -->
 <section class="divider" data-part="1">
   <p class="promise">Cada parte de uma GPU responde a um problema que alguém teve. A história explica a arquitetura.</p>
-  <aside class="notes">Parte 1, ~12 min. Cada época deixa um conceito; escrever o conceito no quadro, embaixo da época.</aside>
+  <aside class="notes">
+<div class="cues"><p>Parte 1, ~10 min</p><p>cada peça da GPU responde a um problema</p></div>
+<div class="script"><p>Parte 1: história. Não é uma lista de datas. A promessa é que cada peça de uma GPU existe porque alguém teve um problema, e a história explica a arquitetura.</p><p>A cada época, vou escrever no quadro o conceito que ela deixou.</p></div>
+<div class="actions"><p>Preparar o quadro: uma linha do tempo.</p></div>
+</aside>
 </section>
 
 <section>
@@ -100,7 +113,11 @@
     <text class="bold" x="990" y="300">Volta, 2017</text><text class="small muted" x="990" y="321">tensor cores</text>
   </svg>
   <p class="concept fragment"><strong>CUDA</strong> é a plataforma desses últimos 20 anos, e provavelmente de boa parte dos próximos.</p>
-  <aside class="notes">Não é notícia que a ciência "descobriu" a GPU. O paralelismo nasceu na ciência (máquinas vetoriais, Connection Machine), foi para a indústria (jogos), e desde 2007 as duas andam juntas: o mesmo chip serve a jogos, a IA e a supercomputadores.</aside>
+  <aside class="notes">
+<div class="cues"><p>ciência: Cray-1 (1976), Connection Machine (1985)</p><p>indústria: placas de vídeo, anos 90</p><p>juntas desde 2007</p></div>
+<div class="script"><p>O paralelismo nasceu na ciência. O Cray-1, de 1976, fazia uma operação num vetor inteiro de uma vez. A Connection Machine, de 1985, tinha 65 536 processadores simples, todos fazendo a mesma coisa.</p><p>Depois a ideia foi para a indústria, nas placas de vídeo dos anos 90, para desenhar jogos. E a partir de 2007, com CUDA, ciência e indústria andam juntas: o mesmo chip serve a jogos, a inteligência artificial e a supercomputadores.</p><p>Então não é bem que "a ciência descobriu a GPU". É uma volta: a ideia saiu da ciência, ficou barata na indústria, e voltou.</p></div>
+<div class="actions"><p>Clique: a faixa "juntas, desde 2007".</p><p>Clique: CUDA, a plataforma dos últimos 20 anos.</p></div>
+</aside>
 </section>
 
 <section>
@@ -130,7 +147,11 @@
     </div>
   </div>
   <p class="concept fragment"><strong>O conceito:</strong> paralelismo de dados; <strong>vazão</strong> (<em>throughput</em>) em vez de <strong>latência</strong></p>
-  <aside class="notes">Perguntar antes de revelar: o que esse problema pede do hardware? Resposta: muitas contas iguais e independentes. O que importa é quantas por segundo (vazão), não quanto demora cada uma (latência).</aside>
+  <aside class="notes">
+<div class="cues"><p>GeForce 256: cada pixel, a mesma conta, sem vizinhos</p><p>pergunta: o que esse problema pede do hardware?</p><p>vazão, não latência</p></div>
+<div class="script"><p>Em 1999, a GeForce 256. O trabalho dela era desenhar milhões de pixels por quadro, sessenta vezes por segundo. E cada pixel é calculado com a mesma conta, sem esperar pelos vizinhos.</p><p>Pergunto para vocês: o que esse problema pede do hardware?</p><p>Pede muitas unidades simples, em vez de poucas rápidas. O que importa é quantas contas por segundo saem no total, a vazão, e não quanto tempo leva cada uma, a latência.</p></div>
+<div class="actions"><p>Perguntar antes de revelar. Esperar uma ou duas respostas.</p><p>Clique: o conceito. Quadro: paralelismo de dados; vazão.</p></div>
+</aside>
 </section>
 
 <section>
@@ -142,7 +163,11 @@
     <li>funcionava, mas era preciso fingir que tudo era gráfico</li>
   </ul>
   <p class="concept fragment"><strong>Os conceitos:</strong> o <strong>kernel</strong> (um programa, muitos elementos); e por que faltava um modelo de programação de verdade</p>
-  <aside class="notes">O shader já é um kernel: o mesmo programa executado uma vez por elemento. O que faltava era poder escrever isso sem a linguagem dos gráficos.</aside>
+  <aside class="notes">
+<div class="cues"><p>shaders: um programa por pixel = o kernel</p><p>GPGPU: matrizes disfarçadas de texturas</p><p>faltava um modelo de programação</p></div>
+<div class="script"><p>Em 2001 a GeForce 3 trouxe os shaders programáveis: um pequeno programa que roda uma vez para cada pixel. Isso já é o que hoje chamamos de kernel: o mesmo programa, executado para cada elemento.</p><p>Os cientistas perceberam e começaram a pegar carona. Em 2004, o BrookGPU, de Stanford, escondia matrizes dentro de texturas e lia os resultados como se fossem imagens. Funcionava, mas era preciso fingir que tudo era gráfico.</p></div>
+<div class="actions"><p>Clique: o conceito. Quadro: o kernel.</p></div>
+</aside>
 </section>
 
 <section>
@@ -154,7 +179,11 @@
     <li>o maior salto de uma geração para a outra: o mesmo chip servia aos jogos e à ciência</li>
   </ul>
   <p class="concept fragment"><strong>Os conceitos:</strong> <strong>host</strong> e <strong>device</strong>; o lançamento de um kernel; o <strong>SM</strong></p>
-  <aside class="notes">O SM é a unidade desta aula inteira: nos dois EPs, comparamos um SM com todos.</aside>
+  <aside class="notes">
+<div class="cues"><p>G80: núcleos iguais em multiprocessadores, os SMs</p><p>CUDA: programar em C, sem fingir gráfico</p><p>o SM: a unidade desta aula</p></div>
+<div class="script"><p>Em 2006 a NVIDIA lançou a G80, que trocou os estágios fixos do pipeline gráfico por núcleos iguais, agrupados em multiprocessadores: os SMs. E introduziu CUDA, que saiu em 2007: programar a GPU em C, sem fingir que é gráfico.</p><p>Foi o maior salto de uma geração para a outra, porque o mesmo chip passou a servir para jogos e para ciência.</p><p>Guardem o SM: ele é a unidade desta aula inteira. Nos dois projetos, comparo um SM com todos.</p></div>
+<div class="actions"><p>Clique: o conceito. Quadro: host, device, lançamento, SM.</p></div>
+</aside>
 </section>
 
 <section>
@@ -166,7 +195,11 @@
     <li>unidades FP64 <strong>separadas</strong>: quantas, depende do mercado do chip</li>
   </ul>
   <p class="concept fragment"><strong>Os conceitos:</strong> <strong>precisão numérica</strong>; a <strong>hierarquia de memória</strong></p>
-  <aside class="notes">Guardar: FP32 e FP64 são unidades diferentes. O nosso laptop tem 2 FP64 por SM; a A30 tem 32. Isso volta no fim.</aside>
+  <aside class="notes">
+<div class="cues"><p>FP64 (2008), ECC e caches (Fermi, 2010)</p><p>FP32: 24 bits; FP64: 53 bits</p><p>unidades FP64 separadas: 2 no laptop, 32 na A30</p></div>
+<div class="script"><p>A ciência pediu duas coisas: precisão dupla, o FP64, que chegou em 2008, e memória confiável e com cache, que veio com a arquitetura Fermi, em 2010.</p><p>FP32 tem 24 bits de mantissa, FP64 tem 53. E as unidades de FP64 são separadas das de FP32: quantas cada chip tem depende de para quem ele é vendido. O nosso laptop tem 2 por SM. A A30 do IAG tem 32. Isso vai voltar no fim, na comparação entre as duas.</p></div>
+<div class="actions"><p>Clique: o conceito. Quadro: precisão; hierarquia de memória.</p></div>
+</aside>
 </section>
 
 <section>
@@ -178,7 +211,11 @@
     <li><em>tensor cores</em> (Volta, 2017): unidades especializadas em produtos de matrizes</li>
   </ul>
   <p class="concept fragment"><strong>O conceito:</strong> um SM tem unidades diferentes: <strong>FP32, INT32, FP64, tensor</strong></p>
-  <aside class="notes">A partir daqui a GPU é um conjunto de unidades especializadas. O nosso kernel usa sobretudo inteiros e FP32 (o Philox é todo inteiro).</aside>
+  <aside class="notes">
+<div class="cues"><p>AlexNet (2012) em duas GTX 580</p><p>redes neurais = produtos de matrizes</p><p>tensor cores (2017): o SM vira unidades especializadas</p></div>
+<div class="script"><p>Em 2012, a AlexNet, a rede neural que reabriu a área, foi treinada em duas placas de jogos, duas GTX 580. Redes neurais são, no fundo, produtos de matrizes: vazão pura.</p><p>Em 2017 vieram os tensor cores, unidades especializadas em produtos de matrizes. A partir daí, o SM é um conjunto de unidades diferentes: FP32, inteiros, FP64 e tensor.</p><p>O nosso kernel usa sobretudo inteiros e FP32: o gerador aleatório, que vamos ver, é todo de inteiros.</p></div>
+<div class="actions"><p>Clique: o conceito. Quadro: FP32, INT32, FP64, tensor.</p></div>
+</aside>
 </section>
 
 <section>
@@ -190,7 +227,11 @@
     <li><strong>no nosso laptop:</strong> com todos os SMs em FP32, o <em>driver</em> baixa o <em>clock</em> para caber na potência</li>
   </ul>
   <p class="concept fragment"><strong>Usos na ciência:</strong> transferência radiativa Monte Carlo (o EP4), N-corpos, clima, dinâmica molecular, IA</p>
-  <aside class="notes">A transferência radiativa Monte Carlo é exatamente o EP4. O limite de potência aparece nas nossas medidas: FP32 em 36 SMs roda a 2730 MHz em vez de ~2890.</aside>
+  <aside class="notes">
+<div class="cues"><p>Frontier (2022): exaescala, máquina de GPUs</p><p>o limite é energia por operação</p><p>no laptop: FP32 em 36 SMs roda a 2730 MHz</p></div>
+<div class="script"><p>Hoje, a Frontier, de 2022, o primeiro supercomputador a passar de um exaflop, é uma máquina de GPUs. E o limite deixou de ser o número de transistores: é a energia por operação.</p><p>Isso aparece até no nosso laptop. Quando eu uso todos os SMs em FP32, o driver baixa o clock para caber na potência. Medimos: cai de uns 2890 para 2730 MHz.</p><p>E nos usos da ciência está a transferência radiativa Monte Carlo, que é exatamente o EP4.</p></div>
+<div class="actions"><p>Clique: os usos na ciência.</p></div>
+</aside>
 </section>
 
 <section>
@@ -220,11 +261,13 @@
     <text class="small" x="800" y="336">Monte Carlo: transporte de radiação (o EP4)</text>
   </svg>
   <p class="concept fragment"><strong>O conceito:</strong> uma plataforma é mais que uma linguagem. É por isso que CUDA dura 20 anos.</p>
-  <aside class="notes">Em negrito, o que nós usamos: o cuRAND (o Philox do EP3 e do EP4) e o Nsight Systems (o perfil do EP3). Os outros grupos da turma usam MPI, OpenMP e OpenACC: OpenACC é a forma "por diretivas" de chegar à GPU.</aside>
+  <aside class="notes">
+<div class="cues"><p>linguagens, bibliotecas, ferramentas, aplicações</p><p>nós usamos: cuRAND, Nsight Systems</p><p>OpenACC: outro grupo</p></div>
+<div class="script"><p>CUDA não é só uma extensão do C. É um ecossistema: linguagens, de C++ a Python; bibliotecas, como cuBLAS e cuFFT; ferramentas de perfil; e aplicações. É isso que faz uma plataforma durar vinte anos.</p><p>Em negrito está o que eu usei: o cuRAND, o gerador de números aleatórios dos dois EPs, e o Nsight Systems, com que medi o EP3.</p><p>E OpenACC, o jeito de chegar à GPU por diretivas, é o tema de outro grupo da turma.</p></div>
+<div class="actions"><p>Clique: o conceito.</p></div>
+</aside>
 </section>
-
-<!-- ================================================================ o gancho -->
-
+<!-- ================================ 02_hook -->
 <section>
   <h2>3,9 trilhões de fótons em 6 minutos</h2>
   <div class="columns">
@@ -243,14 +286,19 @@
     </div>
   </div>
   <p class="source">main.py make --snr 10</p>
-  <aside class="notes">O gancho. Não explicar: só mostrar o que vamos conseguir fazer. A pergunta "como?" fica aberta até a parte 10.</aside>
+  <aside class="notes">
+<div class="cues"><p>deixar o vídeo rodar (10 s)</p><p>3,9·10¹² fótons, 7 observadores, 1024²</p><p>6 min em 36 SMs; 3,5 h em 1 SM</p><p>2048²: 1 h 43 min no laptop · [A30]</p></div>
+<div class="script"><p>Antes de continuar, quero mostrar onde a gente vai chegar.</p><p>Isto é uma estrela com manchas, girando, vista por sete observadores, dos dois hemisférios. A imagem é 1024 por 1024, com 300 quadros por rotação.</p><p>São 3,9 trilhões de fótons, o que dá uma relação sinal-ruído de 10. Nos 36 SMs do meu laptop: seis minutos. Num SM só: três horas e meia. E a mesma estrela em 2048 por 2048: uma hora e quarenta e três minutos no laptop. [A30: e na A30, tanto.]</p></div>
+<div class="actions"><p>Deixar o vídeo rodar uma volta em silêncio antes de falar.</p><p>Clique: "Como?". Dizer: a resposta é a aula; voltamos aqui na parte 9.</p></div>
+</aside>
 </section>
-
-<!-- ================================================================ 2. arquitetura -->
-
+<!-- ================================ 03_architecture -->
 <section class="divider" data-part="2">
   <p class="promise">Por que uma GPU tem milhares de núcleos simples, e o que há dentro de um SM.</p>
-  <aside class="notes">Parte 2, ~10 min.</aside>
+  <aside class="notes">
+<div class="cues"><p>Parte 2, ~6 min</p><p>por que milhares de núcleos simples; o que há num SM</p></div>
+<div class="script"><p>Parte 2: arquitetura. Duas perguntas: por que uma GPU tem milhares de núcleos simples, e o que há dentro de um SM.</p></div>
+</aside>
 </section>
 
 <section>
@@ -289,7 +337,10 @@
     <text class="muted mid" x="900" y="405">feita para a vazão: muitas tarefas por segundo</text>
     <text class="small muted mid" x="900" y="432">cada caixa: um SM (aqui 9 de 36); o nosso laptop: 36 × 128 = 4 608 faixas FP32</text>
   </svg>
-  <aside class="notes">A CPU gasta transistores em controle e cache para que UMA tarefa termine rápido. A GPU gasta em unidades de cálculo; uma tarefa individual é lenta, mas milhares andam juntas. Monte Carlo é o caso perfeito: milhões de tarefas iguais e independentes.</aside>
+  <aside class="notes">
+<div class="cues"><p>CPU: controle + cache, uma tarefa rápida (latência)</p><p>GPU: unidades de cálculo, muitas tarefas (vazão)</p><p>laptop: 36 × 128 = 4 608 faixas FP32</p><p>Monte Carlo: milhões de tarefas iguais e independentes</p></div>
+<div class="script"><p>À esquerda, uma CPU: poucos núcleos grandes, e boa parte do chip gasta em controle e em cache. Tudo isso serve para que uma tarefa termine o mais rápido possível: é feita para a latência.</p><p>À direita, a GPU: o chip é quase todo unidades de cálculo, agrupadas em SMs. Cada tarefa sozinha é lenta, mas milhares andam juntas: é feita para a vazão. O próprio guia da NVIDIA diz isso: a GPU troca o desempenho de um thread pela vazão total.</p><p>No meu laptop são 36 SMs com 128 faixas FP32 cada: 4 608 faixas. E Monte Carlo é o caso perfeito para isso: milhões de tarefas iguais e independentes.</p></div>
+</aside>
 </section>
 
 <section>
@@ -345,7 +396,11 @@
     <text class="small muted" x="820" y="354">1 : 2 na A30</text>
   </svg>
   <p class="source">main.py measure → parts/occupancy.json (device), e os dados técnicos da NVIDIA</p>
-  <aside class="notes">Quatro partições, cada uma com o seu escalonador e 32 faixas. FP64: só 2 unidades para o SM inteiro no laptop (placa de jogos); 32 na A30 (placa de ciência). Registradores: 65 536 por SM nas duas.</aside>
+  <aside class="notes">
+<div class="cues"><p>4 partições: escalonador, 32 faixas, tensor, 16 384 registradores</p><p>o SM inteiro: 2 unidades FP64 (laptop) × 32 (A30)</p><p>registradores iguais; warps: 48 × 64</p></div>
+<div class="script"><p>Este é um SM do meu laptop, arquitetura Blackwell. Ele tem quatro partições. Cada uma tem o seu escalonador de warps, 32 faixas que fazem FP32 ou inteiros, um tensor core, as unidades de memória e de funções especiais, e 16 384 registradores.</p><p>Agora reparem embaixo: para o SM inteiro, só duas unidades de FP64. É uma placa de jogos. A A30, que é uma placa de ciência, tem 32.</p><p>Na tabela da direita, as duas GPUs: os mesmos 65 536 registradores por SM, mas a A30 comporta 64 warps, e o laptop 48.</p></div>
+<div class="actions"><p>Apontar o 2 e o 32, em laranja: isso volta no fim.</p></div>
+</aside>
 </section>
 
 <section>
@@ -363,36 +418,19 @@
     </tbody>
   </table>
   <p class="question fragment">qual das duas ganha em FP64? E em FP32?</p>
-  <aside class="notes">Deixar a turma apostar. Resposta na parte 10, com a medida da A30.</aside>
+  <aside class="notes">
+<div class="cues"><p>laptop: 36 SMs, cc 12.0, FP64 : FP32 = 1 : 64</p><p>A30 (pituna, IAG): 56 SMs, cc 8.0, 1 : 2</p><p>pergunta: qual ganha em FP64? E em FP32?</p></div>
+<div class="script"><p>As duas GPUs desta aula. A RTX 5070 do meu laptop: Blackwell, 36 SMs, compute capability 12.0. E a A30 do IAG, a máquina se chama pituna: Ampere, 56 SMs, compute capability 8.0, 24 GB de memória.</p><p>A razão entre FP64 e FP32 é de 1 para 64 no laptop e de 1 para 2 na A30.</p><p>Então pergunto: qual das duas ganha em FP64? E em FP32?</p></div>
+<div class="actions"><p>Clique: a pergunta. Deixar a turma apostar; anotar as apostas no quadro.</p><p>Dizer: a resposta, medida, vem na parte 9.</p></div>
+</aside>
 </section>
-
-<section>
-  <h2>Precisão numérica: FP32 e FP64</h2>
-  <svg class="d" viewBox="0 0 1180 270" width="1180">
-    <text class="bold" x="10" y="70">FP32</text>
-    <rect class="gray" x="110" y="40" width="16" height="48"/>
-    <rect class="good" x="126" y="40" width="128" height="48"/><text class="small mid" x="190" y="70">expoente 8</text>
-    <rect class="device" x="254" y="40" width="368" height="48"/><text class="small mid" x="438" y="70">mantissa 23 (+1 implícito)</text>
-    <text x="650" y="62">ε = 2⁻²⁴ ≈ 6·10⁻⁸</text><text class="small muted" x="650" y="86">~7 dígitos</text>
-    <text class="bold" x="10" y="180">FP64</text>
-    <rect class="gray" x="110" y="150" width="16" height="48"/>
-    <rect class="good" x="126" y="150" width="176" height="48"/><text class="small mid" x="214" y="180">expoente 11</text>
-    <rect class="device" x="302" y="150" width="832" height="48"/><text class="small mid" x="718" y="180">mantissa 52 (+1 implícito)</text>
-    <text x="110" y="240">ε = 2⁻⁵³ ≈ 1,1·10⁻¹⁶</text><text class="small muted" x="360" y="240">~16 dígitos · 1 bit de sinal</text>
-  </svg>
-  <ul>
-    <li class="fragment">na estrela, FP32 muda o pixel de <strong>7,2·10⁻⁴</strong> dos fótons: abaixo do ruído (0,14 por pixel)</li>
-    <li class="fragment">e é <strong>16,2×</strong> mais rápido que FP64 no laptop (não 64×: veremos por quê)</li>
-  </ul>
-  <p class="source">main.py measure → parts/validation.json (precision)</p>
-  <aside class="notes">A precisão é uma escolha física: a pergunta é se o erro de arredondamento é menor que o ruído do Monte Carlo. Aqui é, por um fator ~200.</aside>
-</section>
-
-<!-- ================================================================ 3. terminologia e memória -->
-
+<!-- ================================ 04_execution_model -->
 <section class="divider" data-part="3">
-  <p class="promise">Dois computadores com duas memórias; o trabalho é um grid de blocos de threads, executados 32 por vez.</p>
-  <aside class="notes">Parte 3, ~10 min.</aside>
+  <p class="promise">O guia da NVIDIA, com o nosso código: threads, blocos, grids, warps, e como o trabalho chega aos SMs.</p>
+  <aside class="notes">
+<div class="cues"><p>Parte 3, ~16 min, a maior dos fundamentos</p><p>guia 1.2, 2.1, 2.3, com o nosso código</p><p>tudo o que o Buffon precisa</p></div>
+<div class="script"><p>Parte 3: o primeiro capítulo do guia da NVIDIA, o modelo de execução. Vou usar as seções 1.2, 2.1 e 2.3 do guia, mas sempre com o nosso código como exemplo.</p><p>Tudo o que o Buffon precisa está aqui: como se lança um kernel, o que são blocos e warps, como os threads cooperam numa redução, e os atômicos.</p></div>
+</aside>
 </section>
 
 <section>
@@ -413,7 +451,11 @@
     <li><code>kernel&lt;&lt;&lt;blocos, threads&gt;&gt;&gt;(…)</code>: lança o kernel na GPU e volta na hora; a CPU segue</li>
     <li><code>__global__</code>: roda na GPU, chamado pela CPU · <code>__device__</code>: só na GPU · <code>__host__ __device__</code>: nos dois</li>
   </ul>
-  <aside class="notes">A primeira coisa que muda em relação ao C: cada ponteiro pertence a uma das duas memórias. cudaMalloc reserva na GPU, cudaMemcpy copia pelo barramento.</aside>
+  <aside class="notes">
+<div class="cues"><p>dois computadores, duas memórias</p><p>cudaMalloc, cudaMemcpy (PCIe), lançamento volta na hora</p><p>__global__, __device__, __host__ __device__</p></div>
+<div class="script"><p>A primeira coisa que muda em relação ao C: são dois computadores, com duas memórias. O host é a CPU com a RAM; o device é a GPU com a memória dela. Um ponteiro da GPU não vale na CPU, e vice-versa: os dados viajam pelo barramento PCIe, de propósito.</p><p>Três chamadas fazem quase tudo: cudaMalloc reserva memória na GPU; cudaMemcpy copia; e o lançamento do kernel, com os três sinais de menor, volta na hora, e a CPU segue.</p><p>E três marcas nas funções: __global__ é o kernel, roda na GPU e é chamado pela CPU; __device__ só roda na GPU; e __host__ __device__ compila para os dois. É assim que a física do EP4 é uma função só, a mesma na CPU e na GPU.</p></div>
+<div class="actions"><p>Clique: as três linhas da API.</p></div>
+</aside>
 </section>
 
 <section>
@@ -441,7 +483,11 @@ soma&lt;&lt;&lt;(n + 255) / 256, 256&gt;&gt;&gt;(a, b, c, n);           // bloco
     <text class="small muted" x="1090" y="98">threadIdx.x</text>
     <text class="mid" x="590" y="150">no desenho blockDim.x = 8: o thread pintado calcula i = 2 · 8 + 5 = <tspan class="bold">21</tspan></text>
   </svg>
-  <aside class="notes">Cada thread executa o MESMO código; só o índice muda. O if (i &lt; n) existe porque o último bloco pode passar do fim. Esta é a forma de todo kernel: "quem sou eu, qual é o meu pedaço".</aside>
+  <aside class="notes">
+<div class="cues"><p>soma de vetores: o exemplo do guia</p><p>i = blockIdx.x · blockDim.x + threadIdx.x</p><p>if (i < n): o último bloco passa do fim</p><p>desenho: bloco 2, thread 5 → i = 21</p></div>
+<div class="script"><p>O primeiro exemplo de todo curso de CUDA, e do guia: somar dois vetores. Cada thread executa exatamente o mesmo código. A única coisa que muda é o índice: blockIdx vezes blockDim mais threadIdx, que é "quem sou eu". O guia chama essa conta de muito comum, e é verdade: está em quase todo kernel.</p><p>O if existe porque o último bloco pode passar do fim do vetor.</p><p>No desenho, com blocos de 8 threads: o thread pintado é o 5 do bloco 2, então ele calcula o elemento 2 vezes 8 mais 5, o 21.</p></div>
+<div class="actions"><p>Clique: destaca o índice. Clique: o lançamento.</p><p>Perguntar: "com n = 1000 e blocos de 256, quantos blocos?" (4)</p></div>
+</aside>
 </section>
 
 <section>
@@ -462,7 +508,11 @@ cudaMemcpy(c_host, c, n * sizeof(float), cudaMemcpyDeviceToHost);   // copiar de
 cudaFree(a); cudaFree(b); cudaFree(c);                   // liberar
   </code></pre>
   <p class="note">Cinco passos, sempre os mesmos: reservar, copiar, lançar, copiar de volta, liberar. O lançamento não espera; a cópia de volta espera o kernel terminar.</p>
-  <aside class="notes">Este é o esqueleto de todo programa CUDA, e o do EP3 e do EP4 também (com mais verificação de erros). Ponto sutil: o lançamento é assíncrono; é a cópia de volta que sincroniza.</aside>
+  <aside class="notes">
+<div class="cues"><p>5 passos: reservar, copiar, lançar, copiar de volta, liberar</p><p>lançamento assíncrono; a cópia de volta espera</p><p>EP4: o mesmo, com check(...) em tudo</p></div>
+<div class="script"><p>Este é o lado do host, o programa inteiro: reservar, copiar para lá, lançar, copiar de volta, liberar. Cinco passos, sempre os mesmos.</p><p>Um detalhe que o guia faz questão de dizer: o lançamento é assíncrono, ele volta antes de o kernel terminar. Quem espera é a cópia de volta, que é síncrona.</p><p>O EP4 tem exatamente esse esqueleto, com uma verificação de erro em volta de cada chamada, o que o guia chama de boa prática.</p></div>
+<div class="actions"><p>Cada clique destaca um passo.</p></div>
+</aside>
 </section>
 
 <section>
@@ -499,47 +549,11 @@ cudaFree(a); cudaFree(b); cudaFree(c);                   // liberar
     </g>
   </svg>
   <p class="question fragment">um bloco de 768 threads tem quantos warps?</p>
-  <aside class="notes">Construir da esquerda para a direita (um clique por nível). Resposta: 24. O bloco não se divide entre SMs: é por isso que, com 80 registradores, cabem 25 warps mas lançamos 24 (os blocos só cabem inteiros).</aside>
-</section>
-
-<section>
-  <h2>O modelo de memória</h2>
-  <svg class="d" viewBox="0 0 1180 440" width="1180">
-    <rect class="line" x="20" y="10" width="760" height="420" rx="6"/><text class="small muted" x="34" y="32">grid</text>
-    <rect class="line-muted" x="40" y="42" width="340" height="236" rx="4"/><text class="small muted" x="52" y="62">bloco</text>
-    <rect class="good" x="55" y="72" width="310" height="40"/><text class="small mid" x="210" y="98">memória compartilhada (do bloco)</text>
-    <rect class="device" x="55" y="128" width="145" height="135"/><text class="small mid" x="127" y="152">thread</text><rect class="gray" x="68" y="172" width="119" height="70"/><text class="small mid" x="127" y="212">registradores</text>
-    <rect class="device" x="220" y="128" width="145" height="135"/><text class="small mid" x="292" y="152">thread</text><rect class="gray" x="233" y="172" width="119" height="70"/><text class="small mid" x="292" y="212">registradores</text>
-    <rect class="line-muted" x="420" y="42" width="340" height="236" rx="4"/><text class="small muted" x="432" y="62">bloco</text>
-    <rect class="good" x="435" y="72" width="310" height="40"/><text class="small mid" x="590" y="98">memória compartilhada (do bloco)</text>
-    <rect class="device" x="435" y="128" width="145" height="135"/><text class="small mid" x="507" y="152">thread</text><rect class="gray" x="448" y="172" width="119" height="70"/><text class="small mid" x="507" y="212">registradores</text>
-    <rect class="device" x="600" y="128" width="145" height="135"/><text class="small mid" x="672" y="152">thread</text><rect class="gray" x="613" y="172" width="119" height="70"/><text class="small mid" x="672" y="212">registradores</text>
-    <line class="line-muted" x1="127" y1="263" x2="127" y2="300"/><line class="line-muted" x1="292" y1="263" x2="292" y2="300"/><line class="line-muted" x1="507" y1="263" x2="507" y2="300"/><line class="line-muted" x1="672" y1="263" x2="672" y2="300"/>
-    <rect class="host" x="40" y="300" width="720" height="52"/><text class="mid" x="400" y="332">memória global: todos os threads, GBs</text>
-    <rect class="gray" x="40" y="364" width="720" height="50"/><text class="mid" x="400" y="395">memória constante: todos leem, ninguém escreve, 64 KB</text>
-
-    <text class="bold" x="810" y="40">quem vê, quanto, quão rápido</text>
-    <text x="810" y="82">registradores</text><text class="small muted" x="810" y="104">um thread · 65 536 por SM · o mais rápido</text>
-    <text x="810" y="146">compartilhada</text><text class="small muted" x="810" y="168">um bloco · ~100 KB por SM · rápida</text>
-    <text x="810" y="210">constante</text><text class="small muted" x="810" y="232">todos · 64 KB · rápida se todos leem o mesmo</text>
-    <text x="810" y="274">global</text><text class="small muted" x="810" y="296">todos · GBs · centenas de ciclos</text>
-    <g class="fragment">
-      <line class="line-thin" x1="810" y1="320" x2="1170" y2="320"/>
-      <text class="bold" x="810" y="352">no EP4</text>
-      <text class="small" x="810" y="378">o fóton → registradores</text>
-      <text class="small" x="810" y="400">a estrela → constante (18 048 B)</text>
-      <text class="small" x="810" y="422">a imagem → global (5 GB a 1024²)</text>
-    </g>
-  </svg>
-  <p class="source">main.py measure → parts/kernel.json (resources: constant_bytes)</p>
-  <aside class="notes">Quanto mais perto do thread, mais rápida e menor. O EP4 usa três: o fóton vive em registradores, a estrela em memória constante (todos os threads leem os mesmos números), a imagem em memória global.</aside>
-</section>
-
-<!-- ================================================================ 4. fluxo de execução -->
-
-<section class="divider" data-part="4">
-  <p class="promise">Copiar, lançar, executar, copiar de volta: e cada seta custa tempo.</p>
-  <aside class="notes">Parte 4, ~8 min.</aside>
+  <aside class="notes">
+<div class="cues"><p>thread → warp (32) → bloco (≤ 1024) → grid → SMs</p><p>o nosso FP64: blocos de 768 threads, 36 blocos, 1 por SM</p><p>pergunta: 768 threads = quantos warps? (24)</p></div>
+<div class="script"><p>A hierarquia, de baixo para cima. O thread executa o kernel uma vez. O warp são 32 threads que andam juntos, executando a mesma instrução. O bloco é um grupo de até 1024 threads que podem cooperar, e vai inteiro para um SM. E o grid são todos os blocos de um lançamento, que se distribuem pelos SMs.</p><p>O nosso caso em FP64: blocos de 768 threads, 36 blocos, um em cada SM.</p><p>Pergunta: um bloco de 768 threads tem quantos warps?</p></div>
+<div class="actions"><p>Um clique por nível: warp, bloco, grid, SMs.</p><p>Clique: a pergunta. Resposta: 24.</p></div>
+</aside>
 </section>
 
 <section>
@@ -567,29 +581,89 @@ cudaFree(a); cudaFree(b); cudaFree(c);                   // liberar
     <text class="small muted" x="100" y="300">antes de tudo: criar o contexto CUDA (o <tspan font-style="italic">driver</tspan> prepara a GPU) · ~0,15 s no EP3</text>
   </svg>
   <p class="question fragment">onde vocês esperariam que a parte serial de um programa de GPU se escondesse?</p>
-  <aside class="notes">Construir as quatro setas. Pergunta antes do próximo slide. No EP3, o nsys mostra que a parte serial é criar o contexto CUDA (0,15 s). No EP4, é a imagem.</aside>
+  <aside class="notes">
+<div class="cues"><p>copiar → lançar → executar → copiar de volta</p><p>antes: o contexto CUDA, ~0,15 s (EP3)</p><p>pergunta: onde se esconde a parte serial?</p></div>
+<div class="script"><p>O fluxo de um programa CUDA: copiar os dados para a GPU, lançar, os SMs trabalham, copiar de volta. E antes de tudo, criar o contexto CUDA: no EP3, medi com o Nsight Systems, uns 0,15 segundo.</p><p>Calcular é barato; mover dados não é. Guardem isso para quando chegarmos em Amdahl.</p><p>Pergunta: onde vocês esperariam que a parte serial de um programa de GPU se escondesse?</p></div>
+<div class="actions"><p>Um clique por seta.</p><p>Clique: a pergunta. Deixar responder. No EP3 é o contexto; no EP4 vai ser a imagem.</p></div>
+</aside>
 </section>
 
 <section>
-  <h2>Quanto custa cada seta: a nossa estrela em 1024²</h2>
-  <div class="figure"><img src="figures/phases_fp64.png" style="max-height: 410px" alt="Fases de uma execução do EP4, 1 SM e 36 SMs"></div>
-  <ul>
-    <li class="fragment">em 1 SM, os fótons são 97% do tempo; em 36 SMs, só <strong>52%</strong></li>
-    <li class="fragment">salvar 5 GB leva ~4,3 s, com 1 SM ou com 36: <strong>calcular é barato; mover dados não é</strong></li>
-  </ul>
-  <p class="source">main.py measure → figures/phases_fp64.png, parts/scaling.json (phases)</p>
-  <aside class="notes">FP64, N = 4·10⁹. 1 SM: 216,9 s de fótons em 223,5 s. 36 SMs: preparar 0,7 s, fótons 6,0 s, copiar de volta 0,4 s, salvar 4,3 s; total 11,5 s. O que não encolhe com os SMs é a parte serial: guardar esta figura para Amdahl.</aside>
-</section>
-
-<!-- ================================================================ 5. modelo de programação -->
-
-<section class="divider" data-part="5">
-  <p class="promise">Uma instrução, 32 threads; cooperação dentro do bloco; e atômicos quando todos escrevem no mesmo lugar.</p>
-  <aside class="notes">Parte 5, ~15 min. É a parte mais densa de fundamentos.</aside>
+  <h2>SPMD: escrevemos um programa, para um thread</h2>
+  <svg class="d" viewBox="0 0 1180 300" width="1180">
+    <rect class="paper" x="20" y="30" width="400" height="200" rx="6"/>
+    <text class="small mono" x="40" y="66">__global__ void trace_photons(...) {</text>
+    <text class="small mono" x="40" y="96">  sm = sm_id();</text>
+    <text class="small mono" x="40" y="126">  while (chunk = next_chunk())</text>
+    <text class="small mono" x="40" y="156">    trace_chunk(chunk, ...);</text>
+    <text class="small mono" x="40" y="186">  add_tallies(...);</text>
+    <text class="small mono" x="40" y="216">}</text>
+    <text class="small muted mid" x="220" y="262">um programa, escrito para um thread</text>
+    <line class="line" x1="430" y1="130" x2="520" y2="130" marker-end="url(#arrow)"/>
+    <text class="small mid" x="475" y="116">lançado</text>
+    <g>
+      <rect class="device" x="530" y="30" width="190" height="46"/><text class="small mid" x="625" y="58">thread 0: pedaços 0, 7, …</text>
+      <rect class="device" x="530" y="86" width="190" height="46"/><text class="small mid" x="625" y="114">thread 1: pedaços 1, 4, …</text>
+      <rect class="device" x="530" y="142" width="190" height="46"/><text class="small mid" x="625" y="170">thread 2: pedaços 2, 9, …</text>
+      <text class="mid" x="625" y="212">⋮</text>
+      <rect class="device" x="530" y="222" width="190" height="46"/><text class="small mid" x="625" y="250">thread 27 647: …</text>
+    </g>
+    <text class="bold" x="760" y="60">Single Program, Multiple Data</text>
+    <text class="small" x="760" y="94">cada instância tem os seus dados</text>
+    <text class="small" x="760" y="120">e o seu caminho pelo código</text>
+    <text class="small" x="760" y="160">o mesmo estilo do MPI (outro grupo):</text>
+    <text class="small" x="760" y="186">lá, processos; aqui, threads</text>
+    <text class="small muted" x="760" y="226">o termo é de F. Darema (IBM, 1984)</text>
+  </svg>
+  <p class="concept fragment">SPMD é o <strong>modelo de programação</strong>: como pensamos e escrevemos. Ele não diz como o hardware executa.</p>
+  <p class="source">guia CUDA 1.2 (kernels, threads); EP4/engine/gpu/gpu.cu (trace_photons)</p>
+  <aside class="notes">
+<div class="cues"><p>Single Program, Multiple Data: um programa, escrito para UM thread</p><p>lançado como 27 648 instâncias, cada uma com os seus dados</p><p>o mesmo estilo do MPI: lá processos, aqui threads</p><p>SPMD = como escrevemos</p></div>
+<div class="script"><p>Antes de falar de como a GPU executa, quero separar duas ideias que costumam se misturar.</p><p>A primeira é SPMD: Single Program, Multiple Data, um programa, muitos dados. O nosso kernel, trace_photons, está escrito para um thread só: pega um pedaço da fila, traça os fótons dele, soma os resultados. E ele é lançado como 27 648 instâncias, cada uma com os seus pedaços e o seu caminho pelo código.</p><p>É o mesmo estilo de um programa MPI, que é o tema de outro grupo: lá, o mesmo programa roda em vários processos, cada um com o seu rank; aqui, em vários threads, cada um com o seu índice. O termo é dos anos 80, da IBM.</p><p>SPMD é o modelo de programação: diz como pensamos e escrevemos. Não diz nada sobre como o hardware executa.</p></div>
+<div class="actions"><p>Clique: a conclusão. Dizer: e agora, como a GPU executa isso?</p></div>
+</aside>
 </section>
 
 <section>
-  <h2>SIMT: uma instrução, 32 threads, e a divergência</h2>
+  <h2>SIMT: a GPU executa em warps (e não é SIMD)</h2>
+  <div class="columns top">
+    <div class="half">
+      <h3>SIMD, na CPU</h3>
+      <svg class="d" viewBox="0 0 540 110" width="540">
+        <text class="mono" x="10" y="24">vaddpd ymm0, ymm1, ymm2</text>
+        <path d="M10 40h60v50h-60zM76 40h60v50h-60zM142 40h60v50h-60zM208 40h60v50h-60z" fill="#fdebe2" stroke="#eb6834" stroke-width="2"/>
+        <text class="small" x="290" y="72">4 doubles, largura fixa</text>
+      </svg>
+      <ul class="note">
+        <li>quem vetoriza é o programador ou o compilador</li>
+        <li>um caminho só: um <code>if</code> vira máscara explícita</li>
+        <li>a largura faz parte do programa</li>
+      </ul>
+    </div>
+    <div class="half">
+      <h3>SIMT, na GPU</h3>
+      <svg class="d" viewBox="0 0 540 110" width="540">
+        <text class="mono" x="10" y="24">DFMA R4, R2, R6, R4</text>
+        <path d="M10 40h13v50h-13zM26 40h13v50h-13zM42 40h13v50h-13zM58 40h13v50h-13zM74 40h13v50h-13zM90 40h13v50h-13zM106 40h13v50h-13zM122 40h13v50h-13zM138 40h13v50h-13zM154 40h13v50h-13zM170 40h13v50h-13zM186 40h13v50h-13zM202 40h13v50h-13zM218 40h13v50h-13zM234 40h13v50h-13zM250 40h13v50h-13zM266 40h13v50h-13zM282 40h13v50h-13zM298 40h13v50h-13zM314 40h13v50h-13zM330 40h13v50h-13zM346 40h13v50h-13zM362 40h13v50h-13zM378 40h13v50h-13zM394 40h13v50h-13zM410 40h13v50h-13zM426 40h13v50h-13zM442 40h13v50h-13zM458 40h13v50h-13zM474 40h13v50h-13zM490 40h13v50h-13zM506 40h13v50h-13z" fill="#e3eefb" stroke="#2a78d6" stroke-width="1.5"/>
+      </svg>
+      <ul class="note">
+        <li>um warp: 32 threads, cada um com os seus registradores</li>
+        <li>o programa é escrito para um thread (SPMD); o hardware agrupa 32 e emite uma instrução</li>
+        <li>cada thread pode seguir o seu caminho: divergência</li>
+      </ul>
+    </div>
+  </div>
+  <p class="concept fragment">O guia (1.2.2.2): SIMT "não tem uma largura de dados fixa como SIMD". SPMD é como escrevemos; <strong>SIMT é como a GPU executa</strong>.</p>
+  <p class="source">guia CUDA 1.2.2.2 (Warps and SIMT), 3.2.2.1 (desde a cc 7.0, cada thread tem o seu contador de programa)</p>
+  <aside class="notes">
+<div class="cues"><p>SIMD (CPU): registrador de largura fixa; o programa vetoriza</p><p>SIMT (GPU): o hardware agrupa 32 threads e emite uma instrução</p><p>cada thread com os seus registradores e o seu caminho</p><p>guia: SIMT não tem largura fixa como SIMD</p></div>
+<div class="script"><p>A segunda ideia é SIMT, como a GPU executa. Para entender, comparem com o SIMD da CPU, à esquerda: uma instrução AVX soma quatro doubles de uma vez, num registrador de largura fixa. Quem vetoriza é o programador ou o compilador, e a largura faz parte do programa. Um if vira uma máscara explícita.</p><p>À direita, a GPU. O programa foi escrito para um thread, em SPMD. É o hardware que agrupa 32 threads num warp e emite uma instrução para os 32. Cada thread tem os seus próprios registradores e, desde 2017, o seu próprio contador de programa: pode seguir o seu caminho.</p><p>O guia diz assim: SIMT não tem uma largura de dados fixa como SIMD. Resumindo: SPMD é como escrevemos; SIMT é como a GPU executa. E quando os threads de um warp querem caminhos diferentes, aparece a divergência.</p></div>
+<div class="actions"><p>Clique: a conclusão.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>A divergência: quando o warp se divide</h2>
   <svg class="d" viewBox="0 0 1180 330" width="1180">
     <text class="small muted mid" x="395" y="22">faixa 0</text><text class="small muted mid" x="485" y="22">1</text><text class="small muted mid" x="575" y="22">2</text><text class="small muted mid" x="665" y="22">3</text><text class="small muted mid" x="755" y="22">4</text><text class="small muted mid" x="845" y="22">5</text><text class="small muted mid" x="935" y="22">6</text><text class="small muted mid" x="1025" y="22">7</text>
     <text class="small mono" x="10" y="70">if (threadIdx.x % 2 == 0)</text>
@@ -612,7 +686,11 @@ cudaFree(a); cudaFree(b); cudaFree(c);                   // liberar
     <text class="small muted" x="360" y="315">desenho: 8 das 32 faixas de um warp · azul: executa · cinza: espera</text>
   </svg>
   <p class="fragment">Um <code>if</code> que divide o warp faz as duas metades esperarem uma pela outra: o warp gasta o tempo de <code>a()</code> <strong>mais</strong> o de <code>b()</code>.</p>
-  <aside class="notes">SIMD: uma instrução opera um vetor. SIMT: cada thread tem o seu estado e pode seguir o seu caminho, mas o warp executa uma instrução de cada vez; quem não está no caminho espera. No EP4: um fóton bloqueado por uma mancha termina antes, e a sua faixa espera o resto do warp.</aside>
+  <aside class="notes">
+<div class="cues"><p>if que divide o warp: um lado, depois o outro</p><p>o warp paga a() + b()</p><p>EP4: fóton bloqueado por mancha termina antes, e espera</p></div>
+<div class="script"><p>O que acontece quando os 32 threads de um warp não concordam num if? A GPU executa um lado, com os threads do outro lado parados, e depois o outro lado. O warp gasta o tempo de a() mais o de b(). Isso é divergência.</p><p>No EP4 isso acontece de verdade: um fóton que bate numa mancha termina antes, e a faixa dele fica esperando o resto do warp.</p></div>
+<div class="actions"><p>Cliques: a(), b(), depois do if. Clique: a frase.</p></div>
+</aside>
 </section>
 
 <section>
@@ -660,7 +738,11 @@ cudaFree(a); cudaFree(b); cudaFree(c);                   // liberar
       <text class="small muted" x="760" y="382">resultado final · cinza: threads parados</text>
     </g>
   </svg>
-  <aside class="notes">Distribuição → resultados parciais → combinação → resultado final: as quatro palavras do roteiro do professor. Serial: N passos. Paralelo: N/p + log₂ p. A cada nível metade dos threads para (cinza): é uma limitação, e a razão de a combinação ser curta.</aside>
+  <aside class="notes">
+<div class="cues"><p>somar N números</p><p>distribuição → parciais → árvore → resultado final</p><p>serial N passos; paralelo N/p + log₂ p</p><p>metade dos threads para a cada nível</p></div>
+<div class="script"><p>O exemplo prático que o roteiro do professor pede: a redução paralela, somar N números.</p><p>Distribuição: cada thread pega o seu número. Combinação em árvore: a cada passo, metade dos threads soma o valor de um vizinho. No fim, um thread tem a soma do bloco, e faz um atômico no total.</p><p>Serialmente são N passos. Em paralelo, N sobre p mais log de p. E reparem no cinza: a cada nível metade dos threads para. É a limitação da redução, e o motivo de a árvore ser curta.</p></div>
+<div class="actions"><p>Um clique por nível. No fim, o atomicAdd.</p></div>
+</aside>
 </section>
 
 <section>
@@ -684,7 +766,11 @@ __global__ void soma(const float *x, float *total, int n) {
     <li><code>__syncthreads()</code> só sincroniza <strong>dentro</strong> do bloco; entre blocos, só a memória global e os atômicos</li>
     <li>a memória compartilhada é pequena (~100 KB por SM) e é dividida entre os blocos residentes</li>
   </ul>
-  <aside class="notes">Cada clique destaca uma fase. As limitações são o que o roteiro pede: sincronização só no bloco, memória compartilhada pequena, threads ociosos no fim da árvore.</aside>
+  <aside class="notes">
+<div class="cues"><p>memória compartilhada (do bloco)</p><p>__syncthreads() por nível</p><p>só sincroniza dentro do bloco; ~100 KB por SM</p></div>
+<div class="script"><p>O mesmo desenho, em código. O vetor parcial está na memória compartilhada, que é do bloco. Depois de cada nível, um __syncthreads, para que todos terminem antes do próximo passo.</p><p>Duas limitações: __syncthreads só sincroniza dentro de um bloco; entre blocos, o guia é explícito, não há mecanismo. E a memória compartilhada é pequena, uns 100 KB por SM.</p></div>
+<div class="actions"><p>Cliques: compartilhada, distribuição, árvore, atômico.</p></div>
+</aside>
 </section>
 
 <section>
@@ -707,7 +793,11 @@ __global__ void soma(const float *x, float *total, int n) {
     </g>
   </svg>
   <p class="fragment note">O atômico é feito na cache L2, um endereço por vez. Muitos threads no mesmo endereço fazem fila; endereços diferentes andam em paralelo.</p>
-  <aside class="notes">Uma condição de corrida: dois threads leem o mesmo valor antes de qualquer um escrever. O Buffon soma em registrador e faz UM atômico por thread (pouca fila). A estrela faz um atômico por fóton, mas em bilhões de pixels diferentes: quase nunca dois no mesmo endereço.</aside>
+  <aside class="notes">
+<div class="cues"><p>corrida: os dois leem 5, os dois escrevem 6</p><p>atomicAdd: ler-somar-escrever indivisível, na L2</p><p>Buffon: 1 atômico por thread; estrela: 1 por fóton, em bilhões de pixels</p></div>
+<div class="script"><p>O que acontece quando vários threads escrevem no mesmo lugar? À esquerda, sem atômico: os dois threads leem 5, os dois somam 1, os dois escrevem 6. Uma soma se perdeu. É uma condição de corrida.</p><p>O atomicAdd faz ler, somar e escrever como uma operação indivisível, na cache L2. No mesmo endereço, os atômicos fazem fila; em endereços diferentes, andam em paralelo.</p><p>O Buffon soma em registrador e faz um atômico só por thread. A estrela faz um por fóton, mas em bilhões de pixels diferentes, então quase nunca há fila.</p></div>
+<div class="actions"><p>Clique: o atomicAdd. Clique: a nota.</p></div>
+</aside>
 </section>
 
 <section>
@@ -736,21 +826,239 @@ __global__ void soma(const float *a, const float *b, float *c, long long n) {
     <li class="fragment">o <strong>grid-stride loop</strong>: um grid do tamanho da GPU, qualquer \(N\); a divisão é fixa</li>
     <li class="fragment">no EP3 e no EP4 a divisão é <strong>dinâmica</strong>: cada thread pega o próximo pedaço de uma fila (<code>atomicAdd</code>); quem termina antes pega mais</li>
   </ul>
-  <aside class="notes">O kernel mínimo lança um thread por elemento; isso quebra quando N passa do que um grid comporta, ou quando cada elemento custa um tempo diferente. O grid-stride loop resolve o primeiro problema. A fila de pedaços do EP3 e do EP4 resolve os dois: é o grid-stride loop com a divisão decidida em tempo de execução. Atenção: o passo é blockDim.x × gridDim.x (threads por bloco × blocos).</aside>
+  <aside class="notes">
+<div class="cues"><p>grid-stride loop: passo = blockDim.x · gridDim.x</p><p>divisão fixa: o thread k faz k, k + passo, …</p><p>EP3/EP4: divisão dinâmica, uma fila</p></div>
+<div class="script"><p>O kernel mínimo lança um thread por elemento. Mas e se houver mais elementos que threads? O padrão, que o guia mostra, é o grid-stride loop: um grid do tamanho da GPU, e cada thread anda de passo em passo, onde o passo é o número total de threads.</p><p>Aqui a divisão é fixa: o thread k faz o elemento k, depois k mais o passo, e assim por diante.</p><p>No EP3 e no EP4 a divisão é dinâmica: uma fila. Quem termina antes pega mais. Isso importa quando cada elemento custa um tempo diferente, como um fóton que bate numa mancha.</p></div>
+<div class="actions"><p>Cliques: o passo, o laço. Clique: grid-stride. Clique: a fila.</p></div>
+</aside>
 </section>
 
 <section>
-  <h2>Ponte para o EP3</h2>
-  <p class="statement" style="margin-top: 2.5em">O Buffon conta quantas agulhas cruzam uma linha.<small>Que operação é essa?</small></p>
-  <p class="concept fragment" style="text-align:center">Uma <strong>redução</strong>: cada thread soma as suas agulhas em registrador, e um atômico junta tudo no fim.</p>
-  <aside class="notes">Checkpoint do bloco. A resposta leva direto ao EP3. Mas antes: de onde vêm os números aleatórios de cada thread?</aside>
+  <h2>Os blocos vão inteiros para um SM, e em qualquer ordem</h2>
+  <div class="columns top">
+    <div class="side">
+      <svg class="d" viewBox="0 0 560 420" width="560">
+        <text class="small muted" x="10" y="22">o grid</text>
+        <rect class="device" x="10" y="34" width="60" height="40"/><text class="small mid" x="40" y="60">B0</text>
+        <rect class="device" x="78" y="34" width="60" height="40"/><text class="small mid" x="108" y="60">B1</text>
+        <rect class="device" x="146" y="34" width="60" height="40"/><text class="small mid" x="176" y="60">B2</text>
+        <rect class="device" x="214" y="34" width="60" height="40"/><text class="small mid" x="244" y="60">B3</text>
+        <rect class="gray" x="282" y="34" width="60" height="40"/><text class="small mid" x="312" y="60">B4</text>
+        <rect class="gray" x="350" y="34" width="60" height="40"/><text class="small mid" x="380" y="60">B5</text>
+        <rect class="gray" x="418" y="34" width="60" height="40"/><text class="small mid" x="448" y="60">B6</text>
+        <rect class="gray" x="486" y="34" width="60" height="40"/><text class="small mid" x="516" y="60">B7</text>
+        <rect class="host" x="140" y="110" width="280" height="50" rx="4"/><text class="mid" x="280" y="141">escalonador de blocos</text>
+        <line class="line-muted" x1="140" y1="74" x2="200" y2="108" marker-end="url(#arrow-muted)"/><line class="line-muted" x1="420" y1="74" x2="360" y2="108" marker-end="url(#arrow-muted)"/>
+        <rect class="paper" x="10" y="200" width="255" height="170" rx="6"/><text class="bold" x="24" y="226">SM 0</text>
+        <rect class="device" x="24" y="240" width="105" height="110"/><text class="mid" x="76" y="300">B0</text>
+        <rect class="device" x="146" y="240" width="105" height="110"/><text class="mid" x="198" y="300">B1</text>
+        <rect class="paper" x="290" y="200" width="255" height="170" rx="6"/><text class="bold" x="304" y="226">SM 1</text>
+        <rect class="device" x="304" y="240" width="105" height="110"/><text class="mid" x="356" y="300">B2</text>
+        <rect class="device" x="426" y="240" width="105" height="110"/><text class="mid" x="478" y="300">B3</text>
+        <line class="line" x1="230" y1="160" x2="140" y2="196" marker-end="url(#arrow)"/><line class="line" x1="330" y1="160" x2="420" y2="196" marker-end="url(#arrow)"/>
+        <text class="small muted" x="10" y="402">cinza: esperam um lugar; entram quando um bloco termina</text>
+      </svg>
+    </div>
+    <div class="main">
+      <ul>
+        <li class="fragment">um bloco só entra num SM se couber <strong>inteiro</strong>: os seus threads podem chamar <code>__syncthreads()</code>, e então precisam estar todos vivos ao mesmo tempo</li>
+        <li class="fragment">por isso, com 80 registradores, cabem 25 warps e lançamos <strong>24</strong>: um bloco de 24 warps, inteiro (a conta vem na parte 8)</li>
+        <li class="fragment">os blocos rodam em <strong>qualquer ordem</strong>: um bloco nunca pode esperar outro</li>
+      </ul>
+      <p class="question fragment">o bloco 0 escreve uma flag; o bloco 1 espera por ela. Funciona?</p>
+    </div>
+  </div>
+  <aside class="notes">
+<div class="cues"><p>guia 1.2.2.1: um bloco, um SM; qualquer ordem</p><p>inteiro: __syncthreads precisa de todos vivos</p><p>25 warps cabem, lançamos 24</p><p>pergunta: bloco 0 escreve uma flag, bloco 1 espera. Funciona?</p></div>
+<div class="script"><p>O guia é bem claro: todos os threads de um bloco rodam num único SM, os blocos rodam em qualquer ordem, e não há garantia de escalonamento entre eles.</p><p>Por que o bloco vai inteiro? Porque os threads dele podem chamar __syncthreads, e para isso precisam estar todos vivos ao mesmo tempo. Por isso, com 80 registradores, cabem 25 warps no SM, mas nós lançamos 24: um bloco de 24 warps, inteiro. A conta vem na parte 8.</p><p>Uma pergunta: o bloco 0 escreve uma flag, e o bloco 1 fica esperando por ela. Funciona?</p></div>
+<div class="actions"><p>Cliques: inteiro, 25 e 24, qualquer ordem. Clique: a pergunta.</p><p>Resposta: depende da ordem; se o bloco 1 ocupar o lugar e ficar esperando, o 0 nunca entra e a GPU trava. Nos EPs, os blocos só se falam por atômicos que nunca esperam.</p></div>
+</aside>
 </section>
 
-<!-- ================================================================ 6. números aleatórios -->
+<section>
+  <h2>Rodando o nosso kernel: um bloco por SM, todos juntos</h2>
+  <div class="columns top">
+    <div class="side"><svg id="sm-grid" class="d" viewBox="0 0 740 500" width="640"></svg></div>
+    <div class="main">
+      <ul>
+        <li>FP64: <strong>36 blocos × 768 threads</strong> = 27 648 threads, um bloco em cada SM</li>
+        <li class="fragment">lançamento cooperativo: os 36 entram juntos, ou o lançamento falha</li>
+        <li class="fragment">com <code>--sms 12</code>, os blocos dos outros 24 SMs leem <code>%smid</code> e <strong>voltam na hora</strong></li>
+        <li class="fragment">os 12 que ficam pegam todos os pedaços da fila: assim medimos Amdahl em 1, 2, …, 36 SMs</li>
+      </ul>
+    </div>
+  </div>
+  <p class="source">engine --sms n (main.py measure, escala forte); EP4/engine/gpu/gpu.cu, gpu_sms.cuh</p>
+  <aside class="notes">
+<div class="cues"><p>36 blocos × 768 threads, 1 por SM, todos juntos</p><p>--sms 12: os outros 24 leem %smid e voltam</p><p>os 12 pegam toda a fila → Amdahl em 1…36 SMs</p></div>
+<div class="script"><p>Agora o nosso kernel rodando. Em FP64: 36 blocos de 768 threads, um em cada SM, todos ao mesmo tempo.</p><p>E aqui está o truque que me deixa medir Amdahl. Com a opção --sms 12, cada bloco lê o número do seu SM, um registrador especial chamado %smid. Os blocos que estão fora dos 12 escolhidos voltam na hora. Os 12 que ficam pegam todos os pedaços da fila.</p><p>É o mesmo programa, só muda quantos SMs trabalham. É assim que medi 1, 2, 3, até 36 SMs.</p></div>
+<div class="actions"><p>Um clique por item.</p></div>
+</aside>
+</section>
 
-<section class="divider" data-part="6">
-  <p class="promise">Monte Carlo precisa de números aleatórios. Em paralelo, cada thread precisa dos seus, sem repetir os dos outros, e iguais na CPU e na GPU.</p>
-  <aside class="notes">Parte 6, ~12 min. Nova: os fundamentos dos geradores e como validamos os nossos.</aside>
+<section>
+  <h2>Threads persistentes: o padrão do EP3 e do EP4</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="1-3|4|6-8|9">
+cudaOccupancyMaxPotentialBlockSize(&amp;grid, &amp;threads_per_block, trace_photons, 0, 0);
+cudaOccupancyMaxActiveBlocksPerMultiprocessor(&amp;blocks_per_sm, trace_photons, threads_per_block, 0);
+blocks = blocks_per_sm * sms;                          // exatamente o que cabe na GPU
+cudaLaunchCooperativeKernel(trace_photons, blocks, threads_per_block, args, 0, 0);
+
+__global__ void trace_photons(...) {
+    if (!is_allowed(sm_id(), sm_work)) return;         // a máscara: só os n SMs escolhidos trabalham
+    take_chunks_until_none_left(...);                  // a fila: atomicAdd(&amp;next_chunk, 1)
+}
+  </code></pre>
+  <ul class="note">
+    <li class="fragment"><strong>o padrão</strong>: lançar só os blocos que cabem; o trabalho vem de uma fila, não do número de blocos (em Stanford, CS149, "persistent threads")</li>
+    <li class="fragment"><strong>o risco</strong>: o código supõe que todos os blocos rodam ao mesmo tempo, e CUDA não promete isso</li>
+    <li class="fragment"><strong>a garantia</strong>: o lançamento cooperativo falha, em vez de rodar, se os blocos não couberem todos juntos; então cada SM recebe exatamente os seus blocos, uma vez</li>
+    <li class="fragment"><strong>a medida</strong>: blocos num SM fora dos n escolhidos voltam na hora (<code>%smid</code>); é assim que o EP3 e o EP4 medem Amdahl em 1, 2, …, 36 SMs</li>
+  </ul>
+  <p class="source">EP4/engine/gpu/gpu.cu (choose_launch, run_kernel, trace_photons)</p>
+  <aside class="notes">
+<div class="cues"><p>API de ocupação → lançar exatamente o que cabe</p><p>CS149: "persistent threads"; o risco: supor todos juntos</p><p>lançamento cooperativo: todos entram, ou falha (guia 4.4.8)</p><p>uma leva só → a máscara mede de fato n SMs</p></div>
+<div class="script"><p>Este é o código real do lançamento. A API de ocupação do CUDA diz quantos threads cabem por bloco e quantos blocos por SM; e eu lanço exatamente o que cabe.</p><p>Em Stanford, no curso CS149, isso se chama persistent threads. E eles apontam o risco: o código supõe que todos os blocos rodam ao mesmo tempo, e CUDA não promete isso.</p><p>A nossa garantia é o lançamento cooperativo. O guia diz que ele é atômico: se a chamada funciona, todos os blocos entram juntos; se não cabem, ela falha. Com uma leva só, cada SM recebe exatamente os seus blocos, e a máscara mede de verdade n SMs.</p></div>
+<div class="actions"><p>Cliques no código: ocupação, lançamento, máscara, fila. Depois, um por item.</p></div>
+</aside>
+</section>
+<!-- ================================ 05_floating_point -->
+<section class="divider" data-part="4">
+  <p class="promise">O guia, com o nosso código: o que FP16, FP32 e FP64 custam e quanto valem, medido no Buffon.</p>
+  <aside class="notes">
+<div class="cues"><p>Parte 4, ~8 min</p><p>guia 5.6, medido no Buffon</p></div>
+<div class="script"><p>Parte 4: o segundo capítulo do guia, ponto flutuante. Quanto custa e quanto vale cada precisão, medido no Buffon.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>FP16, FP32 e FP64: os bits (IEEE 754)</h2>
+  <svg class="d" viewBox="0 0 1180 330" width="1180">
+    <text class="bold" x="10" y="60">FP16</text>
+    <rect class="gray" x="110" y="30" width="16" height="48"/>
+    <rect class="good" x="126" y="30" width="80" height="48"/><text class="small mid" x="166" y="60">exp. 5</text>
+    <rect class="device" x="206" y="30" width="160" height="48"/><text class="small mid" x="286" y="60">mantissa 10</text>
+    <text x="400" y="52">ε = 2⁻¹¹ ≈ 4,9·10⁻⁴</text><text class="small muted" x="400" y="76">~3 dígitos · maior valor 65 504</text>
+    <text class="bold" x="10" y="160">FP32</text>
+    <rect class="gray" x="110" y="130" width="16" height="48"/>
+    <rect class="good" x="126" y="130" width="128" height="48"/><text class="small mid" x="190" y="160">expoente 8</text>
+    <rect class="device" x="254" y="130" width="368" height="48"/><text class="small mid" x="438" y="160">mantissa 23 (+1 implícito)</text>
+    <text x="650" y="152">ε = 2⁻²⁴ ≈ 6·10⁻⁸</text><text class="small muted" x="650" y="176">~7 dígitos</text>
+    <text class="bold" x="10" y="260">FP64</text>
+    <rect class="gray" x="110" y="230" width="16" height="48"/>
+    <rect class="good" x="126" y="230" width="176" height="48"/><text class="small mid" x="214" y="260">expoente 11</text>
+    <rect class="device" x="302" y="230" width="832" height="48"/><text class="small mid" x="718" y="260">mantissa 52 (+1 implícito)</text>
+    <text x="110" y="314">ε = 2⁻⁵³ ≈ 1,1·10⁻¹⁶</text><text class="small muted" x="360" y="314">~16 dígitos · cinza: 1 bit de sinal · 16 px por bit</text>
+  </svg>
+  <ul>
+    <li class="fragment">unidades separadas no SM: no laptop, 128 faixas FP32 e só <strong>2 FP64</strong> (1 : 64); na A30, 1 : 2</li>
+    <li class="fragment">a pergunta não é "qual é mais exato", é "o erro de arredondamento é menor que o ruído do Monte Carlo?"</li>
+  </ul>
+  <p class="source">IEEE 754; guia CUDA 5.1 (FP32 : FP64 por compute capability), 5.6</p>
+  <aside class="notes">
+<div class="cues"><p>IEEE 754: sinal, expoente, mantissa</p><p>~3, ~7, ~16 dígitos</p><p>unidades separadas: 128 FP32 × 2 FP64 por SM (laptop)</p><p>a pergunta: o erro é menor que o ruído?</p></div>
+<div class="script"><p>Os três formatos do padrão IEEE 754. FP16 guarda uns 3 dígitos, FP32 uns 7, e FP64 uns 16. O ε é o erro relativo de uma operação. O guia diz que todas as GPUs seguem o IEEE 754.</p><p>E as unidades são separadas no SM: no laptop, 128 faixas de FP32 e só 2 de FP64.</p><p>A pergunta certa, num Monte Carlo, não é "qual é mais exato". É: o erro de arredondamento é menor que o ruído estatístico?</p></div>
+<div class="actions"><p>Clique: as unidades. Clique: a pergunta certa.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>O mesmo Buffon em FP64, FP32 e FP16</h2>
+  <table>
+    <thead><tr><th></th><th>agulhas/s (GPU)</th><th>6 casas de π</th><th>casas alcançáveis</th></tr></thead>
+    <tbody>
+      <tr><td>FP64</td><td class="number">\(6{,}6\times10^{9}\)</td><td class="number">14 min</td><td>14, em \(2{,}7\times10^{11}\) anos</td></tr>
+      <tr><td>FP32</td><td class="number">\(1{,}07\times10^{11}\)</td><td class="number"><strong>51 s</strong></td><td><strong>6: a 7ª nunca vem</strong></td></tr>
+      <tr><td>FP16</td><td class="number">\(1{,}03\times10^{11}\)</td><td class="number">nunca</td><td>3</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li class="fragment">FP32 é 16× mais rápido: com ele, 6 casas saem em segundos em vez de minutos</li>
+    <li class="fragment">mas a comparação <code>x &lt;= L/2 · sinf(θ)</code> em 24 bits tem um <strong>viés</strong> de ~10⁻⁷: quando o erro estatístico cai abaixo dele, mais agulhas não ajudam</li>
+    <li class="fragment">não é erro acumulado: cada agulha é uma conta curta e independente; é um viés da comparação</li>
+  </ul>
+  <p class="question fragment">e a estrela, precisa de FP64?</p>
+  <p class="source">EP3/buffon.py --precision 64|32|16 → runs/…-report/report.txt</p>
+  <aside class="notes">
+<div class="cues"><p>FP32 16× mais rápido: 6 casas em 51 s (FP64: 14 min)</p><p>FP32 nunca chega à 7ª casa: viés ~10⁻⁷</p><p>FP16: 3 casas</p><p>não é erro acumulado; é viés</p></div>
+<div class="script"><p>O EP3 tem três versões da mesma conta. FP32 é 16 vezes mais rápido que FP64: seis casas de π saem em 51 segundos, em vez de 14 minutos.</p><p>Mas o FP32 nunca chega à sétima casa. A comparação "x menor que L sobre 2 vezes seno de θ", feita em 24 bits, tem um viés de uns 10 a menos 7. Quando o erro estatístico cai abaixo disso, mais agulhas não ajudam. E o FP16 para em 3 casas.</p><p>E não é erro acumulado: cada agulha é uma conta curta e independente. É um viés da comparação.</p><p>Pergunta: e a estrela, precisa de FP64?</p></div>
+<div class="actions"><p>Cliques: velocidade, viés, não acumulado. Clique: a pergunta.</p><p>Resposta, adiantando a parte 9: não; FP32 muda o pixel de 7·10⁻⁴ dos fótons, abaixo do ruído.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>Por que a CPU e a GPU discordam no último bit</h2>
+  <div class="columns top">
+    <div class="half">
+      <svg class="d" viewBox="0 0 560 300" width="560">
+        <text class="bold" x="10" y="26">a · b + c em duas operações</text>
+        <rect class="gray" x="10" y="44" width="150" height="44"/><text class="mid mono" x="85" y="72">a · b</text>
+        <line class="line" x1="160" y1="66" x2="200" y2="66" marker-end="url(#arrow)"/>
+        <rect class="host" x="205" y="44" width="110" height="44"/><text class="small mid" x="260" y="72">arredonda</text>
+        <line class="line" x1="315" y1="66" x2="345" y2="66" marker-end="url(#arrow)"/>
+        <rect class="gray" x="350" y="44" width="80" height="44"/><text class="mid mono" x="390" y="72">+ c</text>
+        <line class="line" x1="430" y1="66" x2="455" y2="66" marker-end="url(#arrow)"/>
+        <rect class="host" x="460" y="44" width="95" height="44"/><text class="small mid" x="507" y="72">arredonda</text>
+        <text class="bold" x="10" y="150">FMA: uma operação (a GPU, por padrão)</text>
+        <rect class="gray" x="10" y="168" width="250" height="44"/><text class="mid mono" x="135" y="196">a · b + c, exato</text>
+        <line class="line" x1="260" y1="190" x2="300" y2="190" marker-end="url(#arrow)"/>
+        <rect class="good" x="305" y="168" width="130" height="44"/><text class="small mid" x="370" y="196">arredonda 1×</text>
+        <text class="small muted" x="10" y="260">resultados diferentes no último bit; nenhum dos dois está "errado"</text>
+      </svg>
+    </div>
+    <div class="half">
+      <table class="compact">
+        <thead><tr><th>função (guia 5.6)</th><th>float</th><th>double</th></tr></thead>
+        <tbody>
+          <tr><td><code>sin</code>, <code>cos</code></td><td>2 ULP</td><td>2 ULP</td></tr>
+          <tr><td><code>atan2</code></td><td>3 ULP</td><td>2 ULP</td></tr>
+          <tr><td><code>cbrt</code></td><td>1 ULP</td><td>1 ULP</td></tr>
+          <tr><td><code>sqrt</code>, + − × ÷</td><td>0</td><td>0</td></tr>
+        </tbody>
+      </table>
+      <p class="note">ULP: a distância até o número representável vizinho. As funções da CPU (glibc) e da GPU são implementações diferentes.</p>
+    </div>
+  </div>
+  <ul>
+    <li class="fragment">medido, sem FMA (<code>--fmad=false</code>): em FP64, <strong>a mesma imagem</strong> (e 7,5% mais ciclos); em FP32, <strong>outra imagem</strong></li>
+    <li class="fragment">por isso, na estrela: FP64 dá os mesmos bits na CPU e na GPU; FP32 move 3·10⁻⁴ dos fótons de pixel (veremos na parte 9)</li>
+  </ul>
+  <p class="source">guia CUDA 5.6 (IEEE 754, FMA, tabelas de ULP); main.py measure → parts/kernel.json (variante no_fma)</p>
+  <aside class="notes">
+<div class="cues"><p>FMA: a·b + c com um arredondamento só (padrão na GPU)</p><p>funções: sin/cos 2 ULP, atan2f 3, cbrt 1; implementações diferentes</p><p>sem FMA: FP64 a mesma imagem; FP32 outra</p></div>
+<div class="script"><p>Por que a mesma conta dá resultados diferentes no último bit na CPU e na GPU? Duas razões, as duas no guia.</p><p>A primeira é o FMA: a vezes b mais c com um arredondamento só, em vez de dois. O compilador da GPU faz isso por padrão.</p><p>A segunda: as funções matemáticas são implementações diferentes. O guia dá até 2 ULP de erro para seno e cosseno, 3 para o atan2 em FP32. E diz, literalmente, que diferenças não significam que a GPU esteja errada.</p><p>Medimos: compilando sem FMA, em FP64 a imagem da estrela é a mesma; em FP32, é outra.</p></div>
+<div class="actions"><p>Cliques: a medida, a consequência.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>Precisão também é escolher a conta: o nosso código</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2">
+static inline HD real sine_from_cosine(real cosine) {
+    real sine_squared = (1 - cosine) * (1 + cosine);   // não 1 - cosine * cosine
+    return sine_squared > 0 ? real_sqrt(sine_squared) : 0;
+}
+  </code></pre>
+  <ul>
+    <li class="fragment">perto do polo, \(\cos \to 1\): \(1 - \cos^2\) subtrai dois números quase iguais e perde os bits que importam</li>
+    <li class="fragment">\((1-\cos)(1+\cos)\) é a mesma conta, com o mesmo custo, e guarda a diferença pequena exata: até ~400× melhor no pior caso</li>
+    <li class="fragment">o mesmo nas manchas: comparamos a corda ao quadrado, \(|p - s|^2 &lt; 4\sin^2(r/2)\), em vez de \(\cos\) contra \(\cos r\), ambos perto de 1</li>
+  </ul>
+  <p class="concept fragment">Monte Carlo perdoa muito: cada fóton é uma conta curta, e a imagem é uma <strong>contagem inteira</strong>. O que importa é não introduzir <strong>viés</strong>.</p>
+  <p class="source">EP4/engine/physics/real.cuh (sine_from_cosine), photon.cuh (escapes_spots); docs/precision.md</p>
+  <aside class="notes">
+<div class="cues"><p>1 − cos² perto do polo: cancelamento</p><p>(1 − cos)(1 + cos): mesma conta, até ~400× melhor</p><p>manchas: corda ao quadrado</p><p>Monte Carlo perdoa: contagem inteira; cuidado com viés</p></div>
+<div class="script"><p>E precisão não é só escolher o tipo. É também escolher a conta. Este é o nosso código: para tirar o seno a partir do cosseno, perto do polo o cosseno vai a 1, e 1 menos cosseno ao quadrado subtrai dois números quase iguais, perdendo justamente os bits que importam.</p><p>Escrevendo um menos cosseno vezes um mais cosseno, é a mesma conta, com o mesmo custo, e a diferença pequena fica exata: até umas 400 vezes melhor no pior caso. Nas manchas fiz o mesmo: comparo a corda ao quadrado, em vez de dois cossenos perto de 1.</p><p>E a boa notícia: Monte Carlo perdoa muito. Cada fóton é uma conta curta, e a imagem é uma contagem inteira. O que importa é não introduzir viés.</p></div>
+<div class="actions"><p>Clique: destaca a linha. Cliques: cancelamento, conta certa, manchas, conclusão.</p></div>
+</aside>
+</section>
+<!-- ================================ 06_random_numbers -->
+<section class="divider" data-part="5">
+  <p class="promise">Monte Carlo precisa de números aleatórios. Em paralelo, cada pedaço do trabalho precisa dos seus, sem repetir os dos outros.</p>
+  <aside class="notes">
+<div class="cues"><p>Parte 5, ~8 min</p><p>cada pedaço do trabalho precisa dos seus números</p></div>
+<div class="script"><p>Parte 5: números aleatórios em paralelo. Monte Carlo vive deles, e em paralelo cada pedaço do trabalho precisa dos seus, sem repetir os dos outros.</p></div>
+</aside>
 </section>
 
 <section>
@@ -761,7 +1069,11 @@ __global__ void soma(const float *a, const float *b, float *c, long long n) {
     <li>a imagem do gancho: \(3{,}9\times10^{12}\) fótons, ~\(2\times10^{13}\) números</li>
   </ul>
   <p class="concept fragment">Três exigências: <strong>qualidade</strong> (parecem independentes), <strong>independência entre threads</strong> (nenhum trecho repetido), <strong>reprodutibilidade</strong> (a mesma semente dá a mesma imagem, em qualquer processador).</p>
-  <aside class="notes">Os números por fóton estão em photon.cuh: superfície (z, φ), direção (μ, o ramo do escurecimento de limbo, φ local), mancha (só na penumbra).</aside>
+  <aside class="notes">
+<div class="cues"><p>Buffon 2 por agulha; estrela 5 ou 6 por fóton</p><p>gancho: ~2·10¹³ números</p><p>qualidade, independência, reprodutibilidade</p></div>
+<div class="script"><p>Quantos números? O Buffon usa dois por agulha. A estrela usa cinco ou seis por fóton: dois para o ponto na superfície, três para a direção, e às vezes um para a mancha. A imagem do gancho consumiu uns 2 vezes 10 a 13 números.</p><p>Três exigências: qualidade, que pareçam independentes; independência entre threads, nenhum trecho repetido; e reprodutibilidade: a mesma semente tem que dar a mesma imagem, em qualquer processador.</p></div>
+<div class="actions"><p>Clique: as três exigências.</p></div>
+</aside>
 </section>
 
 <section>
@@ -784,7 +1096,11 @@ __global__ void soma(const float *a, const float *b, float *c, long long n) {
       <text class="small" x="10" y="282">• o resultado passa a depender de quantos threads havia e de quem pegou o quê</text>
     </g>
   </svg>
-  <aside class="notes">O drand48 do EP3 na CPU é um LCG de 48 bits. Funciona bem num thread. Em paralelo, é preciso dividir uma sequência serial entre threads, e a imagem final depende da divisão.</aside>
+  <aside class="notes">
+<div class="cues"><p>LCG: o próximo sai do anterior (drand48 do EP3 na CPU)</p><p>para chegar a x₁₀₀₀, passar por todos: serial</p><p>em paralelo: quem usa qual trecho? correlação; depende da divisão</p></div>
+<div class="script"><p>O gerador clássico tem estado. Um LCG, como o drand48 que o EP3 usava na CPU: cada número sai do anterior, multiplicando e somando, módulo 2 a 48.</p><p>Para chegar ao milésimo número, é preciso passar por todos os anteriores. A sequência é serial.</p><p>Em paralelo isso vira um problema: quem usa qual trecho? Se cada thread usar uma semente vizinha, as sequências podem sair correlacionadas. E o resultado passa a depender de quantos threads havia e de quem pegou o quê.</p></div>
+<div class="actions"><p>Clique: os três problemas.</p></div>
+</aside>
 </section>
 
 <section>
@@ -816,7 +1132,11 @@ __global__ void soma(const float *a, const float *b, float *c, long long n) {
     <li class="fragment">f é uma bijeção: contadores diferentes nunca dão a mesma saída; passa na bateria BigCrush (TestU01)</li>
     <li class="fragment">é o mesmo algoritmo na nossa CPU (código nosso) e na GPU (cuRAND, <code>curandStatePhilox4_32_10_t</code>)</li>
   </ul>
-  <aside class="notes">O nome: "Philox" de Feistel + multiplicação (mul-hi/lo) + XOR. Um gerador baseado em contador é como uma cifra: cifra o número n com a chave. Sem estado para carregar, sem sequência para dividir. O BigCrush é resultado publicado; nós não o rodamos.</aside>
+  <aside class="notes">
+<div class="cues"><p>número n = f(chave, n): qualquer n, direto</p><p>Philox4x32-10 (Salmon et al., 2011): 4 números de 32 bits por contador</p><p>bijeção; passa no BigCrush</p><p>o mesmo na CPU (nosso) e na GPU (cuRAND)</p></div>
+<div class="script"><p>A solução é não ter estado. Num gerador baseado em contador, o número n é uma função de n e de uma chave. Dá para pedir qualquer n, direto, em qualquer ordem, em qualquer processador.</p><p>O que eu uso é o Philox, de Salmon e coautores, de 2011. Ele embaralha um contador de 128 bits com uma chave de 64, e devolve quatro números de 32 bits. É uma bijeção, contadores diferentes nunca dão a mesma saída, e passa na bateria BigCrush, que é o teste mais exigente de geradores. Isso é resultado publicado, eu não rodei.</p><p>É o mesmo algoritmo nos dois lados: na CPU, uma implementação nossa; na GPU, o cuRAND.</p></div>
+<div class="actions"><p>Cliques: Philox, bijeção, CPU e GPU.</p></div>
+</aside>
 </section>
 
 <section>
@@ -846,7 +1166,10 @@ __global__ void soma(const float *a, const float *b, float *c, long long n) {
   </svg>
   <p class="note">10 rodadas; entre elas, a chave (k₀, k₁) = a semente soma constantes fixas. Só multiplicações de inteiros, XOR e trocas de lugar: tudo em <strong>INT32</strong>, idêntico em qualquer processador.</p>
   <p class="source">EP4/engine/random/rng.cuh (philox_round)</p>
-  <aside class="notes">Para o professor de HPC: multiplicações 32×32→64 bits divididas em alto e baixo, XOR com a chave, e as palavras trocam de lugar. É aritmética inteira exata: por isso a CPU e a GPU dão os mesmos bits. As constantes são as do artigo e do cuRAND.</aside>
+  <aside class="notes">
+<div class="cues"><p>multiplicação 32 × 32 → 64, alta e baixa</p><p>XOR com a chave, palavras trocam de lugar</p><p>10 rodadas, tudo inteiro: mesmos bits em qualquer lugar</p></div>
+<div class="script"><p>Uma rodada do Philox, para quem gosta de ver por dentro. As palavras x e z são multiplicadas por constantes, de 32 por 32 bits dando 64, divididos em parte alta e baixa. As partes altas fazem XOR com a chave e com as outras palavras, e tudo troca de lugar.</p><p>São dez rodadas, e entre elas a chave soma constantes fixas. É tudo aritmética inteira exata. Por isso a CPU e a GPU dão exatamente os mesmos bits.</p></div>
+</aside>
 </section>
 
 <section>
@@ -864,59 +1187,11 @@ curand_init(seed, chunk, 0, &amp;rng);    // GPU: cuRAND
 philox_init(seed, chunk, 0, &amp;rng);    // CPU: a nossa Philox (rng.cuh)
   </code></pre>
   <p class="concept fragment">O pedaço, não o thread, escolhe os números. Então <strong>quem</strong> traça um pedaço (que SM, que thread, CPU ou GPU) não muda a imagem.</p>
-  <aside class="notes">Esta é a decisão central do EP4. O pedaço tem tamanho fixo (1024) porque ele É o fluxo aleatório: mudar o tamanho mudaria a imagem. O EP3 pode adaptar o tamanho porque só conta cruzamentos.</aside>
-</section>
-
-<section>
-  <h2>Como validamos os geradores: seis níveis</h2>
-  <svg class="d" viewBox="0 0 1180 460" width="1180">
-    <g class="fragment" data-fragment-index="1">
-      <rect class="device" x="20" y="388" width="820" height="62" rx="4"/><text class="mid bold" x="430" y="415">1. o algoritmo: a nossa Philox = Random123</text><text class="small mid" x="430" y="438">3 respostas publicadas, bit a bit</text>
-      <text class="small mono" x="870" y="424">test → rng cpu</text>
-    </g>
-    <g class="fragment" data-fragment-index="2">
-      <rect class="device" x="50" y="322" width="760" height="62" rx="4"/><text class="mid bold" x="430" y="349">2. os bits: cuRAND (GPU) = a nossa (CPU)</text><text class="small mid" x="430" y="372">pedaços 0, 1, 1 000 003 e 2³² + 5 (o "vai-um" no contador)</text>
-      <text class="small mono" x="870" y="358">test → rng gpu</text>
-    </g>
-    <g class="fragment" data-fragment-index="3">
-      <rect class="device" x="80" y="256" width="700" height="62" rx="4"/><text class="mid bold" x="430" y="283">3. as uniformes: os mesmos bits em float e double</text><text class="small mid" x="430" y="306">comparadas com memcmp, não "parecidas"</text>
-      <text class="small mono" x="870" y="292">test → rng gpu</text>
-    </g>
-    <g class="fragment" data-fragment-index="4">
-      <rect class="good" x="110" y="190" width="640" height="62" rx="4"/><text class="mid bold" x="430" y="217">4. a divisão não importa</text><text class="small mid" x="430" y="240">qualquer divisão, passes, 1 ou 36 SMs: a mesma imagem</text>
-      <text class="small mono" x="870" y="226">test → split, passes</text>
-    </g>
-    <g class="fragment" data-fragment-index="5">
-      <rect class="good" x="140" y="124" width="580" height="62" rx="4"/><text class="mid bold" x="430" y="151">5. a imagem: GPU = CPU, bit a bit</text><text class="small mid" x="430" y="174">FP64, 10⁸ fótons, 1024²</text>
-      <text class="small mono" x="870" y="160">test → gpu = cpu</text>
-    </g>
-    <g class="fragment" data-fragment-index="6">
-      <rect class="host" x="170" y="58" width="520" height="62" rx="4"/><text class="mid bold" x="430" y="85">6. a estatística: fótons independentes</text><text class="small mid" x="430" y="108">χ²/gl = 0,990 em 51 899 blocos</text>
-      <text class="small mono" x="870" y="94">test → gpu ~ cpu</text>
-    </g>
-    <text class="small muted" x="870" y="30">main.py test (e measure)</text>
-  </svg>
-  <aside class="notes">De baixo para cima: cada nível só faz sentido se o de baixo passou. 1–3 testam o gerador; 4 testa a ideia de um fluxo por pedaço; 5 testa a física inteira; 6 testa com números diferentes, como um experimento. Todos rodam em main.py test (~20 s) e de novo, em N válido, em main.py measure.</aside>
-</section>
-
-<section>
-  <h2>A saída real</h2>
-  <pre class="terminal"><code class="nohighlight" data-trim data-noescape>
-<span class="dim">$ engine/build/star_gpu64 --test-rng</span>
-PHILOX_TEST_0=<span class="pass">PASS</span> GOT=6627e8d5,e169c58d,bc57ac4c,9b00dbd8
-PHILOX_TEST_1=<span class="pass">PASS</span> GOT=408f276d,41c83b0e,a20bc7c6,6d5451fd
-PHILOX_TEST_2=<span class="pass">PASS</span> GOT=d16cfe09,94fdcceb,5001e420,24126ea1
-SEED_42_CHUNK_0=9ceaf053,77f5493b,12bf50ad,5742b3d7,fcdb2127,53ba6cfd,838f5a6e,744e06fb
-GPU_SEED_42_CHUNK_0=9ceaf053,77f5493b,12bf50ad,5742b3d7,fcdb2127,53ba6cfd,838f5a6e,744e06fb
-GPU_RNG_CHUNK=0 BITS=<span class="pass">SAME_AS_CPU</span> UNIFORMS=<span class="pass">SAME_AS_CPU</span>
-GPU_RNG_CHUNK=1 BITS=<span class="pass">SAME_AS_CPU</span> UNIFORMS=<span class="pass">SAME_AS_CPU</span>
-GPU_RNG_CHUNK=1000003 BITS=<span class="pass">SAME_AS_CPU</span> UNIFORMS=<span class="pass">SAME_AS_CPU</span>
-GPU_RNG_CHUNK=4294967301 BITS=<span class="pass">SAME_AS_CPU</span> UNIFORMS=<span class="pass">SAME_AS_CPU</span>
-PHILOX_TESTS=<span class="pass">PASS</span>
-  </code></pre>
-  <p class="note">As duas linhas do meio: os 8 primeiros números do pedaço 0, na CPU e na GPU. O pedaço 4 294 967 301 = 2³² + 5 passa do limite de uma palavra de 32 bits.</p>
-  <p class="source">main.py test → "rng cpu", "rng gpu" (chama o engine com --test-rng)</p>
-  <aside class="notes">Mostrar que não é uma afirmação: é a saída do programa. Os três primeiros são os vetores de teste do Random123.</aside>
+  <aside class="notes">
+<div class="cues"><p>chave = semente; contador = (pedaço, posição)</p><p>~6 000 números por pedaço, cabem 2⁶⁶</p><p>curand_init(seed, chunk, 0) = philox_init(seed, chunk, 0)</p><p>o pedaço escolhe os números, não o thread</p></div>
+<div class="script"><p>Como uso isso. A chave é a semente. O contador tem duas metades: o número do pedaço, 64 bits, e a posição dentro do pedaço, outros 64. Um pedaço de 1024 fótons usa uns 6 mil números, e cabem 2 a 66: os fluxos de dois pedaços nunca se encontram.</p><p>Na GPU, curand_init com a semente e o pedaço; na CPU, a nossa philox_init com os mesmos argumentos. É a mesma coisa.</p><p>E esta é a decisão central do EP4: quem escolhe os números é o pedaço, não o thread. Então quem traça um pedaço, que SM, que thread, CPU ou GPU, não muda a imagem.</p></div>
+<div class="actions"><p>Clique: a conclusão. Dizer: guardem isso; é o que torna a estrela bit a bit.</p></div>
+</aside>
 </section>
 
 <section>
@@ -928,25 +1203,30 @@ PHILOX_TESTS=<span class="pass">PASS</span>
     <li class="fragment">limite conhecido: mesmo em FP64, há só \(2^{32}\) valores possíveis (passo \(2{,}3\times10^{-10}\)); para a estrela, muito abaixo do ruído</li>
   </ul>
   <p class="source">EP4/engine/random/rng.cuh (philox_uniform_float, philox_uniform_double)</p>
-  <aside class="notes">Um detalhe que um professor de HPC pode perguntar. A conversão é a mesma do cuRAND (curand_uniform, curand_uniform_double com Philox usam um único inteiro de 32 bits).</aside>
+  <aside class="notes">
+<div class="cues"><p>u = x · 2⁻³² + meio passo: nunca 0, pode ser 1</p><p>a conversão do cuRAND; conferida bit a bit</p><p>limite: 2³² valores (passo 2,3·10⁻¹⁰), muito abaixo de um pixel</p></div>
+<div class="script"><p>O inteiro de 32 bits vira uma uniforme assim: x vezes 2 a menos 32, mais meio passo. Nunca dá zero, pode dar um. É a conversão do cuRAND, e a nossa CPU repete a mesma conta.</p><p>Um limite conhecido: mesmo em FP64, há só 2 a 32 valores possíveis, um passo de 2,3 vezes 10 a menos 10. Para a estrela, isso é milhões de vezes menor que um pixel.</p></div>
+<div class="actions"><p>Cliques: a conversão, o limite.</p></div>
+</aside>
+</section>
+<!-- ================================ 07_buffon -->
+<section class="divider" data-part="6">
+  <p class="promise">O EP3 como foi entregue: a premissa, o código serial, a paralelização e os resultados.</p>
+  <aside class="notes">
+<div class="cues"><p>Parte 6, ~14 min</p><p>o EP3 como entregue: premissa, desenvolvimento, resultados</p></div>
+<div class="script"><p>Parte 6: o primeiro projeto, o EP3, a agulha de Buffon, do jeito que foi entregue. Premissa, desenvolvimento e resultados.</p></div>
+</aside>
 </section>
 
 <section>
-  <h2>O nível 6: fótons diferentes, a mesma estrela</h2>
-  <div class="figure"><img src="figures/independent_comparison.png" alt="GPU contra CPU com fótons independentes: imagens, resíduos e histograma"></div>
-  <ul>
-    <li>mesma semente, pedaços diferentes: CPU [0, 97 656), GPU [97 656, 195 313)</li>
-    <li>resíduos \((a-b)/\sqrt{a+b}\) em blocos de 8×8 pixels: \(\chi^2/\text{gl} = 0{,}990\) com 51 899 graus de liberdade (−1,6σ)</li>
-  </ul>
-  <p class="source">main.py measure → validation/independent-gpu64/comparison.png, parts/validation.json</p>
-  <aside class="notes">Por que a mesma semente? A semente também posiciona as manchas: outra semente é outra estrela. Primeira versão usava sementes diferentes e falhou (χ² 1,021, ~5σ) por isso. Os blocos de 8×8 existem porque a 1024² um pixel tem ~1 fóton em 10⁸.</aside>
-</section>
-
-<!-- ================================================================ 7. EP3 -->
-
-<section class="divider" data-part="7">
-  <p class="promise">O EP3 como foi entregue: o problema, o código serial, a paralelização e Amdahl nos SMs.</p>
-  <aside class="notes">Parte 7, ~15 min. Os quatro passos do roteiro: introdução → código serial → paralelização → Amdahl.</aside>
+  <h2>Ponte para o EP3</h2>
+  <p class="statement" style="margin-top: 2.5em">O Buffon conta quantas agulhas cruzam uma linha.<small>Que operação é essa?</small></p>
+  <p class="concept fragment" style="text-align:center">Uma <strong>redução</strong>: cada thread soma as suas agulhas em registrador, e um atômico junta tudo no fim.</p>
+  <aside class="notes">
+<div class="cues"><p>pergunta: contar agulhas que cruzam = que operação?</p><p>resposta: uma redução</p></div>
+<div class="script"><p>Antes de começar, uma pergunta. O Buffon conta quantas agulhas cruzam uma linha. Que operação é essa, do que vimos até agora?</p><p>É uma redução. Cada thread soma as suas agulhas em registrador, e um atômico junta tudo no fim.</p></div>
+<div class="actions"><p>Ler a frase e esperar respostas. Clique: a resposta.</p></div>
+</aside>
 </section>
 
 <section>
@@ -978,7 +1258,10 @@ PHILOX_TESTS=<span class="pass">PASS</span>
       <p class="formula">\(\pi \approx \dfrac{2 L\, n}{D \cdot \text{cruzamentos}}\)</p>
     </div>
   </div>
-  <aside class="notes">Azul: cruzam. Dois números aleatórios por agulha: x (distância do centro à linha mais próxima) e θ (ângulo).</aside>
+  <aside class="notes">
+<div class="cues"><p>agulha L, linhas a distância D</p><p>cruza se x ≤ (L/2) sin θ</p><p>P = 2L/(πD) → π ≈ 2Ln / (D · cruzamentos)</p></div>
+<div class="script"><p>A premissa. Jogamos agulhas de comprimento L sobre um chão com linhas paralelas a distância D. Cada agulha tem o centro a uma distância x da linha mais próxima e faz um ângulo θ com as linhas. Ela cruza se x for menor ou igual a L sobre 2 vezes o seno de θ.</p><p>A probabilidade de cruzar é 2L sobre π D. Então, contando os cruzamentos, estimamos π. No desenho, em azul, as que cruzam.</p><p>Dois números aleatórios por agulha: x e θ.</p></div>
+</aside>
 </section>
 
 <section>
@@ -993,15 +1276,10 @@ for (long long i = 0; i &lt; n; i++) {
 pi = 2 * L * n / (D * crossings);
   </code></pre>
   <p class="concept">Cada agulha é independente das outras: <strong>paralelismo de dados</strong>, como os pixels de 1999. Contar é uma <strong>redução</strong>.</p>
-  <aside class="notes">As pontes: paralelismo de dados (parte 1) e redução (parte 5).</aside>
-</section>
-
-<section>
-  <h2>EP3: o erro cai como \(1/\sqrt{N}\)</h2>
-  <div class="figure"><img src="figures/ep3_error.png" style="max-height: 440px" alt="EP3: erro real e experimental contra N; tempo contra N"></div>
-  <p class="caption">ajuste do erro real: \(\propto N^{-0{,}499\pm0{,}009}\) (teoria \(2{,}37/\sqrt{N}\)); tempo: \(T = 0{,}15\ \text{s} + 1{,}5\times10^{-10}\ \text{s}\times N\)</p>
-  <p class="source">EP3/buffon.py → runs/…-gpu-fp64/error.png, summary.txt</p>
-  <aside class="notes">Esta também é uma validação do gerador: se os números tivessem correlação, o erro não cairia com o expoente −1/2. À direita: o tempo é 0,15 s (o contexto CUDA) mais uma parte proporcional a N. Para N pequeno, o tempo é só o contexto.</aside>
+  <aside class="notes">
+<div class="cues"><p>um laço: sorteia, testa, conta</p><p>cada agulha independente = paralelismo de dados</p><p>contar = redução</p></div>
+<div class="script"><p>O código serial é um laço: sorteia x, sorteia θ, testa, conta.</p><p>E as duas pontes com o que já vimos: cada agulha é independente das outras, é paralelismo de dados, como os pixels de 1999. E contar é uma redução, como na parte 3.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1034,7 +1312,10 @@ pi = 2 * L * n / (D * crossings);
     <text class="small" x="760" y="290">1 atomicAdd por thread, no fim</text>
   </svg>
   <p class="note">Tantos threads quanto cabem nos SMs, lançados uma vez; cada um pega pedaços até acabar a fila. Quem acaba antes pega mais: o trabalho se equilibra sozinho.</p>
-  <aside class="notes">Threads persistentes: em vez de um thread por agulha, um thread por vaga no SM, e uma fila. É a mesma estrutura do EP4. A soma em registrador e o único atômico são a redução da parte 5.</aside>
+  <aside class="notes">
+<div class="cues"><p>tantos threads quanto cabem, lançados uma vez</p><p>fila de pedaços: atomicAdd no contador</p><p>soma em registrador, 1 atômico por thread no fim</p><p>quem termina antes pega mais</p></div>
+<div class="script"><p>O desenvolvimento. Lanço tantos threads quanto cabem nos SMs, uma vez só. Cada thread pega o próximo pedaço de agulhas de uma fila, com um atomicAdd num contador global, e cada pedaço tem o seu fluxo Philox.</p><p>O thread soma os cruzamentos dele num registrador, e só no fim faz um atômico no total.</p><p>Quem termina antes pega mais pedaços: o trabalho se equilibra sozinho.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1054,7 +1335,43 @@ __global__ void throw_needles(...) {
 }
   </code></pre>
   <p class="source">EP3/buffon.cu</p>
-  <aside class="notes">Três ideias das partes anteriores num só kernel: o fluxo por pedaço (6), a redução em registrador e o atômico (5), a fila (slide anterior).</aside>
+  <aside class="notes">
+<div class="cues"><p>fluxo Philox por pedaço (parte 5)</p><p>parcial em registrador + 1 atômico (parte 3)</p><p>a fila (parte 3)</p></div>
+<div class="script"><p>O código real. Três ideias num kernel só: o fluxo Philox por pedaço, da parte 5; a redução, com o resultado parcial em registrador e um atômico por thread, da parte 3; e a fila de pedaços, também da parte 3.</p></div>
+<div class="actions"><p>Cliques: o fluxo, o laço, o atômico.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>EP3: o erro cai como \(1/\sqrt{N}\)</h2>
+  <div class="figure"><img src="figures/ep3_error.png" style="max-height: 440px" alt="EP3: erro real e experimental contra N; tempo contra N"></div>
+  <p class="caption">ajuste do erro real: \(\propto N^{-0{,}499\pm0{,}009}\) (teoria \(2{,}37/\sqrt{N}\)); tempo: \(T = 0{,}15\ \text{s} + 1{,}5\times10^{-10}\ \text{s}\times N\)</p>
+  <p class="source">EP3/buffon.py → runs/…-gpu-fp64/error.png, summary.txt</p>
+  <aside class="notes">
+<div class="cues"><p>erro ∝ N^(−0,499 ± 0,009): valida o gerador</p><p>tempo: 0,15 s fixos (contexto) + proporcional a N</p></div>
+<div class="script"><p>Os primeiros resultados. À esquerda, o erro da estimativa de π cai com N elevado a menos 0,499, mais ou menos 0,009. A teoria diz menos meio. Isso também valida o gerador: se os números tivessem correlação, o erro não cairia assim.</p><p>À direita, o tempo: 0,15 segundo fixos, que é criar o contexto CUDA, mais uma parte proporcional a N. Para N pequeno, o tempo é só o contexto.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>EP3: os resultados</h2>
+  <table>
+    <thead><tr><th></th><th>resultado</th><th>de onde</th></tr></thead>
+    <tbody>
+      <tr><td>todas as agulhas juntas</td><td>\(\pi = 3{,}1415942 \pm 0{,}0000024\) (o verdadeiro está a 0,6σ), \(9{,}7\times10^{11}\) agulhas</td><td>FP64</td></tr>
+      <tr><td>o erro</td><td>\(\propto N^{-0{,}499\pm0{,}009}\); \(k = 2{,}38 \pm 0{,}10\) (teoria 2,374)</td><td>294 execuções</td></tr>
+      <tr><td>o tempo</td><td>\(T = 0{,}15\ \text{s} + 1{,}5\times10^{-10}\ \text{s}\times N\)</td><td>36 SMs</td></tr>
+      <tr><td>velocidade</td><td>FP64 \(6{,}6\times10^{9}\)/s; FP32 \(1{,}07\times10^{11}\)/s</td><td>36 SMs</td></tr>
+      <tr><td>14 casas de π</td><td>\(5{,}6\times10^{28}\) agulhas: \(2{,}7\times10^{11}\) anos nesta GPU</td><td>extrapolado</td></tr>
+    </tbody>
+  </table>
+  <p class="question fragment">e se dividirmos o trabalho entre 1, 2, … 36 SMs?</p>
+  <p class="source">EP3/buffon.py → runs/2026-11-08_20-36-22-gpu-fp64/summary.txt</p>
+  <aside class="notes">
+<div class="cues"><p>π = 3,1415942 ± 0,0000024 (0,6σ), 9,7·10¹¹ agulhas</p><p>k = 2,38 ± 0,10 (teoria 2,374)</p><p>FP64 6,6·10⁹/s; FP32 1,07·10¹¹/s</p><p>14 casas: 2,7·10¹¹ anos</p></div>
+<div class="script"><p>Os resultados em uma tabela. Juntando todas as agulhas, quase um trilhão: π igual a 3,1415942, mais ou menos 0,0000024. O valor verdadeiro está a 0,6 sigma.</p><p>O erro segue a teoria: o coeficiente medido é 2,38, a teoria diz 2,374.</p><p>A velocidade: 6,6 bilhões de agulhas por segundo em FP64, 107 bilhões em FP32.</p><p>E a pergunta do EP1, quanto tempo para 14 casas de π: 5,6 vezes 10 a 28 agulhas, 270 bilhões de anos nesta GPU. Esse número nem cabe num inteiro de 64 bits.</p></div>
+<div class="actions"><p>Clique: a pergunta. Passa para Amdahl.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1067,7 +1384,10 @@ __global__ void throw_needles(...) {
     <text class="small host-ink" x="110" y="285">serial: s = 0,1</text><text class="small device-ink" x="300" y="285">paralela: p = 0,9, dividida entre n SMs</text>
   </svg>
   <p class="formula">\(S(n) = \dfrac{T(1)}{T(n)} = \dfrac{1}{s + p/n}\qquad\text{teto: } \dfrac{1}{s}\)</p>
-  <aside class="notes">A turma já conhece Amdahl. O que muda aqui: n são SMs (o EP3 e o EP4 conseguem rodar em 1, 2, … 36 SMs), e a pergunta é: o que é a parte serial de um programa de GPU?</aside>
+  <aside class="notes">
+<div class="cues"><p>S(n) = 1 / (s + p/n); teto 1/s</p><p>n = SMs (a máscara)</p><p>a pergunta: qual é a parte serial de um programa de GPU?</p></div>
+<div class="script"><p>Amdahl vocês conhecem: S de n é 1 sobre s mais p sobre n, e o teto é 1 sobre s, quantos processadores houver. No desenho, com s igual a 0,1, o teto é 10.</p><p>A novidade aqui é que n são SMs, graças à máscara da parte 3. E a pergunta que importa: o que é a parte serial de um programa de GPU?</p></div>
+</aside>
 </section>
 
 <section>
@@ -1076,14 +1396,158 @@ __global__ void throw_needles(...) {
   <p class="question fragment">em 36 SMs, quanto mais rápido?</p>
   <p class="caption fragment">\(N = 3{,}2\times10^{10}\) (FP64): <strong>34,3× em 36 SMs</strong>, \(p = 0{,}9986\); a parte serial é 0,15 s: criar o contexto CUDA. \(p\) cresce com \(N\): 0,07 em 10⁶, 0,78 em 10⁸, 0,997 em 10¹⁰.</p>
   <p class="source">EP3/buffon.py → runs/…-gpu-fp64/amdahl.png, summary.txt</p>
-  <aside class="notes">Prever antes de mostrar. p não é propriedade só do programa: depende de N, porque a parte serial é fixa e a paralela cresce. Guardar o 0,15 s: o EP4 vai ter outra parte serial.</aside>
+  <aside class="notes">
+<div class="cues"><p>pergunta antes: 36 SMs, quanto?</p><p>34,3× em 36 SMs, p = 0,9986 (N = 3,2·10¹⁰)</p><p>serial: 0,15 s = o contexto CUDA</p><p>p cresce com N: 0,07 → 0,78 → 0,997</p></div>
+<div class="script"><p>Antes de mostrar: em 36 SMs, quanto mais rápido vocês acham que fica?</p><p>Com 32 bilhões de agulhas em FP64: 34,3 vezes em 36 SMs. O p ajustado é 0,9986. A parte serial é aqueles 0,15 segundo: criar o contexto CUDA.</p><p>E um ponto importante: o p não é uma propriedade do programa. Ele cresce com N: 0,07 com um milhão de agulhas, 0,78 com cem milhões, 0,997 com dez bilhões. A parte serial é fixa, e a paralela cresce.</p><p>Guardem o 0,15 segundo: a estrela vai ter outra parte serial.</p></div>
+<div class="actions"><p>Clique: a pergunta; anotar apostas. Clique: o resultado.</p></div>
+</aside>
+</section>
+<!-- ================================ 08_memory -->
+<section class="divider" data-part="7">
+  <p class="promise">O guia, com o nosso código: onde mora cada dado, e o que acontece quando todos escrevem na mesma imagem.</p>
+  <aside class="notes">
+<div class="cues"><p>Parte 7, ~8 min</p><p>guia 2.3.3: onde mora cada dado</p></div>
+<div class="script"><p>Parte 7: o terceiro capítulo do guia, a memória. Onde mora cada dado, e o que acontece quando todos os threads escrevem na mesma imagem.</p></div>
+</aside>
 </section>
 
-<!-- ================================================================ 8. mais fundo -->
+<section>
+  <h2>O modelo de memória</h2>
+  <svg class="d" viewBox="0 0 1180 440" width="1180">
+    <rect class="line" x="20" y="10" width="760" height="420" rx="6"/><text class="small muted" x="34" y="32">grid</text>
+    <rect class="line-muted" x="40" y="42" width="340" height="236" rx="4"/><text class="small muted" x="52" y="62">bloco</text>
+    <rect class="good" x="55" y="72" width="310" height="40"/><text class="small mid" x="210" y="98">memória compartilhada (do bloco)</text>
+    <rect class="device" x="55" y="128" width="145" height="135"/><text class="small mid" x="127" y="152">thread</text><rect class="gray" x="68" y="172" width="119" height="70"/><text class="small mid" x="127" y="212">registradores</text>
+    <rect class="device" x="220" y="128" width="145" height="135"/><text class="small mid" x="292" y="152">thread</text><rect class="gray" x="233" y="172" width="119" height="70"/><text class="small mid" x="292" y="212">registradores</text>
+    <rect class="line-muted" x="420" y="42" width="340" height="236" rx="4"/><text class="small muted" x="432" y="62">bloco</text>
+    <rect class="good" x="435" y="72" width="310" height="40"/><text class="small mid" x="590" y="98">memória compartilhada (do bloco)</text>
+    <rect class="device" x="435" y="128" width="145" height="135"/><text class="small mid" x="507" y="152">thread</text><rect class="gray" x="448" y="172" width="119" height="70"/><text class="small mid" x="507" y="212">registradores</text>
+    <rect class="device" x="600" y="128" width="145" height="135"/><text class="small mid" x="672" y="152">thread</text><rect class="gray" x="613" y="172" width="119" height="70"/><text class="small mid" x="672" y="212">registradores</text>
+    <line class="line-muted" x1="127" y1="263" x2="127" y2="300"/><line class="line-muted" x1="292" y1="263" x2="292" y2="300"/><line class="line-muted" x1="507" y1="263" x2="507" y2="300"/><line class="line-muted" x1="672" y1="263" x2="672" y2="300"/>
+    <rect class="host" x="40" y="300" width="720" height="52"/><text class="mid" x="400" y="332">memória global: todos os threads, GBs</text>
+    <rect class="gray" x="40" y="364" width="720" height="50"/><text class="mid" x="400" y="395">memória constante: todos leem, ninguém escreve, 64 KB</text>
 
+    <text class="bold" x="810" y="40">quem vê, quanto, quão rápido</text>
+    <text x="810" y="82">registradores</text><text class="small muted" x="810" y="104">um thread · 65 536 por SM · o mais rápido</text>
+    <text x="810" y="146">compartilhada</text><text class="small muted" x="810" y="168">um bloco · ~100 KB por SM · rápida</text>
+    <text x="810" y="210">constante</text><text class="small muted" x="810" y="232">todos · 64 KB · rápida se todos leem o mesmo</text>
+    <text x="810" y="274">global</text><text class="small muted" x="810" y="296">todos · GBs · centenas de ciclos</text>
+    <g class="fragment">
+      <line class="line-thin" x1="810" y1="320" x2="1170" y2="320"/>
+      <text class="bold" x="810" y="352">no EP4</text>
+      <text class="small" x="810" y="378">o fóton → registradores</text>
+      <text class="small" x="810" y="400">a estrela → constante (18 048 B)</text>
+      <text class="small" x="810" y="422">a imagem → global (5 GB a 1024²)</text>
+    </g>
+  </svg>
+  <p class="source">main.py measure → parts/kernel.json (resources: constant_bytes)</p>
+  <aside class="notes">
+<div class="cues"><p>perto do thread: rápida e pequena</p><p>registradores (thread), compartilhada (bloco), global (todos), constante (todos, só leitura)</p><p>EP4: fóton, estrela, imagem</p></div>
+<div class="script"><p>A regra geral: quanto mais perto do thread, mais rápida e menor. Registradores são de um thread. A memória compartilhada é de um bloco. A global é de todos, tem gigabytes, e custa centenas de ciclos. A constante é de todos, só para leitura.</p></div>
+<div class="actions"><p>Clique: o EP4. O fóton vive em registradores, a estrela em memória constante, a imagem em memória global.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>A tabela do guia, com uma coluna nossa</h2>
+  <table class="compact">
+    <thead><tr><th>espaço</th><th>quem vê</th><th>dura</th><th>onde fica</th><th>no EP4</th></tr></thead>
+    <tbody>
+      <tr><td>registradores</td><td>um thread</td><td>o kernel</td><td>no SM</td><td><strong>o fóton</strong>: 80 registradores por thread (FP64)</td></tr>
+      <tr><td>local</td><td>um thread</td><td>o kernel</td><td>na memória do device</td><td>40 bytes de pilha; 0 derramados</td></tr>
+      <tr><td>compartilhada</td><td>um bloco</td><td>o kernel</td><td>no SM</td><td>não usamos: a imagem não cabe</td></tr>
+      <tr><td>global</td><td>o grid</td><td>a aplicação</td><td>na memória do device</td><td><strong>a imagem</strong> (5 GB), a fila, as somas</td></tr>
+      <tr><td>constante</td><td>o grid, só leitura</td><td>a aplicação</td><td>memória do device, com cache de 8 KB por SM</td><td><strong>a estrela</strong>: 18 048 bytes</td></tr>
+    </tbody>
+  </table>
+  <ul class="note">
+    <li class="fragment">"local" é o escopo, não o lugar: mora na memória do device, com a latência da global (guia 2.3.3.4)</li>
+    <li class="fragment">é para lá que vão os valores quando faltam registradores: os derramamentos da parte 8</li>
+  </ul>
+  <p class="source">guia CUDA 2.3.3, tabela 1; main.py measure → parts/kernel.json (resources: registers, local_bytes, constant_bytes)</p>
+  <aside class="notes">
+<div class="cues"><p>fóton: 80 registradores (FP64)</p><p>local: 40 bytes de pilha, 0 derramados</p><p>compartilhada: não usamos</p><p>global: imagem de 5 GB; constante: estrela de 18 KB</p></div>
+<div class="script"><p>Esta é a tabela 1 do guia, com uma coluna a mais: o que o EP4 guarda em cada espaço. Os números vêm do orquestrador.</p><p>O fóton ocupa 80 registradores por thread, em FP64. Na memória local, 40 bytes de pilha, nada derramado. A memória compartilhada não usamos: a imagem não cabe. Na global, a imagem de 5 gigabytes, a fila e as somas. E na constante, a descrição da estrela: 18 mil bytes.</p></div>
+<div class="actions"><p>Clique: "local" é o escopo, não o lugar: fica na memória do device, com a latência da global.</p><p>Clique: é para lá que vão os derramamentos da parte 8.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>Constante ou global? O guia sugere, nós medimos</h2>
+  <svg class="d" viewBox="0 0 1180 230" width="1180">
+    <text class="bold" x="20" y="28">constante: um endereço, 32 threads</text>
+    <rect class="gray" x="20" y="44" width="200" height="50"/><text class="small mid" x="120" y="74">estrela[k]</text>
+    <path class="line-muted" d="M220 69L300 40M220 69L300 55M220 69L300 70M220 69L300 85M220 69L300 100" marker-end="url(#arrow-muted)"/>
+    <path d="M305 34h6v12h-6zM305 49h6v12h-6zM305 64h6v12h-6zM305 79h6v12h-6zM305 94h6v12h-6z" fill="#2a78d6"/>
+    <text class="small" x="330" y="74">uma leitura, entregue ao warp inteiro (broadcast)</text>
+    <text class="bold" x="20" y="152">global: o mesmo dado, pela cache L1</text>
+    <rect class="host" x="20" y="168" width="200" height="50"/><text class="small mid" x="120" y="198">estrela[k]</text>
+    <line class="line-muted" x1="220" y1="193" x2="300" y2="193" marker-end="url(#arrow-muted)"/>
+    <rect class="gray" x="305" y="170" width="90" height="46"/><text class="small mid" x="350" y="198">L1</text>
+    <line class="line-muted" x1="395" y1="193" x2="455" y2="193" marker-end="url(#arrow-muted)"/>
+    <text class="small" x="465" y="198">também uma leitura, se todos querem o mesmo</text>
+  </svg>
+  <table class="compact">
+    <thead><tr><th>a estrela em memória global</th><th>registradores</th><th>ciclos</th><th>imagem</th></tr></thead>
+    <tbody>
+      <tr><td>FP64</td><td>80 → 88</td><td>0,996×</td><td>a mesma</td></tr>
+      <tr><td>FP32</td><td>67 → 68</td><td>1,007×</td><td>a mesma</td></tr>
+    </tbody>
+  </table>
+  <p class="concept fragment">Diferença dentro do ruído: a estrela tem 18 KB e cabe nas caches. Mantemos a constante porque ela <strong>diz</strong> o que o dado é: só leitura, igual para todos.</p>
+  <p class="source">main.py measure → parts/kernel.json (variante scene_in_global)</p>
+  <aside class="notes">
+<div class="cues"><p>constante: uma leitura serve o warp inteiro</p><p>medido, estrela em global: ciclos 0,996× (FP64), 1,007× (FP32)</p><p>ruído; a estrela cabe na cache</p><p>mantemos a constante: diz o que o dado é</p></div>
+<div class="script"><p>O guia sugere a memória constante quando todos os threads leem o mesmo endereço: uma leitura serve o warp inteiro. É exatamente o caso da estrela.</p><p>Mas eu testei: compilei uma versão com a estrela na memória global. Resultado: 0,996 vezes os ciclos em FP64 e 1,007 em FP32. Dentro do ruído. A estrela tem 18 KB, cabe nas caches, e a L1 também entrega o mesmo dado a todos.</p><p>Mantenho a constante porque ela diz o que o dado é: só leitura, igual para todos. E a versão em global ainda pede mais registradores.</p></div>
+<div class="actions"><p>Clique: a conclusão. Dizer: predizer e medir; às vezes a recomendação não muda nada.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>A imagem é um histograma de fótons</h2>
+  <div class="columns top">
+    <div class="half">
+      <h3>o jeito do guia (histogramas pequenos)</h3>
+      <svg class="d" viewBox="0 0 540 250" width="540">
+        <rect class="device" x="10" y="10" width="150" height="60"/><text class="small mid" x="85" y="45">bloco 0</text>
+        <rect class="device" x="190" y="10" width="150" height="60"/><text class="small mid" x="265" y="45">bloco 1</text>
+        <rect class="good" x="10" y="100" width="150" height="50"/><text class="small mid" x="85" y="130">hist. compartilhado</text>
+        <rect class="good" x="190" y="100" width="150" height="50"/><text class="small mid" x="265" y="130">hist. compartilhado</text>
+        <line class="line-muted" x1="85" y1="70" x2="85" y2="96" marker-end="url(#arrow-muted)"/><line class="line-muted" x1="265" y1="70" x2="265" y2="96" marker-end="url(#arrow-muted)"/>
+        <rect class="host" x="60" y="190" width="230" height="50"/><text class="small mid" x="175" y="220">histograma global</text>
+        <path class="line" d="M85 150L150 186M265 150L210 186" marker-end="url(#arrow)"/>
+        <text class="small muted" x="360" y="130">atômicos no SM,</text><text class="small muted" x="360" y="150">poucos na global</text>
+      </svg>
+    </div>
+    <div class="half">
+      <h3>o nosso (1,26 bilhão de pixels)</h3>
+      <pre><code class="language-cpp" data-trim data-noescape>
+__device__ void count_photon_atomic(
+        PixelCount *counts, unsigned long long pixel) {
+    atomicAdd(&amp;counts[pixel], 1u);   // direto na global
+}
+      </code></pre>
+      <ul class="note">
+        <li>1024² × 300 quadros × 4 observadores = 1,26·10⁹ contagens: 5 GB não cabem em 100 KB</li>
+        <li>com bilhões de endereços, dois fótons quase nunca disputam o mesmo pixel</li>
+      </ul>
+    </div>
+  </div>
+  <p class="concept fragment">E as contagens são <strong>inteiras</strong>: somadas em qualquer ordem, dão o mesmo número. Atômicos em ponto flutuante dependem da ordem (guia 5.6.8). É uma das razões de a imagem sair <strong>bit a bit</strong>.</p>
+  <p class="source">EP4/engine/gpu/gpu_image.cuh; guia CUDA 2.3.3.8 (histogramas), 5.6.8 (ordem dos atômicos)</p>
+  <aside class="notes">
+<div class="cues"><p>guia: histograma na compartilhada, depois atômicos na global</p><p>o nosso: 1,26·10⁹ contagens = 5 GB → direto na global</p><p>bilhões de endereços: quase nunca fila</p><p>contagens inteiras: mesma soma em qualquer ordem → bit a bit</p></div>
+<div class="script"><p>A imagem da estrela é um histograma de fótons: cada fóton soma 1 num pixel. O guia ensina como fazer histogramas: cada bloco conta na sua memória compartilhada, e no fim soma tudo na global com atômicos.</p><p>O nosso histograma tem 1024 ao quadrado pixels, vezes 300 quadros, vezes 4 observadores: 1,26 bilhão de contagens, 5 gigabytes. Não cabe em 100 KB. Então é um atomicAdd por fóton, direto na memória global. Com bilhões de endereços, dois fótons quase nunca disputam o mesmo pixel.</p><p>E o ponto mais bonito: as contagens são inteiras. Somar inteiros em qualquer ordem dá o mesmo número. Com ponto flutuante, o guia avisa, a ordem dos atômicos muda o resultado.</p></div>
+<div class="actions"><p>Clique: a conclusão. Dizer: é uma das razões de a imagem sair bit a bit.</p></div>
+</aside>
+</section>
+<!-- ================================ 09_occupancy -->
 <section class="divider" data-part="8">
-  <p class="promise">Um SM esconde a espera trocando de warp; quantos warps cabem é decidido pelos registradores; e mais warps nem sempre ajudam.</p>
-  <aside class="notes">Parte 8, ~12 min. Os conceitos mais difíceis, agora que temos código de verdade para olhar.</aside>
+  <p class="promise">O guia, com o nosso código: quantos warps cabem num SM, e por que mais warps não foram mais rápidos aqui.</p>
+  <aside class="notes">
+<div class="cues"><p>Parte 8, ~10 min</p><p>quantos warps cabem; o guia recomenda; nós medimos</p></div>
+<div class="script"><p>Parte 8: o quarto capítulo do guia, a ocupação. Quantos warps cabem num SM, o que o guia recomenda, e o que medimos.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1109,45 +1573,11 @@ __global__ void throw_needles(...) {
     <text class="tiny muted" x="20" y="315">azul: o warp emite uma instrução · cinza: espera o resultado (memória, uma unidade lenta)</text>
   </svg>
   <p class="note fragment">Mas isso só ajuda se a espera for <strong>latência</strong>. Se a unidade já está cheia (poucas unidades FP64, por exemplo), mais warps só fazem mais fila.</p>
-  <aside class="notes">A GPU não esconde latência com caches grandes (como a CPU), e sim com muitos warps prontos. Trocar de warp custa zero ciclos: o estado de todos fica nos registradores. Daí a pergunta: quantos warps cabem?</aside>
-</section>
-
-<section>
-  <h2>Os blocos vão inteiros para um SM, e em qualquer ordem</h2>
-  <div class="columns top">
-    <div class="side">
-      <svg class="d" viewBox="0 0 560 420" width="560">
-        <text class="small muted" x="10" y="22">o grid</text>
-        <rect class="device" x="10" y="34" width="60" height="40"/><text class="small mid" x="40" y="60">B0</text>
-        <rect class="device" x="78" y="34" width="60" height="40"/><text class="small mid" x="108" y="60">B1</text>
-        <rect class="device" x="146" y="34" width="60" height="40"/><text class="small mid" x="176" y="60">B2</text>
-        <rect class="device" x="214" y="34" width="60" height="40"/><text class="small mid" x="244" y="60">B3</text>
-        <rect class="gray" x="282" y="34" width="60" height="40"/><text class="small mid" x="312" y="60">B4</text>
-        <rect class="gray" x="350" y="34" width="60" height="40"/><text class="small mid" x="380" y="60">B5</text>
-        <rect class="gray" x="418" y="34" width="60" height="40"/><text class="small mid" x="448" y="60">B6</text>
-        <rect class="gray" x="486" y="34" width="60" height="40"/><text class="small mid" x="516" y="60">B7</text>
-        <rect class="host" x="140" y="110" width="280" height="50" rx="4"/><text class="mid" x="280" y="141">escalonador de blocos</text>
-        <line class="line-muted" x1="140" y1="74" x2="200" y2="108" marker-end="url(#arrow-muted)"/><line class="line-muted" x1="420" y1="74" x2="360" y2="108" marker-end="url(#arrow-muted)"/>
-        <rect class="paper" x="10" y="200" width="255" height="170" rx="6"/><text class="bold" x="24" y="226">SM 0</text>
-        <rect class="device" x="24" y="240" width="105" height="110"/><text class="mid" x="76" y="300">B0</text>
-        <rect class="device" x="146" y="240" width="105" height="110"/><text class="mid" x="198" y="300">B1</text>
-        <rect class="paper" x="290" y="200" width="255" height="170" rx="6"/><text class="bold" x="304" y="226">SM 1</text>
-        <rect class="device" x="304" y="240" width="105" height="110"/><text class="mid" x="356" y="300">B2</text>
-        <rect class="device" x="426" y="240" width="105" height="110"/><text class="mid" x="478" y="300">B3</text>
-        <line class="line" x1="230" y1="160" x2="140" y2="196" marker-end="url(#arrow)"/><line class="line" x1="330" y1="160" x2="420" y2="196" marker-end="url(#arrow)"/>
-        <text class="small muted" x="10" y="402">cinza: esperam um lugar; entram quando um bloco termina</text>
-      </svg>
-    </div>
-    <div class="main">
-      <ul>
-        <li class="fragment">um bloco só entra num SM se couber <strong>inteiro</strong>: os seus threads podem chamar <code>__syncthreads()</code>, e então precisam estar todos vivos ao mesmo tempo</li>
-        <li class="fragment">por isso, com 80 registradores, cabem 25 warps e lançamos <strong>24</strong>: um bloco de 24 warps, inteiro</li>
-        <li class="fragment">os blocos rodam em <strong>qualquer ordem</strong>: um bloco nunca pode esperar outro</li>
-      </ul>
-      <p class="question fragment">o bloco 0 escreve uma flag; o bloco 1 espera por ela. Funciona?</p>
-    </div>
-  </div>
-  <aside class="notes">Resposta: depende da ordem. Se o bloco 1 ocupar o único lugar e ficar esperando, o bloco 0 nunca entra: a GPU trava. CUDA não garante ordem nem simultaneidade entre blocos. No EP3 e no EP4 os blocos só se comunicam por atômicos que nunca esperam (a fila, as somas). Ideia do exemplo: Stanford CS149, aula "GPU architecture and CUDA programming" (Fatahalian, 2023).</aside>
+  <aside class="notes">
+<div class="cues"><p>1 warp: a unidade parada 75% do tempo</p><p>4 warps: sempre alguém pronto</p><p>trocar de warp custa zero</p><p>só ajuda se a espera for latência</p></div>
+<div class="script"><p>Um warp emite uma instrução e depois espera o resultado: da memória, ou de uma unidade lenta. Com um warp só, a unidade fica parada boa parte do tempo. Com quatro warps, enquanto um espera, outro está pronto, e a unidade fica sempre ocupada.</p><p>É assim que a GPU esconde latência, não com caches grandes como a CPU. E trocar de warp não custa nada, porque o estado de todos fica nos registradores.</p><p>Mas atenção: isso só ajuda se a espera for latência. Se a unidade já está cheia, mais warps só fazem fila.</p></div>
+<div class="actions"><p>Clique: os 4 warps. Clique: a ressalva.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1163,7 +1593,10 @@ __global__ void throw_needles(...) {
     <text class="tiny muted" x="250" y="312">cada quadrado: um warp · azul: residente · azul-claro: cabe nos registradores, mas o bloco não cabe inteiro · cinza: sem registradores</text>
   </svg>
   <p class="source">main.py measure → parts/occupancy.json (this_gpu, targets); a linha de lançamento de todo produto de GPU</p>
-  <aside class="notes">FP64: 80 registradores × 32 = 2560 por warp → 25 warps cabem; os blocos de 768 threads (24 warps) só cabem inteiros, então 24 → ocupação 0,50. FP32: 67 arredonda para 72 → 28 warps, 0,58. A30: 96 → 21 de 64, no máximo 0,33.</aside>
+  <aside class="notes">
+<div class="cues"><p>65 536 registradores por SM, em passos de 8 por thread</p><p>FP64: 80 → cabem 25, lançamos 24 → 0,50</p><p>FP32: 67 → 72 → 28 → 0,58</p><p>A30 FP64: 96 → 21 de 64 → 0,33</p></div>
+<div class="script"><p>Quantos warps cabem num SM? Quem decide são os registradores. O SM tem 65 536, e eles são dados por warp, em passos de 8 por thread.</p><p>No nosso FP64, 80 registradores por thread: 2 560 por warp. Cabem 25 warps, mas lançamos 24, porque o bloco só entra inteiro. Ocupação: 24 de 48, 0,50.</p><p>Em FP32, 67 arredonda para 72: cabem 28, ocupação 0,58.</p><p>E na A30, o mesmo código compilado para ela pede 96 registradores: 21 warps de 64, no máximo 0,33.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1180,37 +1613,46 @@ __global__ void throw_needles(...) {
     <li>na A30 a mesma chamada escolhe outro lançamento: <strong>nenhum <code>if</code> por GPU</strong></li>
   </ul>
   <p class="source">main.py (test, make, measure): environment.show_launch</p>
-  <aside class="notes">Cada produto de GPU imprime esta linha antes de rodar. Lançamento cooperativo, um bloco por SM, threads persistentes. Na A30, com 96 registradores, a mesma API escolhe o lançamento dela: ver a linha impressa lá.</aside>
+  <aside class="notes">
+<div class="cues"><p>todo produto de GPU imprime esta linha</p><p>o bloco vem da API de ocupação</p><p>nenhum if por GPU · [A30: a linha dela]</p></div>
+<div class="script"><p>Esta é a linha que o orquestrador imprime antes de qualquer execução na GPU: registradores, warps que cabem, threads por bloco, ocupação, total de threads.</p><p>O tamanho do bloco vem da API de ocupação do CUDA. Na A30, a mesma chamada escolhe o lançamento dela: não tem nenhum if por GPU no código.</p><p>[A30: ler aqui a linha que ela imprimiu.]</p></div>
+</aside>
 </section>
 
 <section>
-  <h2>Threads persistentes: o padrão do EP3 e do EP4</h2>
-  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="1-3|4|6-8|9">
-cudaOccupancyMaxPotentialBlockSize(&amp;grid, &amp;threads_per_block, trace_photons, 0, 0);
-cudaOccupancyMaxActiveBlocksPerMultiprocessor(&amp;blocks_per_sm, trace_photons, threads_per_block, 0);
-blocks = blocks_per_sm * sms;                          // exatamente o que cabe na GPU
-cudaLaunchCooperativeKernel(trace_photons, blocks, threads_per_block, args, 0, 0);
-
-__global__ void trace_photons(...) {
-    if (!is_allowed(sm_id(), sm_work)) return;         // a máscara: só os n SMs escolhidos trabalham
-    take_chunks_until_none_left(...);                  // a fila: atomicAdd(&amp;next_chunk, 1)
-}
-  </code></pre>
-  <ul class="note">
-    <li class="fragment"><strong>o padrão</strong>: lançar só os blocos que cabem; o trabalho vem de uma fila, não do número de blocos (em Stanford, CS149, "persistent threads")</li>
-    <li class="fragment"><strong>o risco</strong>: o código supõe que todos os blocos rodam ao mesmo tempo, e CUDA não promete isso</li>
-    <li class="fragment"><strong>a garantia</strong>: o lançamento cooperativo falha, em vez de rodar, se os blocos não couberem todos juntos; então cada SM recebe exatamente os seus blocos, uma vez</li>
-    <li class="fragment"><strong>a medida</strong>: blocos num SM fora dos n escolhidos voltam na hora (<code>%smid</code>); é assim que o EP3 e o EP4 medem Amdahl em 1, 2, …, 36 SMs</li>
-  </ul>
-  <p class="source">EP4/engine/gpu/gpu.cu (choose_launch, run_kernel, trace_photons)</p>
-  <aside class="notes">O grid-stride loop da parte 5, levado ao limite: um grid do tamanho da GPU e a divisão do trabalho decidida em tempo de execução. A fila em si nunca espera ninguém, então não trava; o lançamento cooperativo é o que garante uma única leva de blocos, e com ela a máscara de SMs mede de fato n SMs.</aside>
+  <h2>O guia diz, nós medimos</h2>
+  <div class="columns top">
+    <div class="half">
+      <h3>o guia (2.3.7)</h3>
+      <p class="statement" style="margin-top: 0.6em; font-size: 1em; text-align: left">"é uma boa prática ter a ocupação tão alta quanto possível, o que esconde a latência e aumenta o desempenho"</p>
+      <p class="note">e limitar os registradores "pode resultar num ganho líquido de desempenho"</p>
+    </div>
+    <div class="half">
+      <h3>a nossa pergunta</h3>
+      <ul>
+        <li>limitar os registradores com <code>-maxrregcount</code> (80 → 72 → … → 32)</li>
+        <li>a ocupação sobe de 0,50 até 1,00</li>
+        <li>medir a velocidade <strong>em ciclos</strong>, para o <em>clock</em> não atrapalhar</li>
+      </ul>
+      <p class="question fragment">fica mais rápido?</p>
+    </div>
+  </div>
+  <p class="source">guia CUDA 2.3.7 (Kernel Launch and Occupancy); main.py measure → parts/occupancy.json</p>
+  <aside class="notes">
+<div class="cues"><p>guia 2.3.7: ocupação "tão alta quanto possível"</p><p>teste: -maxrregcount 80 → 32; ocupação 0,50 → 1,00</p><p>medir em ciclos</p><p>pergunta: fica mais rápido?</p></div>
+<div class="script"><p>O guia, na seção 2.3.7, diz: é uma boa prática ter a ocupação tão alta quanto possível, porque isso esconde a latência e aumenta o desempenho. E diz que limitar os registradores pode trazer um ganho líquido.</p><p>Então testamos. Compilei o kernel limitando os registradores, de 80 até 32. A ocupação sobe de 0,50 até 1,00. E medi a velocidade em ciclos, para o clock não atrapalhar.</p><p>Pergunta: fica mais rápido?</p></div>
+<div class="actions"><p>Clique: a pergunta. Deixar a turma apostar; a maioria diz que sim.</p></div>
+</aside>
 </section>
 
 <section>
   <h2>Mais ocupação não é mais rápido (aqui)</h2>
   <div class="figure"><img src="figures/registers_and_occupancy.png" style="max-height: 500px" alt="Ocupação e velocidade em ciclos em função do limite de registradores"></div>
   <p class="source">main.py measure → figures/registers_and_occupancy.png</p>
-  <aside class="notes">Com -maxrregcount o compilador limita os registradores: a ocupação sobe (gráfico de cima), mas a velocidade em ciclos não melhora (gráfico de baixo). FP64: igual até 0,67, depois até 10% mais lento. FP32: o mais rápido é sem limite.</aside>
+  <aside class="notes">
+<div class="cues"><p>não</p><p>FP64: igual até 0,67; depois até 10% mais lento</p><p>FP32: o mais rápido é sem limite</p></div>
+<div class="script"><p>Não. No gráfico de cima, a ocupação sobe exatamente como a conta manda. No de baixo, a velocidade em ciclos não melhora.</p><p>Em FP64 fica igual até ocupação 0,67, e depois piora, até 10% mais lento. Em FP32, o mais rápido é sem limite nenhum.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1230,7 +1672,11 @@ __global__ void trace_photons(...) {
     <li class="fragment">mais warps só pagariam se o SM ficasse parado esperando; aqui não fica</li>
   </ul>
   <p class="source">main.py measure → parts/occupancy.json (rows: instructions_vs_uncapped, spill_bytes, cycles_vs_baseline)</p>
-  <aside class="notes">A ocupação em si não custa nada; tirar registradores custa. Não há sincronização envolvida: o kernel não tem __syncthreads, e os derramamentos são por thread.</aside>
+  <aside class="notes">
+<div class="cues"><p>antes de derramar: o compilador recalcula (FP32 a 55: +4,7% instruções, +1,1% ciclos)</p><p>depois: cada derramamento = escrita + leitura na local</p><p>o SM não estava esperando latência</p><p>sem sincronização envolvida</p></div>
+<div class="script"><p>Por quê? A ocupação em si não custa nada. O que custa é tirar registradores do compilador, em dois passos.</p><p>Primeiro, antes de derramar qualquer coisa, o compilador passa a recalcular valores em vez de guardá-los. Em FP32 com 55 registradores, sem derramar nada, o kernel já tem 4,7% mais instruções, e leva 1,1% mais ciclos.</p><p>Depois vêm os derramamentos: cada valor que não cabe vira uma escrita e uma leitura na memória local, que mora na memória do device.</p><p>E mais warps só pagariam se o SM estivesse parado esperando latência. Aqui não está. E não há sincronização envolvida: o kernel não tem __syncthreads.</p></div>
+<div class="actions"><p>Um clique por item.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1243,7 +1689,11 @@ __global__ void trace_photons(...) {
   </ul>
   <p class="question fragment">na A30 (32 FP64 por SM), FP64 deve custar quanto em relação a FP32?</p>
   <p class="source">main.py measure → parts/validation.json (speed_ratio), parts/kernel.json (instruction_mix); a leitura dos NOPs: research/nop_runs.py</p>
-  <aside class="notes">A contagem de instruções é estática (o que está no código, não o que executa). Que os NOPs são esperas antes de DFMA/DMUL/DADD veio de uma investigação (research/nop_runs.py), não do orquestrador: dizer isso.</aside>
+  <aside class="notes">
+<div class="cues"><p>pico 1 : 64; medido 16,2×</p><p>o kernel também é inteiro (Philox, índices, bins)</p><p>1 063 NOPs em 2 744 instruções: espera pelas 2 unidades FP64</p><p>a fila é na unidade, não na memória</p><p>pergunta: e na A30?</p></div>
+<div class="script"><p>O laptop tem 2 unidades FP64 contra 128 faixas FP32: a razão de pico é 1 para 64. Mas medimos só 16 vezes. Por quê? Porque o kernel não é só FP64: o Philox, os índices e os bins são contas de inteiros, que não mudam com a precisão.</p><p>E olhando o código de máquina em FP64: 1 063 instruções NOP em 2 744. São esperas: o compilador faz o warp esperar as duas unidades FP64 terminarem. Isso veio de uma investigação nossa, não do orquestrador.</p><p>Por isso a ocupação não ajuda em FP64: a fila é na unidade de cálculo, não na memória.</p><p>E na A30, com 32 unidades FP64 por SM?</p></div>
+<div class="actions"><p>Clique: a pergunta. Resposta esperada: perto de 1 a 2 vezes; a medida está na parte 9.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1262,14 +1712,18 @@ __global__ void trace_photons(...) {
     </tbody>
   </table>
   <p class="source">main.py measure --targets 80 → parts/occupancy.json (targets); na A30: main.py measure</p>
-  <aside class="notes">Por que 96 e não 80: o compilador do CUDA 13 usa um front end mais novo só para Blackwell em diante (compute_100+). Isso é pesquisa (research/front_end_registers.py), não dado do orquestrador.</aside>
+  <aside class="notes">
+<div class="cues"><p>96 / 76 registradores → ocupação ≤ 0,33 / 0,39</p><p>FP64 rápido: a fila some, a latência pode importar</p><p>a medida decide · [A30]</p></div>
+<div class="script"><p>O mesmo código compilado para a A30 pede 96 registradores em FP64 e 76 em FP32. A ocupação fica no máximo em 0,33.</p><p>Mas o FP64 dela é rápido. A fila na unidade FP64 some, e a latência pode voltar a importar. Aí, mais ocupação talvez ajude. Quem decide é a medida.</p><p>Por que 96 e não 80? O compilador do CUDA 13 usa um front end mais novo só para Blackwell em diante. Também é investigação nossa.</p><p>[A30: ocupação medida, registradores mais rápidos na varredura, FP32 sobre FP64.]</p></div>
+</aside>
 </section>
-
-<!-- ================================================================ 9. EP4 -->
-
+<!-- ================================ 10_star -->
 <section class="divider" data-part="9">
-  <p class="promise">O esqueleto do Buffon com outro corpo: a física da estrela, um fluxo por pedaço, atômicos numa imagem grande.</p>
-  <aside class="notes">Parte 9, ~15 min. Os quatro passos de novo: introdução → serial (EP2) → paralelização → validação.</aside>
+  <p class="promise">A premissa, o desenvolvimento e os resultados: a física da estrela na GPU, validada bit a bit, e o seu Amdahl.</p>
+  <aside class="notes">
+<div class="cues"><p>Parte 9, ~25 min, a maior</p><p>premissa, desenvolvimento, validação, resultados</p><p>a resposta ao "como?" do gancho</p></div>
+<div class="script"><p>Parte 9: o segundo projeto, o EP4, a estrela manchada. É a parte maior: premissa, desenvolvimento, validação e resultados. E é aqui que respondo o "como?" do começo.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1288,7 +1742,10 @@ __global__ void trace_photons(...) {
     </div>
   </div>
   <p class="source">main.py make → observers_grid.mp4</p>
-  <aside class="notes">Introdução: o problema físico. Os observadores do sul não veem manchas: as três manchas estão no hemisfério norte.</aside>
+  <aside class="notes">
+<div class="cues"><p>estrela com escurecimento de limbo e manchas</p><p>observadores em várias inclinações; quadro = fase da rotação</p><p>algoritmo do EP2 (CPU) → GPU</p></div>
+<div class="script"><p>A premissa. Uma estrela com escurecimento de limbo, mais escura na borda, e com manchas. Vários observadores a olham de inclinações diferentes, e cada quadro do vídeo é uma fase da rotação.</p><p>O algoritmo é o do EP2, que rodava sequencial na CPU. O EP4 leva esse algoritmo para a GPU.</p><p>Reparem: os observadores do sul não veem manchas. As três estão no hemisfério norte.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1319,7 +1776,10 @@ __global__ void trace_photons(...) {
     <text class="small muted" x="80" y="465">3: na sombra, bloqueado; na penumbra, escapa com uma probabilidade</text>
   </svg>
   <p class="source">main.py measure → parts/kernel.json (sections: a parte do tempo de cada passo)</p>
-  <aside class="notes">Os cinco passos de trace_photon (photon.cuh), com a fração do tempo de cada um, medida pela variante "sections". A direção é o passo mais caro (35%): é onde estão os senos e cossenos, e onde o kernel atinge o pico de registradores.</aside>
+  <aside class="notes">
+<div class="cues"><p>1 superfície (21%) · 2 direção, limbo (35%) · 3 mancha (9%)</p><p>4 observador e quadro (22%) · 5 pixel (1%) · registrar (13%)</p><p>a estrela não gira: o azimute de escape é a fase</p></div>
+<div class="script"><p>A vida de um fóton, em cinco passos, com a parte do tempo de cada um, medida.</p><p>Um: sorteio um ponto na superfície, 21% do tempo. Dois: sorteio a direção de saída, com o escurecimento de limbo, 35%, o passo mais caro, porque tem senos e cossenos. Três: se o ponto cai numa mancha, na sombra o fóton é bloqueado, na penumbra escapa com uma probabilidade; 9%. Quatro: a direção escolhe o observador e o quadro, 22%. Cinco: o pixel, 1%. E registrar na imagem, 13%.</p><p>E um truque bonito: a estrela não gira no código. O azimute para onde o fóton escapa é a fase da rotação.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1338,7 +1798,11 @@ __device__ void trace_chunk(long long chunk, ...) {
     <li>a mesma fila de pedaços, os mesmos threads persistentes do EP3</li>
     <li>a diferença: o resultado não é um número, é uma <strong>imagem de 5 GB</strong></li>
   </ul>
-  <aside class="notes">Colocar lado a lado com o EP3: o mesmo esqueleto, só muda o corpo do laço. A diferença importante está na última linha: o "resultado parcial" agora é a imagem inteira, que não cabe em registradores.</aside>
+  <aside class="notes">
+<div class="cues"><p>o esqueleto do Buffon, outro corpo</p><p>o mesmo fluxo por pedaço; a física __host__ __device__</p><p>o resultado: uma imagem de 5 GB</p></div>
+<div class="script"><p>O desenvolvimento. É o esqueleto do Buffon, com outro corpo. O mesmo fluxo por pedaço, a mesma fila. A física é compilada para os dois processadores, então é uma função só, testada uma vez.</p><p>A grande diferença está na última linha: o resultado não é mais um número. É uma imagem de 5 gigabytes, onde cada fóton soma 1 num pixel.</p></div>
+<div class="actions"><p>Cliques: o fluxo, o laço, o atômico na imagem.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1363,7 +1827,83 @@ __device__ void trace_chunk(long long chunk, ...) {
   </svg>
   <p class="note">Constante em vez de global para a estrela: medido pela variante <code>scene_in_global</code>. Os atômicos em bilhões de pixels diferentes raramente fazem fila.</p>
   <p class="source">main.py measure → parts/kernel.json (resources, variants)</p>
-  <aside class="notes">O fóton vive inteiro em registradores (80 em FP64). A estrela é lida por todos os threads: memória constante, com broadcast. A imagem é grande demais para qualquer outra coisa: memória global, com um atômico por fóton.</aside>
+  <aside class="notes">
+<div class="cues"><p>estrela: constante · fóton: registradores</p><p>imagem: global, 1 atômico por fóton</p><p>fila: 1 atômico por pedaço</p></div>
+<div class="script"><p>A parte 7, aplicada. A estrela fica em memória constante, lida por todos. Cada fóton vive nos registradores do seu thread. A imagem fica na global, e cada fóton faz um atômico nela. E a fila de pedaços faz um atômico por pedaço.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>Como validamos os geradores: seis níveis</h2>
+  <svg class="d" viewBox="0 0 1180 460" width="1180">
+    <g class="fragment" data-fragment-index="1">
+      <rect class="device" x="20" y="388" width="820" height="62" rx="4"/><text class="mid bold" x="430" y="415">1. o algoritmo: a nossa Philox = Random123</text><text class="small mid" x="430" y="438">3 respostas publicadas, bit a bit</text>
+      <text class="small mono" x="870" y="424">test → rng cpu</text>
+    </g>
+    <g class="fragment" data-fragment-index="2">
+      <rect class="device" x="50" y="322" width="760" height="62" rx="4"/><text class="mid bold" x="430" y="349">2. os bits: cuRAND (GPU) = a nossa (CPU)</text><text class="small mid" x="430" y="372">pedaços 0, 1, 1 000 003 e 2³² + 5 (o "vai-um" no contador)</text>
+      <text class="small mono" x="870" y="358">test → rng gpu</text>
+    </g>
+    <g class="fragment" data-fragment-index="3">
+      <rect class="device" x="80" y="256" width="700" height="62" rx="4"/><text class="mid bold" x="430" y="283">3. as uniformes: os mesmos bits em float e double</text><text class="small mid" x="430" y="306">comparadas com memcmp, não "parecidas"</text>
+      <text class="small mono" x="870" y="292">test → rng gpu</text>
+    </g>
+    <g class="fragment" data-fragment-index="4">
+      <rect class="good" x="110" y="190" width="640" height="62" rx="4"/><text class="mid bold" x="430" y="217">4. a divisão não importa</text><text class="small mid" x="430" y="240">qualquer divisão, passes, 1 ou 36 SMs: a mesma imagem</text>
+      <text class="small mono" x="870" y="226">test → split, passes</text>
+    </g>
+    <g class="fragment" data-fragment-index="5">
+      <rect class="good" x="140" y="124" width="580" height="62" rx="4"/><text class="mid bold" x="430" y="151">5. a imagem: GPU = CPU, bit a bit</text><text class="small mid" x="430" y="174">FP64, 10⁸ fótons, 1024²</text>
+      <text class="small mono" x="870" y="160">test → gpu = cpu</text>
+    </g>
+    <g class="fragment" data-fragment-index="6">
+      <rect class="host" x="170" y="58" width="520" height="62" rx="4"/><text class="mid bold" x="430" y="85">6. a estatística: fótons independentes</text><text class="small mid" x="430" y="108">χ²/gl = 0,990 em 51 899 blocos</text>
+      <text class="small mono" x="870" y="94">test → gpu ~ cpu</text>
+    </g>
+    <text class="small muted" x="870" y="30">main.py test (e measure)</text>
+  </svg>
+  <aside class="notes">
+<div class="cues"><p>6 níveis, de baixo para cima</p><p>1–3: o gerador · 4: a divisão · 5: a física · 6: estatística</p><p>tudo em main.py test (20 s) e no measure</p></div>
+<div class="script"><p>A validação, em seis níveis, de baixo para cima. Cada nível só faz sentido se o de baixo passou.</p><p>O 1, o 2 e o 3 testam o gerador: a nossa Philox contra as respostas publicadas; o cuRAND da GPU contra a nossa; e as uniformes, bit a bit. O 4 testa a ideia do fluxo por pedaço: qualquer divisão do trabalho dá a mesma imagem. O 5 testa a física inteira: a imagem da GPU igual à da CPU. E o 6 testa com fótons diferentes, como um experimento.</p><p>Tudo isso roda no main.py test, em uns 20 segundos, e de novo, com N grande, no measure.</p></div>
+<div class="actions"><p>Um clique por nível.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>A saída real</h2>
+  <pre class="terminal"><code class="nohighlight" data-trim data-noescape>
+<span class="dim">$ engine/build/star_gpu64 --test-rng</span>
+PHILOX_TEST_0=<span class="pass">PASS</span> GOT=6627e8d5,e169c58d,bc57ac4c,9b00dbd8
+PHILOX_TEST_1=<span class="pass">PASS</span> GOT=408f276d,41c83b0e,a20bc7c6,6d5451fd
+PHILOX_TEST_2=<span class="pass">PASS</span> GOT=d16cfe09,94fdcceb,5001e420,24126ea1
+SEED_42_CHUNK_0=9ceaf053,77f5493b,12bf50ad,5742b3d7,fcdb2127,53ba6cfd,838f5a6e,744e06fb
+GPU_SEED_42_CHUNK_0=9ceaf053,77f5493b,12bf50ad,5742b3d7,fcdb2127,53ba6cfd,838f5a6e,744e06fb
+GPU_RNG_CHUNK=0 BITS=<span class="pass">SAME_AS_CPU</span> UNIFORMS=<span class="pass">SAME_AS_CPU</span>
+GPU_RNG_CHUNK=1 BITS=<span class="pass">SAME_AS_CPU</span> UNIFORMS=<span class="pass">SAME_AS_CPU</span>
+GPU_RNG_CHUNK=1000003 BITS=<span class="pass">SAME_AS_CPU</span> UNIFORMS=<span class="pass">SAME_AS_CPU</span>
+GPU_RNG_CHUNK=4294967301 BITS=<span class="pass">SAME_AS_CPU</span> UNIFORMS=<span class="pass">SAME_AS_CPU</span>
+PHILOX_TESTS=<span class="pass">PASS</span>
+  </code></pre>
+  <p class="note">As duas linhas do meio: os 8 primeiros números do pedaço 0, na CPU e na GPU. O pedaço 4 294 967 301 = 2³² + 5 passa do limite de uma palavra de 32 bits.</p>
+  <p class="source">main.py test → "rng cpu", "rng gpu" (chama o engine com --test-rng)</p>
+  <aside class="notes">
+<div class="cues"><p>não é afirmação: é a saída do programa</p><p>3 vetores de teste do Random123</p><p>pedaço 0: mesmos 8 números na CPU e na GPU</p><p>pedaço 2³² + 5: o vai-um</p></div>
+<div class="script"><p>Isto não é uma afirmação, é a saída do programa. As três primeiras linhas são os vetores de teste publicados do Random123: passam.</p><p>As duas do meio: os oito primeiros números do pedaço 0, na CPU e na GPU. Iguais.</p><p>E o pedaço 4 294 967 301, que é 2 a 32 mais 5, testa o vai-um entre as palavras do contador.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>O nível 6: fótons diferentes, a mesma estrela</h2>
+  <div class="figure"><img src="figures/independent_comparison.png" alt="GPU contra CPU com fótons independentes: imagens, resíduos e histograma"></div>
+  <ul>
+    <li>mesma semente, pedaços diferentes: CPU [0, 97 656), GPU [97 656, 195 313)</li>
+    <li>resíduos \((a-b)/\sqrt{a+b}\) em blocos de 8×8 pixels: \(\chi^2/\text{gl} = 0{,}990\) com 51 899 graus de liberdade (−1,6σ)</li>
+  </ul>
+  <p class="source">main.py measure → validation/independent-gpu64/comparison.png, parts/validation.json</p>
+  <aside class="notes">
+<div class="cues"><p>mesma semente, pedaços diferentes</p><p>χ²/gl = 0,990 em 51 899 blocos (−1,6σ)</p><p>sementes diferentes = estrelas diferentes (primeira versão falhou)</p></div>
+<div class="script"><p>O nível 6: fótons diferentes, da mesma estrela. Mesma semente, pedaços diferentes: a CPU fica com uma metade, a GPU com a outra. Comparando as imagens em blocos de 8 por 8 pixels, o qui-quadrado por grau de liberdade é 0,990, com quase 52 mil graus de liberdade.</p><p>Por que a mesma semente? Porque a semente também posiciona as manchas. Na primeira versão usei sementes diferentes e o teste falhou: outra semente é outra estrela.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1381,7 +1921,11 @@ __device__ void trace_chunk(long long chunk, ...) {
   <p class="question fragment">por que dois processadores diferentes podem dar os mesmos bits?</p>
   <p class="concept fragment">Os mesmos números aleatórios (níveis 1–3) e a mesma física. Em FP64, as contas da GPU podem diferir no último bit (FMA, a biblioteca matemática), mas um fóton quase nunca cai tão perto da borda de um pixel para isso importar: nenhum em 10⁸. Em FP32 alguns caem.</p>
   <p class="source">main.py test; main.py measure → parts/validation.json</p>
-  <aside class="notes">Bit a bit versus estatisticamente igual: FP64 dá a mesma imagem em dois processadores; FP32 dá uma imagem estatisticamente igual, e sabemos por quê (as somas-multiplicações fundidas e a biblioteca de senos da GPU).</aside>
+  <aside class="notes">
+<div class="cues"><p>FP64: GPU = CPU, bit a bit (10⁸ fótons)</p><p>FP32: 3·10⁻⁴ dos fótons mudam de pixel</p><p>pergunta: por que dois processadores dão os mesmos bits?</p></div>
+<div class="script"><p>O resumo. Em FP64, a imagem da GPU é idêntica à da CPU, bit a bit, com 100 milhões de fótons. Em FP32, 3 em cada 10 mil fótons mudam de pixel.</p><p>Pergunta: por que dois processadores diferentes podem dar exatamente os mesmos bits?</p></div>
+<div class="actions"><p>Clique: a pergunta. Esperar.</p><p>Clique: a resposta. Os mesmos números aleatórios (parte 5); contagens inteiras (parte 7); e em FP64 as diferenças do último bit (parte 4) quase nunca põem um fóton do outro lado da borda de um pixel: nenhum em 10⁸. Em FP32, alguns.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1395,14 +1939,10 @@ __device__ void trace_chunk(long long chunk, ...) {
     <li><strong>tamanho</strong> (pixels × quadros × observadores × 4 bytes) → memória e passes; cada passe traça todos os fótons de novo</li>
   </ul>
   <p class="source">main.py measure → figures/costs_compute.png, costs_memory.png, parts/costs.json</p>
-  <aside class="notes">Os observadores não custam fótons (cada um fica com os fótons do seu bin), só memória. Imagens nítidas ao nível do pixel pediriam outro algoritmo ("peel-off"): fica para o TCC.</aside>
-</section>
-
-<!-- ================================================================ 10. Amdahl EP4 -->
-
-<section class="divider" data-part="10">
-  <p class="promise">A mesma lei do EP3, outra parte serial: numa imagem de alta resolução, a parte serial é a própria imagem.</p>
-  <aside class="notes">Parte 10, ~12 min. Aqui respondemos o "como?" do gancho.</aside>
+  <aside class="notes">
+<div class="cues"><p>resolução (quadros, bins) → fótons, borrão (~11 px; polo 105 px)</p><p>tamanho → memória, passes (cada passe traça tudo de novo)</p><p>nitidez de pixel: outro algoritmo (TCC)</p></div>
+<div class="script"><p>Dois eixos de custo, que é bom separar. A resolução, quantos quadros e quantas faixas de inclinação, custa fótons e decide o borrão: a 1024 com 300 quadros, uns 11 pixels de borrão no equador, até 105 no polo.</p><p>O tamanho, pixels vezes quadros vezes observadores vezes 4 bytes, custa memória. Sete observadores a 1024 já pedem dois passes no laptop, e cada passe traça todos os fótons de novo.</p><p>Imagens nítidas ao nível do pixel pediriam outro algoritmo. Isso fica para o meu TCC.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1418,7 +1958,25 @@ __device__ void trace_chunk(long long chunk, ...) {
   <p class="question fragment">antes da última linha: quanto deve dar a execução inteira?</p>
   <p class="concept fragment"><strong>A parte serial de uma imagem de alta resolução é a própria imagem.</strong></p>
   <p class="source">main.py measure → parts/scaling.json (strong-fp64: phases, speedup_photon_phase, speedup_whole_run)</p>
-  <aside class="notes">O EP3 tinha 0,15 s de parte serial (o contexto). O EP4 tem 5,6 s: salvar 5 GB (~4,3 s), preparar (~0,7 s), copiar de volta (~0,4 s).</aside>
+  <aside class="notes">
+<div class="cues"><p>fótons: 216,9 s → 6,0 s (36,3×)</p><p>o resto não encolhe (salvar 5 GB)</p><p>pergunta: e a execução inteira?</p><p>19,3×</p></div>
+<div class="script"><p>Os resultados de Amdahl. Em FP64, com 4 bilhões de fótons e a imagem de 5 GB: os fótons levam 216,9 segundos num SM e 6,0 em 36. 36,3 vezes.</p><p>Mas preparar, copiar de volta e salvar 5 GB no disco não encolhem com os SMs.</p><p>Então, quanto deve dar a execução inteira?</p></div>
+<div class="actions"><p>Clique: o resto. Clique: a pergunta; esperar. Clique: 19,3×. Clique: a frase.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>As fases da execução, em 1 SM e em 36 SMs</h2>
+  <div class="figure"><img src="figures/phases_fp64.png" style="max-height: 410px" alt="Fases de uma execução do EP4, 1 SM e 36 SMs"></div>
+  <ul>
+    <li class="fragment">em 1 SM, os fótons são 97% do tempo; em 36 SMs, só <strong>52%</strong></li>
+    <li class="fragment">salvar 5 GB leva ~4,3 s, com 1 SM ou com 36: <strong>calcular é barato; mover dados não é</strong></li>
+  </ul>
+  <p class="source">main.py measure → figures/phases_fp64.png, parts/scaling.json (phases)</p>
+  <aside class="notes">
+<div class="cues"><p>1 SM: fótons 97% · 36 SMs: fótons 52%</p><p>salvar 5 GB: ~4,3 s em qualquer caso</p><p>a parte serial é a própria imagem</p></div>
+<div class="script"><p>A mesma coisa, em figura. Num SM, os fótons são 97% do tempo. Em 36, só 52%. Salvar 5 GB leva uns 4,3 segundos, com um SM ou com 36.</p><p>Calcular é barato; mover dados não é. Numa imagem de alta resolução, a parte serial é a própria imagem.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1426,14 +1984,20 @@ __device__ void trace_chunk(long long chunk, ...) {
   <div class="figure"><img src="figures/amdahl_ceiling_fp64.png" style="max-height: 500px" alt="O teto de Amdahl do EP4 em FP64"></div>
   <p class="caption">em verde, a mesma fase em ciclos: o <em>clock</em> sai da conta; à direita, o <em>clock</em> durante os fótons</p>
   <p class="source">main.py measure → figures/amdahl_ceiling_fp64.png</p>
-  <aside class="notes">FP64: o clock fica em ~2880 MHz até 36 SMs, então segundos e ciclos coincidem (36,3× e 36,1×). Em FP32, com 36 SMs, cai para 2730 MHz (limite de potência): 35,3× em segundos, 36,3× em ciclos. O teto da execução inteira é 38×, quantos SMs houver.</aside>
+  <aside class="notes">
+<div class="cues"><p>azul: fótons, quase ideal · laranja: execução inteira → teto 38×</p><p>verde: em ciclos, sem o clock</p><p>FP64 ~2880 MHz; FP32 em 36 SMs: 2730 (potência)</p></div>
+<div class="script"><p>Azul: os fótons, quase no ideal. Laranja: a execução inteira, curvando para um teto de 38 vezes, quantos SMs houver. Ninguém passa disso com esta imagem.</p><p>Verde: os fótons medidos em ciclos, o que tira o clock da conta. À direita, o clock durante os fótons: em FP64 fica em uns 2880 MHz. Em FP32 com todos os SMs ele cai para 2730, pelo limite de potência: 35,3 vezes em segundos, 36,3 em ciclos.</p></div>
+</aside>
 </section>
 
 <section>
   <h2>Quanto maior \(N\), mais perto do ideal</h2>
   <div class="figure"><img src="figures/costs_large_n.png" style="max-height: 500px" alt="Aceleração da execução inteira em função de N"></div>
   <p class="source">main.py measure → figures/costs_large_n.png, parts/costs.json (large_n)</p>
-  <aside class="notes">O modelo T(n) = N/velocidade(n) + parte serial, com velocidades e parte serial medidas, prevê a curva; os pontos medidos caem nela (FP32 em 10¹¹: 21,4× medido contra 22,2× previsto). É o p(N) do EP3, de novo: a parte serial é fixa e a paralela cresce.</aside>
+  <aside class="notes">
+<div class="cues"><p>T = N/velocidade + parte serial (ambos medidos)</p><p>medidos sobre a curva (FP32 10¹¹: 21,4× × 22,2×)</p><p>o p(N) do Buffon de novo</p></div>
+<div class="script"><p>E quanto maior N, mais perto do ideal. O modelo é simples: o tempo é N dividido pela velocidade, mais a parte serial, os dois medidos. Os pontos medidos caem na curva: em FP32 com 10 a 11 fótons, 21,4 vezes medido, 22,2 previsto.</p><p>É o mesmo p que cresce com N do Buffon: a parte serial é fixa, a paralela cresce.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1446,53 +2010,11 @@ __device__ void trace_chunk(long long chunk, ...) {
     </tbody>
   </table>
   <p class="question fragment">com uma imagem 2048², a execução inteira escala melhor ou pior?</p>
-  <aside class="notes">Pior, para o mesmo N: a imagem fica 4× maior (mais tempo para salvar), e a parte serial cresce. Melhor só se N crescer junto (Gustafson).</aside>
-</section>
-
-<section>
-  <h2>O laptop e a A30</h2>
-  <table>
-    <thead><tr><th></th><th>laptop (36 SMs)</th><th>A30 (56 SMs)</th></tr></thead>
-    <tbody>
-      <tr><td>fótons/s, FP32</td><td>\(1{,}1\times10^{10}\)</td><td><span class="a30">[A30]</span></td></tr>
-      <tr><td>fótons/s, FP64</td><td>\(6{,}7\times10^{8}\)</td><td><span class="a30">[A30]</span></td></tr>
-      <tr><td>FP32 / FP64</td><td>16,2×</td><td><span class="a30">[A30]</span></td></tr>
-      <tr><td>por SM por GHz, FP64</td><td><span class="a30">[compare]</span></td><td><span class="a30">[A30]</span></td></tr>
-      <tr><td>todos os SMs vs um SM (FP64)</td><td>36,3×</td><td><span class="a30">[A30]</span></td></tr>
-      <tr><td>execução inteira, 1024²</td><td>19,3×</td><td><span class="a30">[A30]</span></td></tr>
-      <tr><td>a mesma imagem (FP64)?</td><td colspan="2"><span class="a30">[compare: digests]</span></td></tr>
-    </tbody>
-  </table>
-  <p class="source">main.py compare runs/measure/&lt;laptop&gt; runs/measure/&lt;A30&gt;</p>
-  <aside class="notes">A resposta à pergunta da parte 2: qual ganha em FP64, e em FP32. Por SM por GHz tira a diferença de número de SMs e de clock e deixa o que um SM faz por ciclo.</aside>
-</section>
-
-<section>
-  <h2>Uma comparação justa: a unidade é o SM</h2>
-  <ul>
-    <li>"a GPU é 100× mais rápida que a CPU": uma GPU inteira contra <strong>um</strong> núcleo de um código sequencial</li>
-    <li class="fragment">é o erro clássico (Lee et al., ISCA 2010: "Debunking the 100X GPU vs. CPU myth")</li>
-    <li class="fragment">aqui: a GPU contra ela mesma, um SM e depois todos, com o mesmo código e o mesmo \(N\)</li>
-    <li class="fragment">a CPU serve para outra coisa: conferir que a GPU dá a resposta certa</li>
-    <li class="fragment">e sempre dizer contra o quê cada aceleração foi medida: fótons ou execução inteira, segundos ou ciclos</li>
-  </ul>
-  <p class="source">main.py measure → parts/speed.json (um SM e todos os SMs)</p>
-  <aside class="notes">36,3× em FP64 de um SM para 36: é uma comparação que se defende. Comparar com um núcleo da CPU daria um número maior e sem sentido.</aside>
-</section>
-
-<!-- ================================================================ 11. fechamento -->
-
-<section class="divider" data-part="11">
-  <p class="promise">O resultado, o fio de volta, e como reproduzir cada número desta aula.</p>
-  <aside class="notes">Parte 11, ~6 min.</aside>
-</section>
-
-<section>
-  <h2>Mais fótons, imagem mais limpa: SNR \(\propto \sqrt{N}\)</h2>
-  <div class="figure"><video data-autoplay muted loop playsinline width="1100" src="videos/snr_ladder.mp4"></video></div>
-  <p class="caption">1024², de \(10^9\) a \(10^{13}\) fótons · SNR na borda de 0,19 a 18,7, medida = prevista (dentro de 1%) · as manchas aparecem a partir de \(10^{10}\)</p>
-  <p class="source">main.py make --ladder 1e9:1e13 --size 1024 → snr_ladder.mp4</p>
-  <aside class="notes">SNR = √(fótons por pixel). Cada degrau é exatamente o começo do seguinte (os mesmos pedaços): são somas parciais, e 10× os fótons dão √10 ≈ 3,2× a SNR. A escada só é possível porque o fluxo é por pedaço. O último degrau levou 31 min no laptop.</aside>
+  <aside class="notes">
+<div class="cues"><p>EP3: 0,15 s (contexto) → 34×</p><p>EP4: 5,6 s (salvar 5 GB) → 19×</p><p>pergunta: 2048², melhor ou pior?</p></div>
+<div class="script"><p>A mesma lei de Amdahl, duas partes seriais diferentes. No EP3, 0,15 segundo de contexto: 34 vezes. No EP4, 5,6 segundos, sobretudo salvar a imagem: 19 vezes.</p><p>Pergunta: com uma imagem de 2048, a execução inteira escala melhor ou pior?</p></div>
+<div class="actions"><p>Clique: a pergunta. Resposta: pior para o mesmo N (imagem 4× maior para salvar); melhor só se N crescer junto (Gustafson).</p></div>
+</aside>
 </section>
 
 <section>
@@ -1510,7 +2032,92 @@ __device__ void trace_chunk(long long chunk, ...) {
     </div>
   </div>
   <p class="source">main.py make --size 2048 --snr 10 --observers 1.5708,1.0472,0.5236,0</p>
-  <aside class="notes">A resposta ao "como?" do gancho, em alta resolução. O mesmo comando rodou na A30: comparar os tempos. Os passes multiplicam o trabalho: cada passe traça os 1,6·10¹³ fótons de novo e guarda só os observadores daquele passe.</aside>
+  <aside class="notes">
+<div class="cues"><p>1,56·10¹³ fótons; 1 h 43 min no laptop</p><p>4 passes (20 GB > 8 GB)</p><p>SNR medida = prevista: 14,0 / 11,7</p><p>A30: 24 GB, 1 passe · [A30]</p></div>
+<div class="script"><p>A mesma estrela em 2048 por 2048. 15,6 trilhões de fótons: 93 minutos de fótons, uma hora e quarenta e três no total, no laptop.</p><p>Foram 4 passes: 20 GB de imagem não cabem em 8, e cada passe traça os fótons de novo, guardando só alguns observadores.</p><p>A relação sinal-ruído medida bate com a prevista: 14,0 no centro, 11,7 na borda.</p><p>A A30 tem 24 GB: um passe só. [A30: o tempo dela.]</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>Mais fótons, imagem mais limpa: SNR \(\propto \sqrt{N}\)</h2>
+  <div class="figure"><video data-autoplay muted loop playsinline width="1100" src="videos/snr_ladder.mp4"></video></div>
+  <p class="caption">1024², de \(10^9\) a \(10^{13}\) fótons · SNR na borda de 0,19 a 18,7, medida = prevista (dentro de 1%) · as manchas aparecem a partir de \(10^{10}\)</p>
+  <p class="source">main.py make --ladder 1e9:1e13 --size 1024 → snr_ladder.mp4</p>
+  <aside class="notes">
+<div class="cues"><p>SNR = √(fótons por pixel)</p><p>10⁹ → 10¹³: SNR na borda 0,19 → 18,7, todos a < 1% do previsto</p><p>manchas a partir de 10¹⁰</p><p>degraus = somas parciais (fluxo por pedaço)</p></div>
+<div class="script"><p>O que os fótons compram. A relação sinal-ruído é a raiz do número de fótons por pixel. De um bilhão a dez trilhões de fótons, a SNR na borda vai de 0,19 a 18,7, cada degrau a menos de 1% do previsto. As manchas aparecem a partir de 10 a 10.</p><p>E cada degrau é exatamente o começo do seguinte: são somas parciais. Isso só é possível porque o fluxo aleatório é por pedaço.</p></div>
+<div class="actions"><p>Deixar o vídeo rodar uma volta.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>A A30: Amdahl em 56 SMs</h2>
+  <div class="columns top">
+    <div class="half figure">
+      <div style="height: 440px; border: 3px dashed var(--a30); border-radius: 8px; display: flex; align-items: center; justify-content: center">
+        <span class="a30">[A30: a figura do teto]</span>
+      </div>
+    </div>
+    <div class="half">
+      <ul>
+        <li>fótons, 56 SMs contra 1: <span class="a30">[A30]</span></li>
+        <li>execução inteira: <span class="a30">[A30]</span>; teto \(1/s\): <span class="a30">[A30]</span></li>
+        <li><em>clock</em> durante os fótons: <span class="a30">[A30]</span></li>
+        <li>a parte serial: salvar 5 GB no disco do IAG, <span class="a30">[A30]</span> s</li>
+      </ul>
+    </div>
+  </div>
+  <p class="source">main.py measure, na A30 → figures/amdahl_ceiling_fp64.png, parts/scaling.json</p>
+  <aside class="notes">
+<div class="cues"><p>[A30: figura + números]</p><p>fótons: FP64 rápido; execução inteira: o disco do IAG</p></div>
+<div class="script"><p>[A30: trocar o quadro tracejado pela figura da A30 e preencher.]</p><p>O que esperar na comparação: nos fótons, a A30 tem FP64 rápido; na execução inteira, o teto depende do disco do IAG, que é onde a imagem é salva.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>O laptop e a A30</h2>
+  <table>
+    <thead><tr><th></th><th>laptop (36 SMs)</th><th>A30 (56 SMs)</th></tr></thead>
+    <tbody>
+      <tr><td>fótons/s, FP32</td><td>\(1{,}1\times10^{10}\)</td><td><span class="a30">[A30]</span></td></tr>
+      <tr><td>fótons/s, FP64</td><td>\(6{,}7\times10^{8}\)</td><td><span class="a30">[A30]</span></td></tr>
+      <tr><td>FP32 / FP64</td><td>16,2×</td><td><span class="a30">[A30]</span></td></tr>
+      <tr><td>por SM por GHz, FP64</td><td><span class="a30">[compare]</span></td><td><span class="a30">[A30]</span></td></tr>
+      <tr><td>todos os SMs vs um SM (FP64)</td><td>36,3×</td><td><span class="a30">[A30]</span></td></tr>
+      <tr><td>execução inteira, 1024²</td><td>19,3×</td><td><span class="a30">[A30]</span></td></tr>
+      <tr><td>a mesma imagem (FP64)?</td><td colspan="2"><span class="a30">[compare: digests]</span></td></tr>
+    </tbody>
+  </table>
+  <p class="source">main.py compare runs/measure/&lt;laptop&gt; runs/measure/&lt;A30&gt;</p>
+  <aside class="notes">
+<div class="cues"><p>a resposta da parte 2: FP64? FP32?</p><p>por SM por GHz: o que um SM faz por ciclo</p><p>[A30: main.py compare]</p></div>
+<div class="script"><p>Agora a resposta à pergunta da parte 2: qual das duas ganha em FP64, e em FP32.</p><p>A linha "por SM por GHz" tira da conta o número de SMs e o clock, e deixa o que um SM faz por ciclo.</p><p>[A30: preencher com main.py compare.]</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>Uma comparação justa: a unidade é o SM</h2>
+  <ul>
+    <li>"a GPU é 100× mais rápida que a CPU": uma GPU inteira contra <strong>um</strong> núcleo de um código sequencial</li>
+    <li class="fragment">é o erro clássico (Lee et al., ISCA 2010: "Debunking the 100X GPU vs. CPU myth")</li>
+    <li class="fragment">aqui: a GPU contra ela mesma, um SM e depois todos, com o mesmo código e o mesmo \(N\)</li>
+    <li class="fragment">a CPU serve para outra coisa: conferir que a GPU dá a resposta certa</li>
+    <li class="fragment">e sempre dizer contra o quê cada aceleração foi medida: fótons ou execução inteira, segundos ou ciclos</li>
+  </ul>
+  <p class="source">main.py measure → parts/speed.json (um SM e todos os SMs)</p>
+  <aside class="notes">
+<div class="cues"><p>"100× mais rápida que a CPU": GPU inteira × 1 núcleo</p><p>erro clássico (Lee et al., ISCA 2010)</p><p>aqui: 1 SM × todos, mesmo código, mesmo N</p><p>sempre dizer contra o quê</p></div>
+<div class="script"><p>Uma última coisa sobre medir. É comum ler "a GPU é cem vezes mais rápida que a CPU". Quase sempre isso compara uma GPU inteira com um núcleo de um código sequencial. É um erro clássico, descrito num artigo de 2010 chamado "desmistificando o mito dos 100×".</p><p>Aqui eu comparo a GPU com ela mesma: um SM contra todos, o mesmo código, o mesmo N. A CPU serve para outra coisa: conferir que a resposta está certa.</p><p>E sempre dizer contra o quê: fótons ou execução inteira, segundos ou ciclos.</p></div>
+<div class="actions"><p>Um clique por item.</p></div>
+</aside>
+</section>
+<!-- ================================ 11_closing -->
+<section class="divider" data-part="10">
+  <p class="promise">O fio de volta, e como reproduzir cada número desta aula.</p>
+  <aside class="notes">
+<div class="cues"><p>Parte 10, ~5 min</p></div>
+<div class="script"><p>Parte 10: o fechamento. O fio de volta, e como reproduzir cada número desta aula.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1524,7 +2131,11 @@ __device__ void trace_chunk(long long chunk, ...) {
     <li>números aleatórios em paralelo → um fluxo por pedaço → <strong>a mesma imagem na CPU e na GPU</strong></li>
     <li>Amdahl → a parte serial → <strong>o contexto no EP3, a imagem no EP4</strong></li>
   </ul>
-  <aside class="notes">Voltar à tabela do começo: cada ponte foi atravessada.</aside>
+  <aside class="notes">
+<div class="cues"><p>a tabela do começo, atravessada</p><p>ler 2 ou 3 linhas</p></div>
+<div class="script"><p>Lembram da tabela do começo? Agora cada linha foi atravessada. Os pixels independentes de 1999 viraram um fóton por iteração. O SM de 2006 virou a unidade de toda aceleração. O FP64 de 2008 virou 16 vezes mais lento aqui, e outra coisa na A30. E os números aleatórios em paralelo viraram a mesma imagem na CPU e na GPU.</p></div>
+<div class="actions"><p>Ler duas ou três linhas, não todas.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1534,7 +2145,11 @@ __device__ void trace_chunk(long long chunk, ...) {
     <li class="fragment">Primeiro a correção: os mesmos bits na CPU e na GPU.</li>
     <li class="fragment">Amdahl decide: ache a parte serial (o contexto, a imagem), meça a execução inteira e diga contra o quê cada aceleração foi medida.</li>
   </ol>
-  <aside class="notes"></aside>
+  <aside class="notes">
+<div class="cues"><p>1 muitos pedaços independentes</p><p>2 primeiro a correção: os mesmos bits</p><p>3 Amdahl decide: ache a parte serial, diga contra o quê</p></div>
+<div class="script"><p>Se ficarem três coisas desta aula:</p><p>Um: a GPU vence quando o trabalho são muitos pedaços independentes.</p><p>Dois: primeiro a correção. Antes de medir velocidade, os mesmos bits na CPU e na GPU.</p><p>Três: Amdahl decide. Achem a parte serial, seja o contexto ou a imagem, meçam a execução inteira, e digam sempre contra o quê cada aceleração foi medida.</p></div>
+<div class="actions"><p>Um clique por lição, devagar.</p></div>
+</aside>
 </section>
 
 <section>
@@ -1551,14 +2166,41 @@ python main.py compare A B               <span class="dim"># duas máquinas lado
     <li>antes de rodar, cada produto confere o ambiente, prevê tempo, memória e disco, e só aceita \(N\) válido</li>
     <li>o EP3, como entregue: <code>python buffon.py</code></li>
   </ul>
-  <aside class="notes">O engine é o projeto; o orquestrador é como ele é apresentado e analisado. Todos os gráficos desta aula foram feitos por estes comandos, no laptop e na A30.</aside>
+  <aside class="notes">
+<div class="cues"><p>engine (C++/CUDA) = o projeto</p><p>orquestrador (Python) = como é apresentado e analisado</p><p>test · make · measure · compare</p></div>
+<div class="script"><p>O engine em C++ e CUDA é o projeto. O orquestrador em Python é como ele é apresentado e analisado. Todos os gráficos desta aula saíram destes quatro comandos, no laptop e na A30.</p><p>E antes de rodar, cada um confere o ambiente, prevê tempo, memória e disco, e só aceita um N válido.</p></div>
+</aside>
+</section>
+
+<section>
+  <h2>Para levar: o guia, com o nosso código</h2>
+  <div class="columns top">
+    <div class="main">
+      <ul>
+        <li><strong>I. o modelo de execução</strong>: o nosso lançamento, linha por linha</li>
+        <li><strong>II. ponto flutuante</strong>: o Buffon em três precisões, a estrela bit a bit</li>
+        <li><strong>III. a memória</strong>: a tabela do guia com a coluna do EP4; a imagem como histograma</li>
+        <li><strong>IV. a ocupação</strong>: o que o guia recomenda e o que medimos</li>
+      </ul>
+      <p class="concept">Cada seção: a ideia do guia (com a seção para citar), o nosso código, o nosso número, e o comando que o reproduz.</p>
+    </div>
+  </div>
+  <p class="source">cuda_class/deck/guia.html · github.com/welt00n/aga511</p>
+  <aside class="notes">
+<div class="cues"><p>o guia, com o nosso código: 4 seções</p><p>cada uma: seção do guia, código, número, comando</p></div>
+<div class="script"><p>O material para levar: o guia, com o nosso código. As quatro partes do guia que usamos hoje, cada uma com a seção para citar, o nosso código, o nosso número medido, e o comando que o reproduz.</p></div>
+<div class="actions"><p>Mostrar onde está: o repositório.</p></div>
+</aside>
 </section>
 
 <section>
   <p class="statement">Obrigado!<small>Perguntas?</small></p>
-  <aside class="notes"></aside>
+  <aside class="notes">
+<div class="cues"><p>perguntas</p></div>
+<div class="script"><p>Obrigado. Perguntas?</p></div>
+<div class="actions"><p>Ter à mão: as duas GPUs (parte 2), o teto de Amdahl, a pirâmide da validação, threads persistentes.</p></div>
+</aside>
 </section>
-
 </div>
 </div>
 

@@ -1,0 +1,110 @@
+<section class="divider" data-part="4">
+  <p class="promise">O guia, com o nosso código: o que FP16, FP32 e FP64 custam e quanto valem, medido no Buffon.</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>FP16, FP32 e FP64: os bits (IEEE 754)</h2>
+  <svg class="d" viewBox="0 0 1180 330" width="1180">
+    <text class="bold" x="10" y="60">FP16</text>
+    <rect class="gray" x="110" y="30" width="16" height="48"/>
+    <rect class="good" x="126" y="30" width="80" height="48"/><text class="small mid" x="166" y="60">exp. 5</text>
+    <rect class="device" x="206" y="30" width="160" height="48"/><text class="small mid" x="286" y="60">mantissa 10</text>
+    <text x="400" y="52">ε = 2⁻¹¹ ≈ 4,9·10⁻⁴</text><text class="small muted" x="400" y="76">~3 dígitos · maior valor 65 504</text>
+    <text class="bold" x="10" y="160">FP32</text>
+    <rect class="gray" x="110" y="130" width="16" height="48"/>
+    <rect class="good" x="126" y="130" width="128" height="48"/><text class="small mid" x="190" y="160">expoente 8</text>
+    <rect class="device" x="254" y="130" width="368" height="48"/><text class="small mid" x="438" y="160">mantissa 23 (+1 implícito)</text>
+    <text x="650" y="152">ε = 2⁻²⁴ ≈ 6·10⁻⁸</text><text class="small muted" x="650" y="176">~7 dígitos</text>
+    <text class="bold" x="10" y="260">FP64</text>
+    <rect class="gray" x="110" y="230" width="16" height="48"/>
+    <rect class="good" x="126" y="230" width="176" height="48"/><text class="small mid" x="214" y="260">expoente 11</text>
+    <rect class="device" x="302" y="230" width="832" height="48"/><text class="small mid" x="718" y="260">mantissa 52 (+1 implícito)</text>
+    <text x="110" y="314">ε = 2⁻⁵³ ≈ 1,1·10⁻¹⁶</text><text class="small muted" x="360" y="314">~16 dígitos · cinza: 1 bit de sinal · 16 px por bit</text>
+  </svg>
+  <ul>
+    <li class="fragment">unidades separadas no SM: no laptop, 128 faixas FP32 e só <strong>2 FP64</strong> (1 : 64); na A30, 1 : 2</li>
+    <li class="fragment">a pergunta não é "qual é mais exato", é "o erro de arredondamento é menor que o ruído do Monte Carlo?"</li>
+  </ul>
+  <p class="source">IEEE 754; guia CUDA 5.1 (FP32 : FP64 por compute capability), 5.6</p>
+  <aside class="notes">A precisão é uma escolha física: a pergunta é se o erro de arredondamento é menor que o ruído do Monte Carlo. Aqui é, por um fator ~200.</aside>
+</section>
+
+<section>
+  <h2>O mesmo Buffon em FP64, FP32 e FP16</h2>
+  <table>
+    <thead><tr><th></th><th>agulhas/s (GPU)</th><th>6 casas de π</th><th>casas alcançáveis</th></tr></thead>
+    <tbody>
+      <tr><td>FP64</td><td class="number">\(6{,}6\times10^{9}\)</td><td class="number">14 min</td><td>14, em \(2{,}7\times10^{11}\) anos</td></tr>
+      <tr><td>FP32</td><td class="number">\(1{,}07\times10^{11}\)</td><td class="number"><strong>51 s</strong></td><td><strong>6: a 7ª nunca vem</strong></td></tr>
+      <tr><td>FP16</td><td class="number">\(1{,}03\times10^{11}\)</td><td class="number">nunca</td><td>3</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li class="fragment">FP32 é 16× mais rápido: com ele, 6 casas saem em segundos em vez de minutos</li>
+    <li class="fragment">mas a comparação <code>x &lt;= L/2 · sinf(θ)</code> em 24 bits tem um <strong>viés</strong> de ~10⁻⁷: quando o erro estatístico cai abaixo dele, mais agulhas não ajudam</li>
+    <li class="fragment">não é erro acumulado: cada agulha é uma conta curta e independente; é um viés da comparação</li>
+  </ul>
+  <p class="question fragment">e a estrela, precisa de FP64?</p>
+  <p class="source">EP3/buffon.py --precision 64|32|16 → runs/…-report/report.txt</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Por que a CPU e a GPU discordam no último bit</h2>
+  <div class="columns top">
+    <div class="half">
+      <svg class="d" viewBox="0 0 560 300" width="560">
+        <text class="bold" x="10" y="26">a · b + c em duas operações</text>
+        <rect class="gray" x="10" y="44" width="150" height="44"/><text class="mid mono" x="85" y="72">a · b</text>
+        <line class="line" x1="160" y1="66" x2="200" y2="66" marker-end="url(#arrow)"/>
+        <rect class="host" x="205" y="44" width="110" height="44"/><text class="small mid" x="260" y="72">arredonda</text>
+        <line class="line" x1="315" y1="66" x2="345" y2="66" marker-end="url(#arrow)"/>
+        <rect class="gray" x="350" y="44" width="80" height="44"/><text class="mid mono" x="390" y="72">+ c</text>
+        <line class="line" x1="430" y1="66" x2="455" y2="66" marker-end="url(#arrow)"/>
+        <rect class="host" x="460" y="44" width="95" height="44"/><text class="small mid" x="507" y="72">arredonda</text>
+        <text class="bold" x="10" y="150">FMA: uma operação (a GPU, por padrão)</text>
+        <rect class="gray" x="10" y="168" width="250" height="44"/><text class="mid mono" x="135" y="196">a · b + c, exato</text>
+        <line class="line" x1="260" y1="190" x2="300" y2="190" marker-end="url(#arrow)"/>
+        <rect class="good" x="305" y="168" width="130" height="44"/><text class="small mid" x="370" y="196">arredonda 1×</text>
+        <text class="small muted" x="10" y="260">resultados diferentes no último bit; nenhum dos dois está "errado"</text>
+      </svg>
+    </div>
+    <div class="half">
+      <table class="compact">
+        <thead><tr><th>função (guia 5.6)</th><th>float</th><th>double</th></tr></thead>
+        <tbody>
+          <tr><td><code>sin</code>, <code>cos</code></td><td>2 ULP</td><td>2 ULP</td></tr>
+          <tr><td><code>atan2</code></td><td>3 ULP</td><td>2 ULP</td></tr>
+          <tr><td><code>cbrt</code></td><td>1 ULP</td><td>1 ULP</td></tr>
+          <tr><td><code>sqrt</code>, + − × ÷</td><td>0</td><td>0</td></tr>
+        </tbody>
+      </table>
+      <p class="note">ULP: a distância até o número representável vizinho. As funções da CPU (glibc) e da GPU são implementações diferentes.</p>
+    </div>
+  </div>
+  <ul>
+    <li class="fragment">medido, sem FMA (<code>--fmad=false</code>): em FP64, <strong>a mesma imagem</strong> (e 7,5% mais ciclos); em FP32, <strong>outra imagem</strong></li>
+    <li class="fragment">por isso, na estrela: FP64 dá os mesmos bits na CPU e na GPU; FP32 move 3·10⁻⁴ dos fótons de pixel (veremos na parte 9)</li>
+  </ul>
+  <p class="source">guia CUDA 5.6 (IEEE 754, FMA, tabelas de ULP); main.py measure → parts/kernel.json (variante no_fma)</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Precisão também é escolher a conta: o nosso código</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2">
+static inline HD real sine_from_cosine(real cosine) {
+    real sine_squared = (1 - cosine) * (1 + cosine);   // não 1 - cosine * cosine
+    return sine_squared > 0 ? real_sqrt(sine_squared) : 0;
+}
+  </code></pre>
+  <ul>
+    <li class="fragment">perto do polo, \(\cos \to 1\): \(1 - \cos^2\) subtrai dois números quase iguais e perde os bits que importam</li>
+    <li class="fragment">\((1-\cos)(1+\cos)\) é a mesma conta, com o mesmo custo, e guarda a diferença pequena exata: até ~400× melhor no pior caso</li>
+    <li class="fragment">o mesmo nas manchas: comparamos a corda ao quadrado, \(|p - s|^2 &lt; 4\sin^2(r/2)\), em vez de \(\cos\) contra \(\cos r\), ambos perto de 1</li>
+  </ul>
+  <p class="concept fragment">Monte Carlo perdoa muito: cada fóton é uma conta curta, e a imagem é uma <strong>contagem inteira</strong>. O que importa é não introduzir <strong>viés</strong>.</p>
+  <p class="source">EP4/engine/physics/real.cuh (sine_from_cosine), photon.cuh (escapes_spots); docs/precision.md</p>
+  <aside class="notes"></aside>
+</section>

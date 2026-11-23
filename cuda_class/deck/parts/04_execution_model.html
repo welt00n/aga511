@@ -1,0 +1,434 @@
+<section class="divider" data-part="3">
+  <p class="promise">O guia da NVIDIA, com o nosso código: threads, blocos, grids, warps, e como o trabalho chega aos SMs.</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Host e device: dois computadores, duas memórias</h2>
+  <svg class="d" viewBox="0 0 1180 300" width="1180">
+    <rect class="host" x="40" y="30" width="430" height="200" rx="8"/>
+    <text class="bold" x="60" y="66">host: a CPU</text>
+    <rect class="paper" x="60" y="100" width="390" height="100"/><text class="mid" x="255" y="145">memória RAM</text><text class="small mid muted" x="255" y="172">os ponteiros do host</text>
+    <rect class="device" x="710" y="30" width="430" height="200" rx="8"/>
+    <text class="bold" x="730" y="66">device: a GPU</text>
+    <rect class="paper" x="730" y="100" width="390" height="100"/><text class="mid" x="925" y="145">memória da GPU (8 GB)</text><text class="small mid muted" x="925" y="172">os ponteiros do device</text>
+    <line class="line" x1="480" y1="130" x2="700" y2="130" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <text class="mid bold" x="590" y="115">PCIe</text><text class="small mid mono" x="590" y="160">cudaMemcpy</text>
+    <text class="mid" x="590" y="280">um ponteiro da GPU não vale na CPU, e vice-versa: os dados viajam de propósito</text>
+  </svg>
+  <ul class="fragment">
+    <li><code>cudaMalloc</code>: reserva memória na GPU · <code>cudaMemcpy</code>: copia pelo PCIe</li>
+    <li><code>kernel&lt;&lt;&lt;blocos, threads&gt;&gt;&gt;(…)</code>: lança o kernel na GPU e volta na hora; a CPU segue</li>
+    <li><code>__global__</code>: roda na GPU, chamado pela CPU · <code>__device__</code>: só na GPU · <code>__host__ __device__</code>: nos dois</li>
+  </ul>
+  <aside class="notes">A primeira coisa que muda em relação ao C: cada ponteiro pertence a uma das duas memórias. cudaMalloc reserva na GPU, cudaMemcpy copia pelo barramento.</aside>
+</section>
+
+<section>
+  <h2>Um kernel mínimo, e o índice de cada thread</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="1-4|2|6">
+__global__ void soma(const float *a, const float *b, float *c, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;   // quem sou eu?
+    if (i &lt; n) c[i] = a[i] + b[i];
+}
+
+soma&lt;&lt;&lt;(n + 255) / 256, 256&gt;&gt;&gt;(a, b, c, n);           // blocos de 256 threads
+  </code></pre>
+  <svg class="d" viewBox="0 0 1180 190" width="1100">
+    <text class="small muted" x="40" y="22">blockIdx.x = 0</text><text class="small muted" x="400" y="22">blockIdx.x = 1</text><text class="small muted" x="760" y="22">blockIdx.x = 2</text>
+    <g>
+      <rect class="device" x="40" y="34" width="36" height="44"/><rect class="device" x="80" y="34" width="36" height="44"/><rect class="device" x="120" y="34" width="36" height="44"/><rect class="device" x="160" y="34" width="36" height="44"/><rect class="device" x="200" y="34" width="36" height="44"/><rect class="device" x="240" y="34" width="36" height="44"/><rect class="device" x="280" y="34" width="36" height="44"/><rect class="device" x="320" y="34" width="36" height="44"/>
+      <rect class="device" x="400" y="34" width="36" height="44"/><rect class="device" x="440" y="34" width="36" height="44"/><rect class="device" x="480" y="34" width="36" height="44"/><rect class="device" x="520" y="34" width="36" height="44"/><rect class="device" x="560" y="34" width="36" height="44"/><rect class="device" x="600" y="34" width="36" height="44"/><rect class="device" x="640" y="34" width="36" height="44"/><rect class="device" x="680" y="34" width="36" height="44"/>
+      <rect class="device" x="760" y="34" width="36" height="44"/><rect class="device" x="800" y="34" width="36" height="44"/><rect class="device" x="840" y="34" width="36" height="44"/><rect class="device" x="880" y="34" width="36" height="44"/><rect class="device" x="920" y="34" width="36" height="44"/><rect class="device-solid" x="960" y="34" width="36" height="44"/><rect class="device" x="1000" y="34" width="36" height="44"/><rect class="device" x="1040" y="34" width="36" height="44"/>
+    </g>
+    <g class="tiny">
+      <text class="tiny mid muted" x="58" y="98">0</text><text class="tiny mid muted" x="98" y="98">1</text><text class="tiny mid muted" x="138" y="98">2</text><text class="tiny mid muted" x="178" y="98">3</text><text class="tiny mid muted" x="218" y="98">4</text><text class="tiny mid muted" x="258" y="98">5</text><text class="tiny mid muted" x="298" y="98">6</text><text class="tiny mid muted" x="338" y="98">7</text>
+      <text class="tiny mid muted" x="418" y="98">0</text><text class="tiny mid muted" x="458" y="98">1</text><text class="tiny mid muted" x="498" y="98">2</text><text class="tiny mid muted" x="538" y="98">3</text><text class="tiny mid muted" x="578" y="98">4</text><text class="tiny mid muted" x="618" y="98">5</text><text class="tiny mid muted" x="658" y="98">6</text><text class="tiny mid muted" x="698" y="98">7</text>
+      <text class="tiny mid muted" x="778" y="98">0</text><text class="tiny mid muted" x="818" y="98">1</text><text class="tiny mid muted" x="858" y="98">2</text><text class="tiny mid muted" x="898" y="98">3</text><text class="tiny mid muted" x="938" y="98">4</text><text class="tiny mid bold" x="978" y="98">5</text><text class="tiny mid muted" x="1018" y="98">6</text><text class="tiny mid muted" x="1058" y="98">7</text>
+    </g>
+    <text class="small muted" x="1090" y="98">threadIdx.x</text>
+    <text class="mid" x="590" y="150">no desenho blockDim.x = 8: o thread pintado calcula i = 2 · 8 + 5 = <tspan class="bold">21</tspan></text>
+  </svg>
+  <aside class="notes">Cada thread executa o MESMO código; só o índice muda. O if (i &lt; n) existe porque o último bloco pode passar do fim. Esta é a forma de todo kernel: "quem sou eu, qual é o meu pedaço".</aside>
+</section>
+
+<section>
+  <h2>O programa inteiro: o lado do host</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|1-4|6-7|9|11|13">
+float *a, *b, *c;                                        // ponteiros do device
+cudaMalloc(&amp;a, n * sizeof(float));                      // reservar na GPU
+cudaMalloc(&amp;b, n * sizeof(float));
+cudaMalloc(&amp;c, n * sizeof(float));
+
+cudaMemcpy(a, a_host, n * sizeof(float), cudaMemcpyHostToDevice);   // copiar para lá
+cudaMemcpy(b, b_host, n * sizeof(float), cudaMemcpyHostToDevice);
+
+soma&lt;&lt;&lt;(n + 255) / 256, 256&gt;&gt;&gt;(a, b, c, n);              // lançar: volta na hora
+
+cudaMemcpy(c_host, c, n * sizeof(float), cudaMemcpyDeviceToHost);   // copiar de volta: espera o kernel
+
+cudaFree(a); cudaFree(b); cudaFree(c);                   // liberar
+  </code></pre>
+  <p class="note">Cinco passos, sempre os mesmos: reservar, copiar, lançar, copiar de volta, liberar. O lançamento não espera; a cópia de volta espera o kernel terminar.</p>
+  <aside class="notes">Este é o esqueleto de todo programa CUDA, e o do EP3 e do EP4 também (com mais verificação de erros). Ponto sutil: o lançamento é assíncrono; é a cópia de volta que sincroniza.</aside>
+</section>
+
+<section>
+  <h2>Thread, warp, bloco, grid, e os SMs</h2>
+  <svg class="d" viewBox="0 0 1180 380" width="1180">
+    <g>
+      <circle class="dot-device" cx="60" cy="170" r="13"/>
+      <text class="bold mid" x="60" y="300">thread</text><text class="small muted mid" x="60" y="326">executa o</text><text class="small muted mid" x="60" y="346">kernel uma vez</text>
+    </g>
+    <g class="fragment">
+      <path d="M130 155h4v30h-4zM137 155h4v30h-4zM144 155h4v30h-4zM151 155h4v30h-4zM158 155h4v30h-4zM165 155h4v30h-4zM172 155h4v30h-4zM179 155h4v30h-4zM186 155h4v30h-4zM193 155h4v30h-4zM200 155h4v30h-4zM207 155h4v30h-4zM214 155h4v30h-4zM221 155h4v30h-4zM228 155h4v30h-4zM235 155h4v30h-4zM242 155h4v30h-4zM249 155h4v30h-4zM256 155h4v30h-4zM263 155h4v30h-4zM270 155h4v30h-4zM277 155h4v30h-4zM284 155h4v30h-4zM291 155h4v30h-4zM298 155h4v30h-4zM305 155h4v30h-4zM312 155h4v30h-4zM319 155h4v30h-4z" fill="#2a78d6"/>
+      <text class="bold mid" x="226" y="300">warp</text><text class="small muted mid" x="226" y="326">32 threads,</text><text class="small muted mid" x="226" y="346">uma instrução</text>
+    </g>
+    <g class="fragment">
+      <rect class="device" x="370" y="95" width="230" height="160" rx="4"/>
+      <rect x="385" y="110" width="200" height="22" fill="#2a78d6"/><rect x="385" y="140" width="200" height="22" fill="#2a78d6"/><rect x="385" y="170" width="200" height="22" fill="#2a78d6"/>
+      <text class="mid" x="485" y="225">⋮</text>
+      <text class="bold mid" x="485" y="300">bloco</text><text class="small muted mid" x="485" y="326">768 threads = 24 warps</text><text class="small muted mid" x="485" y="346">(o nosso, em FP64)</text>
+    </g>
+    <g class="fragment">
+      <rect class="line" x="640" y="90" width="230" height="170" rx="4"/>
+      <rect class="device" x="655" y="105" width="60" height="60"/><rect class="device" x="725" y="105" width="60" height="60"/><rect class="device" x="795" y="105" width="60" height="60"/>
+      <rect class="device" x="655" y="180" width="60" height="60"/><rect class="device" x="725" y="180" width="60" height="60"/><rect class="device" x="795" y="180" width="60" height="60"/>
+      <text class="bold mid" x="755" y="300">grid</text><text class="small muted mid" x="755" y="326">todos os blocos</text><text class="small muted mid" x="755" y="346">(o nosso: 36 blocos)</text>
+    </g>
+    <g class="fragment">
+      <rect class="gray" x="950" y="80" width="190" height="50"/><text class="mid" x="1045" y="112">SM 0</text>
+      <rect class="gray" x="950" y="145" width="190" height="50"/><text class="mid" x="1045" y="177">SM 1</text>
+      <rect class="gray" x="950" y="210" width="190" height="50"/><text class="mid" x="1045" y="242">⋯ SM 35</text>
+      <line class="line-muted" x1="870" y1="135" x2="945" y2="105" marker-end="url(#arrow-muted)"/>
+      <line class="line-muted" x1="870" y1="175" x2="945" y2="170" marker-end="url(#arrow-muted)"/>
+      <line class="line-muted" x1="870" y1="215" x2="945" y2="235" marker-end="url(#arrow-muted)"/>
+      <text class="bold mid" x="1045" y="300">SMs</text><text class="small muted mid" x="1045" y="326">cada bloco vai inteiro</text><text class="small muted mid" x="1045" y="346">para um SM</text>
+    </g>
+  </svg>
+  <p class="question fragment">um bloco de 768 threads tem quantos warps?</p>
+  <aside class="notes">Construir da esquerda para a direita (um clique por nível). Resposta: 24. O bloco não se divide entre SMs: é por isso que, com 80 registradores, cabem 25 warps mas lançamos 24 (os blocos só cabem inteiros).</aside>
+</section>
+
+<section>
+  <h2>O fluxo de execução</h2>
+  <svg class="d" viewBox="0 0 1180 330" width="1180">
+    <text class="bold host-ink" x="10" y="85">host</text><text class="bold device-ink" x="10" y="225">device</text>
+    <line class="line-muted dashed" x1="90" y1="80" x2="1170" y2="80"/><line class="line-muted dashed" x1="90" y1="220" x2="1170" y2="220"/>
+    <g class="fragment" data-fragment-index="1">
+      <rect class="host" x="100" y="55" width="150" height="50" rx="4"/><text class="small mid mono" x="175" y="85">cudaMalloc</text>
+      <line class="line" x1="250" y1="105" x2="330" y2="195" marker-end="url(#arrow)"/><text class="small mid" x="260" y="160">1 copiar</text>
+      <rect class="device" x="300" y="195" width="110" height="50" rx="4"/><text class="small mid" x="355" y="225">dados</text>
+    </g>
+    <g class="fragment" data-fragment-index="2">
+      <rect class="host" x="420" y="55" width="190" height="50" rx="4"/><text class="small mid mono" x="515" y="85">kernel&lt;&lt;&lt;g, b&gt;&gt;&gt;</text>
+      <line class="line dashed" x1="515" y1="105" x2="560" y2="195" marker-end="url(#arrow)"/><text class="small" x="545" y="150">2 lançar</text>
+    </g>
+    <g class="fragment" data-fragment-index="3">
+      <rect class="device-solid" x="560" y="195" width="380" height="50" rx="4"/><text class="mid on-dark" x="750" y="226">3 executar: os SMs trabalham</text>
+      <rect class="gray" x="620" y="55" width="320" height="50" rx="4" stroke-dasharray="6 5"/><text class="small mid muted" x="780" y="85">a CPU espera (ou faz outra coisa)</text>
+    </g>
+    <g class="fragment" data-fragment-index="4">
+      <line class="line" x1="945" y1="195" x2="1010" y2="105" marker-end="url(#arrow)"/><text class="small" x="985" y="160">4 copiar de volta</text>
+      <rect class="host" x="1000" y="55" width="165" height="50" rx="4"/><text class="small mid" x="1082" y="85">usar, salvar</text>
+    </g>
+    <text class="small muted" x="100" y="300">antes de tudo: criar o contexto CUDA (o <tspan font-style="italic">driver</tspan> prepara a GPU) · ~0,15 s no EP3</text>
+  </svg>
+  <p class="question fragment">onde vocês esperariam que a parte serial de um programa de GPU se escondesse?</p>
+  <aside class="notes">Construir as quatro setas. Pergunta antes do próximo slide. No EP3, o nsys mostra que a parte serial é criar o contexto CUDA (0,15 s). No EP4, é a imagem.</aside>
+</section>
+
+<section>
+  <h2>SPMD: escrevemos um programa, para um thread</h2>
+  <svg class="d" viewBox="0 0 1180 300" width="1180">
+    <rect class="paper" x="20" y="30" width="400" height="200" rx="6"/>
+    <text class="small mono" x="40" y="66">__global__ void trace_photons(...) {</text>
+    <text class="small mono" x="40" y="96">  sm = sm_id();</text>
+    <text class="small mono" x="40" y="126">  while (chunk = next_chunk())</text>
+    <text class="small mono" x="40" y="156">    trace_chunk(chunk, ...);</text>
+    <text class="small mono" x="40" y="186">  add_tallies(...);</text>
+    <text class="small mono" x="40" y="216">}</text>
+    <text class="small muted mid" x="220" y="262">um programa, escrito para um thread</text>
+    <line class="line" x1="430" y1="130" x2="520" y2="130" marker-end="url(#arrow)"/>
+    <text class="small mid" x="475" y="116">lançado</text>
+    <g>
+      <rect class="device" x="530" y="30" width="190" height="46"/><text class="small mid" x="625" y="58">thread 0: pedaços 0, 7, …</text>
+      <rect class="device" x="530" y="86" width="190" height="46"/><text class="small mid" x="625" y="114">thread 1: pedaços 1, 4, …</text>
+      <rect class="device" x="530" y="142" width="190" height="46"/><text class="small mid" x="625" y="170">thread 2: pedaços 2, 9, …</text>
+      <text class="mid" x="625" y="212">⋮</text>
+      <rect class="device" x="530" y="222" width="190" height="46"/><text class="small mid" x="625" y="250">thread 27 647: …</text>
+    </g>
+    <text class="bold" x="760" y="60">Single Program, Multiple Data</text>
+    <text class="small" x="760" y="94">cada instância tem os seus dados</text>
+    <text class="small" x="760" y="120">e o seu caminho pelo código</text>
+    <text class="small" x="760" y="160">o mesmo estilo do MPI (outro grupo):</text>
+    <text class="small" x="760" y="186">lá, processos; aqui, threads</text>
+    <text class="small muted" x="760" y="226">o termo é de F. Darema (IBM, 1984)</text>
+  </svg>
+  <p class="concept fragment">SPMD é o <strong>modelo de programação</strong>: como pensamos e escrevemos. Ele não diz como o hardware executa.</p>
+  <p class="source">guia CUDA 1.2 (kernels, threads); EP4/engine/gpu/gpu.cu (trace_photons)</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>SIMT: a GPU executa em warps (e não é SIMD)</h2>
+  <div class="columns top">
+    <div class="half">
+      <h3>SIMD, na CPU</h3>
+      <svg class="d" viewBox="0 0 540 110" width="540">
+        <text class="mono" x="10" y="24">vaddpd ymm0, ymm1, ymm2</text>
+        <path d="M10 40h60v50h-60zM76 40h60v50h-60zM142 40h60v50h-60zM208 40h60v50h-60z" fill="#fdebe2" stroke="#eb6834" stroke-width="2"/>
+        <text class="small" x="290" y="72">4 doubles, largura fixa</text>
+      </svg>
+      <ul class="note">
+        <li>quem vetoriza é o programador ou o compilador</li>
+        <li>um caminho só: um <code>if</code> vira máscara explícita</li>
+        <li>a largura faz parte do programa</li>
+      </ul>
+    </div>
+    <div class="half">
+      <h3>SIMT, na GPU</h3>
+      <svg class="d" viewBox="0 0 540 110" width="540">
+        <text class="mono" x="10" y="24">DFMA R4, R2, R6, R4</text>
+        <path d="M10 40h13v50h-13zM26 40h13v50h-13zM42 40h13v50h-13zM58 40h13v50h-13zM74 40h13v50h-13zM90 40h13v50h-13zM106 40h13v50h-13zM122 40h13v50h-13zM138 40h13v50h-13zM154 40h13v50h-13zM170 40h13v50h-13zM186 40h13v50h-13zM202 40h13v50h-13zM218 40h13v50h-13zM234 40h13v50h-13zM250 40h13v50h-13zM266 40h13v50h-13zM282 40h13v50h-13zM298 40h13v50h-13zM314 40h13v50h-13zM330 40h13v50h-13zM346 40h13v50h-13zM362 40h13v50h-13zM378 40h13v50h-13zM394 40h13v50h-13zM410 40h13v50h-13zM426 40h13v50h-13zM442 40h13v50h-13zM458 40h13v50h-13zM474 40h13v50h-13zM490 40h13v50h-13zM506 40h13v50h-13z" fill="#e3eefb" stroke="#2a78d6" stroke-width="1.5"/>
+      </svg>
+      <ul class="note">
+        <li>um warp: 32 threads, cada um com os seus registradores</li>
+        <li>o programa é escrito para um thread (SPMD); o hardware agrupa 32 e emite uma instrução</li>
+        <li>cada thread pode seguir o seu caminho: divergência</li>
+      </ul>
+    </div>
+  </div>
+  <p class="concept fragment">O guia (1.2.2.2): SIMT "não tem uma largura de dados fixa como SIMD". SPMD é como escrevemos; <strong>SIMT é como a GPU executa</strong>.</p>
+  <p class="source">guia CUDA 1.2.2.2 (Warps and SIMT), 3.2.2.1 (desde a cc 7.0, cada thread tem o seu contador de programa)</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>A divergência: quando o warp se divide</h2>
+  <svg class="d" viewBox="0 0 1180 330" width="1180">
+    <text class="small muted mid" x="395" y="22">faixa 0</text><text class="small muted mid" x="485" y="22">1</text><text class="small muted mid" x="575" y="22">2</text><text class="small muted mid" x="665" y="22">3</text><text class="small muted mid" x="755" y="22">4</text><text class="small muted mid" x="845" y="22">5</text><text class="small muted mid" x="935" y="22">6</text><text class="small muted mid" x="1025" y="22">7</text>
+    <text class="small mono" x="10" y="70">if (threadIdx.x % 2 == 0)</text>
+    <path d="M360 40h70v45h-70zM450 40h70v45h-70zM540 40h70v45h-70zM630 40h70v45h-70zM720 40h70v45h-70zM810 40h70v45h-70zM900 40h70v45h-70zM990 40h70v45h-70z" fill="#2a78d6"/>
+    <g class="fragment">
+      <text class="small mono" x="10" y="135">    a();</text>
+      <path d="M360 105h70v45h-70zM540 105h70v45h-70zM720 105h70v45h-70zM900 105h70v45h-70z" fill="#2a78d6"/>
+      <path d="M450 105h70v45h-70zM630 105h70v45h-70zM810 105h70v45h-70zM990 105h70v45h-70z" fill="#e4e3df"/>
+    </g>
+    <g class="fragment">
+      <text class="small mono" x="10" y="200">else b();</text>
+      <path d="M450 170h70v45h-70zM630 170h70v45h-70zM810 170h70v45h-70zM990 170h70v45h-70z" fill="#2a78d6"/>
+      <path d="M360 170h70v45h-70zM540 170h70v45h-70zM720 170h70v45h-70zM900 170h70v45h-70z" fill="#e4e3df"/>
+    </g>
+    <g class="fragment">
+      <text class="small mono" x="10" y="265">depois do if</text>
+      <path d="M360 235h70v45h-70zM450 235h70v45h-70zM540 235h70v45h-70zM630 235h70v45h-70zM720 235h70v45h-70zM810 235h70v45h-70zM900 235h70v45h-70zM990 235h70v45h-70z" fill="#2a78d6"/>
+    </g>
+    <line class="line" x1="1110" y1="40" x2="1110" y2="280" marker-end="url(#arrow)"/><text class="small" x="1122" y="160">tempo</text>
+    <text class="small muted" x="360" y="315">desenho: 8 das 32 faixas de um warp · azul: executa · cinza: espera</text>
+  </svg>
+  <p class="fragment">Um <code>if</code> que divide o warp faz as duas metades esperarem uma pela outra: o warp gasta o tempo de <code>a()</code> <strong>mais</strong> o de <code>b()</code>.</p>
+  <aside class="notes">SIMD: uma instrução opera um vetor. SIMT: cada thread tem o seu estado e pode seguir o seu caminho, mas o warp executa uma instrução de cada vez; quem não está no caminho espera. No EP4: um fóton bloqueado por uma mancha termina antes, e a sua faixa espera o resto do warp.</aside>
+</section>
+
+<section>
+  <h2>Redução paralela: somar N números</h2>
+  <svg class="d" viewBox="0 0 1180 420" width="1180">
+    <text class="small mono" x="10" y="52">parcial[]</text>
+    <g>
+      <rect class="device" x="150" y="20" width="80" height="50"/><text class="mid" x="190" y="53">3</text>
+      <rect class="device" x="260" y="20" width="80" height="50"/><text class="mid" x="300" y="53">1</text>
+      <rect class="device" x="370" y="20" width="80" height="50"/><text class="mid" x="410" y="53">7</text>
+      <rect class="device" x="480" y="20" width="80" height="50"/><text class="mid" x="520" y="53">0</text>
+      <rect class="device" x="590" y="20" width="80" height="50"/><text class="mid" x="630" y="53">4</text>
+      <rect class="device" x="700" y="20" width="80" height="50"/><text class="mid" x="740" y="53">1</text>
+      <rect class="device" x="810" y="20" width="80" height="50"/><text class="mid" x="850" y="53">6</text>
+      <rect class="device" x="920" y="20" width="80" height="50"/><text class="mid" x="960" y="53">3</text>
+    </g>
+    <text class="small muted" x="1020" y="52">distribuição</text>
+    <g class="fragment">
+      <line class="line-muted dashed" x1="140" y1="95" x2="1010" y2="95"/><text class="tiny mono muted" x="1020" y="99">__syncthreads()</text>
+      <path d="M190 70L190 128M630 70L190 128M300 70L300 128M740 70L300 128M410 70L410 128M850 70L410 128M520 70L520 128M960 70L520 128" class="line-muted"/>
+      <text class="small mono" x="10" y="162">passo 4</text>
+      <rect class="device" x="150" y="130" width="80" height="50"/><text class="mid" x="190" y="163">7</text>
+      <rect class="device" x="260" y="130" width="80" height="50"/><text class="mid" x="300" y="163">2</text>
+      <rect class="device" x="370" y="130" width="80" height="50"/><text class="mid" x="410" y="163">13</text>
+      <rect class="device" x="480" y="130" width="80" height="50"/><text class="mid" x="520" y="163">3</text>
+      <rect class="gray" x="590" y="130" width="80" height="50"/><rect class="gray" x="700" y="130" width="80" height="50"/><rect class="gray" x="810" y="130" width="80" height="50"/><rect class="gray" x="920" y="130" width="80" height="50"/>
+      <text class="small muted" x="1020" y="162">resultados parciais</text>
+    </g>
+    <g class="fragment">
+      <line class="line-muted dashed" x1="140" y1="205" x2="1010" y2="205"/><text class="tiny mono muted" x="1020" y="209">__syncthreads()</text>
+      <path d="M190 180L190 238M410 180L190 238M300 180L300 238M520 180L300 238" class="line-muted"/>
+      <text class="small mono" x="10" y="272">passo 2</text>
+      <rect class="device" x="150" y="240" width="80" height="50"/><text class="mid" x="190" y="273">20</text>
+      <rect class="device" x="260" y="240" width="80" height="50"/><text class="mid" x="300" y="273">5</text>
+      <rect class="gray" x="370" y="240" width="80" height="50"/><rect class="gray" x="480" y="240" width="80" height="50"/><rect class="gray" x="590" y="240" width="80" height="50"/><rect class="gray" x="700" y="240" width="80" height="50"/><rect class="gray" x="810" y="240" width="80" height="50"/><rect class="gray" x="920" y="240" width="80" height="50"/>
+      <text class="small muted" x="1020" y="272">combinação</text><text class="small muted" x="1020" y="292">em árvore</text>
+    </g>
+    <g class="fragment">
+      <line class="line-muted dashed" x1="140" y1="315" x2="1010" y2="315"/><text class="tiny mono muted" x="1020" y="319">__syncthreads()</text>
+      <path d="M190 290L190 348M300 290L190 348" class="line-muted"/>
+      <text class="small mono" x="10" y="382">passo 1</text>
+      <rect class="device-solid" x="150" y="350" width="80" height="50"/><text class="mid on-dark bold" x="190" y="383">25</text>
+      <line class="line" x1="230" y1="375" x2="420" y2="375" marker-end="url(#arrow)"/>
+      <rect class="host" x="425" y="350" width="300" height="50"/><text class="mid mono" x="575" y="382">atomicAdd(total, 25)</text>
+      <text class="small muted" x="760" y="382">resultado final · cinza: threads parados</text>
+    </g>
+  </svg>
+  <aside class="notes">Distribuição → resultados parciais → combinação → resultado final: as quatro palavras do roteiro do professor. Serial: N passos. Paralelo: N/p + log₂ p. A cada nível metade dos threads para (cinza): é uma limitação, e a razão de a combinação ser curta.</aside>
+</section>
+
+<section>
+  <h2>A redução em CUDA</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2|3-5|6-10|11-12">
+__global__ void soma(const float *x, float *total, int n) {
+    __shared__ float parcial[256];                            // memória do bloco
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    parcial[threadIdx.x] = (i &lt; n) ? x[i] : 0.0f;          // distribuição
+    __syncthreads();                                          // todos escreveram
+    for (int passo = blockDim.x / 2; passo &gt; 0; passo /= 2) {  // combinação em árvore
+        if (threadIdx.x &lt; passo)
+            parcial[threadIdx.x] += parcial[threadIdx.x + passo];
+        __syncthreads();
+    }
+    if (threadIdx.x == 0)
+        atomicAdd(total, parcial[0]);                         // um atômico por bloco
+}
+  </code></pre>
+  <ul class="note">
+    <li><code>__syncthreads()</code> só sincroniza <strong>dentro</strong> do bloco; entre blocos, só a memória global e os atômicos</li>
+    <li>a memória compartilhada é pequena (~100 KB por SM) e é dividida entre os blocos residentes</li>
+  </ul>
+  <aside class="notes">Cada clique destaca uma fase. As limitações são o que o roteiro pede: sincronização só no bloco, memória compartilhada pequena, threads ociosos no fim da árvore.</aside>
+</section>
+
+<section>
+  <h2>Quando todos escrevem no mesmo lugar: atômicos</h2>
+  <svg class="d" viewBox="0 0 1180 330" width="1180">
+    <text class="bold" x="40" y="30">sem atômico</text>
+    <rect class="gray" x="170" y="48" width="220" height="44"/><text class="mid" x="280" y="77">contador = 5</text>
+    <text class="bold mid device-ink" x="120" y="130">thread A</text><text class="bold mid device-ink" x="440" y="130">thread B</text>
+    <text class="mid" x="120" y="170">lê 5</text><text class="mid" x="440" y="170">lê 5</text>
+    <text class="mid" x="120" y="205">soma 1 → 6</text><text class="mid" x="440" y="205">soma 1 → 6</text>
+    <text class="mid" x="120" y="240">escreve 6</text><text class="mid" x="440" y="240">escreve 6</text>
+    <text class="mid bold host-ink" x="280" y="295">contador = 6: uma soma se perdeu</text>
+    <line class="line-thin" x1="590" y1="20" x2="590" y2="310"/>
+    <g class="fragment">
+      <text class="bold" x="640" y="30">com atomicAdd</text>
+      <rect class="gray" x="780" y="48" width="220" height="44"/><text class="mid" x="890" y="77">contador = 5</text>
+      <rect class="device" x="640" y="150" width="500" height="44"/><text class="mid" x="890" y="179">A: ler-somar-escrever, indivisível: 5 → 6</text>
+      <rect class="device" x="640" y="210" width="500" height="44"/><text class="mid" x="890" y="239">B: ler-somar-escrever, indivisível: 6 → 7</text>
+      <text class="mid bold good-ink" x="890" y="295">contador = 7</text>
+    </g>
+  </svg>
+  <p class="fragment note">O atômico é feito na cache L2, um endereço por vez. Muitos threads no mesmo endereço fazem fila; endereços diferentes andam em paralelo.</p>
+  <aside class="notes">Uma condição de corrida: dois threads leem o mesmo valor antes de qualquer um escrever. O Buffon soma em registrador e faz UM atômico por thread (pouca fila). A estrela faz um atômico por fóton, mas em bilhões de pixels diferentes: quase nunca dois no mesmo endereço.</aside>
+</section>
+
+<section>
+  <h2>E se houver mais elementos que threads?</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2|3-4">
+__global__ void soma(const float *a, const float *b, float *c, long long n) {
+    long long passo = (long long) blockDim.x * gridDim.x;      // todos os threads do grid
+    for (long long i = blockIdx.x * blockDim.x + threadIdx.x; i &lt; n; i += passo)
+        c[i] = a[i] + b[i];
+}
+  </code></pre>
+  <svg class="d" viewBox="0 0 1180 120" width="1100">
+    <g>
+      <rect class="device-solid" x="20" y="20" width="64" height="44"/><rect class="device" x="90" y="20" width="64" height="44"/><rect class="good" x="160" y="20" width="64" height="44"/><rect class="host" x="230" y="20" width="64" height="44"/>
+      <rect class="device-solid" x="320" y="20" width="64" height="44"/><rect class="device" x="390" y="20" width="64" height="44"/><rect class="good" x="460" y="20" width="64" height="44"/><rect class="host" x="530" y="20" width="64" height="44"/>
+      <rect class="device-solid" x="620" y="20" width="64" height="44"/><rect class="device" x="690" y="20" width="64" height="44"/><rect class="good" x="760" y="20" width="64" height="44"/><rect class="host" x="830" y="20" width="64" height="44"/>
+      <rect class="device-solid" x="920" y="20" width="64" height="44"/><rect class="device" x="990" y="20" width="64" height="44"/><rect class="good" x="1060" y="20" width="64" height="44"/>
+    </g>
+    <text class="small mid on-dark" x="52" y="48">T0</text><text class="small mid" x="122" y="48">T1</text><text class="small mid" x="192" y="48">T2</text><text class="small mid" x="262" y="48">T3</text>
+    <text class="small mid on-dark" x="352" y="48">T0</text><text class="small mid" x="422" y="48">T1</text><text class="small mid" x="492" y="48">T2</text><text class="small mid" x="562" y="48">T3</text>
+    <text class="small mid on-dark" x="652" y="48">T0</text><text class="small mid" x="722" y="48">T1</text><text class="small mid" x="792" y="48">T2</text><text class="small mid" x="862" y="48">T3</text>
+    <text class="small mid on-dark" x="952" y="48">T0</text><text class="small mid" x="1022" y="48">T1</text><text class="small mid" x="1092" y="48">T2</text>
+    <text class="small muted" x="20" y="100">um grid de 4 threads e 15 elementos: o thread k faz k, k + 4, k + 8, …</text>
+  </svg>
+  <ul>
+    <li class="fragment">o <strong>grid-stride loop</strong>: um grid do tamanho da GPU, qualquer \(N\); a divisão é fixa</li>
+    <li class="fragment">no EP3 e no EP4 a divisão é <strong>dinâmica</strong>: cada thread pega o próximo pedaço de uma fila (<code>atomicAdd</code>); quem termina antes pega mais</li>
+  </ul>
+  <aside class="notes">O kernel mínimo lança um thread por elemento; isso quebra quando N passa do que um grid comporta, ou quando cada elemento custa um tempo diferente. O grid-stride loop resolve o primeiro problema. A fila de pedaços do EP3 e do EP4 resolve os dois: é o grid-stride loop com a divisão decidida em tempo de execução. Atenção: o passo é blockDim.x × gridDim.x (threads por bloco × blocos).</aside>
+</section>
+
+<section>
+  <h2>Os blocos vão inteiros para um SM, e em qualquer ordem</h2>
+  <div class="columns top">
+    <div class="side">
+      <svg class="d" viewBox="0 0 560 420" width="560">
+        <text class="small muted" x="10" y="22">o grid</text>
+        <rect class="device" x="10" y="34" width="60" height="40"/><text class="small mid" x="40" y="60">B0</text>
+        <rect class="device" x="78" y="34" width="60" height="40"/><text class="small mid" x="108" y="60">B1</text>
+        <rect class="device" x="146" y="34" width="60" height="40"/><text class="small mid" x="176" y="60">B2</text>
+        <rect class="device" x="214" y="34" width="60" height="40"/><text class="small mid" x="244" y="60">B3</text>
+        <rect class="gray" x="282" y="34" width="60" height="40"/><text class="small mid" x="312" y="60">B4</text>
+        <rect class="gray" x="350" y="34" width="60" height="40"/><text class="small mid" x="380" y="60">B5</text>
+        <rect class="gray" x="418" y="34" width="60" height="40"/><text class="small mid" x="448" y="60">B6</text>
+        <rect class="gray" x="486" y="34" width="60" height="40"/><text class="small mid" x="516" y="60">B7</text>
+        <rect class="host" x="140" y="110" width="280" height="50" rx="4"/><text class="mid" x="280" y="141">escalonador de blocos</text>
+        <line class="line-muted" x1="140" y1="74" x2="200" y2="108" marker-end="url(#arrow-muted)"/><line class="line-muted" x1="420" y1="74" x2="360" y2="108" marker-end="url(#arrow-muted)"/>
+        <rect class="paper" x="10" y="200" width="255" height="170" rx="6"/><text class="bold" x="24" y="226">SM 0</text>
+        <rect class="device" x="24" y="240" width="105" height="110"/><text class="mid" x="76" y="300">B0</text>
+        <rect class="device" x="146" y="240" width="105" height="110"/><text class="mid" x="198" y="300">B1</text>
+        <rect class="paper" x="290" y="200" width="255" height="170" rx="6"/><text class="bold" x="304" y="226">SM 1</text>
+        <rect class="device" x="304" y="240" width="105" height="110"/><text class="mid" x="356" y="300">B2</text>
+        <rect class="device" x="426" y="240" width="105" height="110"/><text class="mid" x="478" y="300">B3</text>
+        <line class="line" x1="230" y1="160" x2="140" y2="196" marker-end="url(#arrow)"/><line class="line" x1="330" y1="160" x2="420" y2="196" marker-end="url(#arrow)"/>
+        <text class="small muted" x="10" y="402">cinza: esperam um lugar; entram quando um bloco termina</text>
+      </svg>
+    </div>
+    <div class="main">
+      <ul>
+        <li class="fragment">um bloco só entra num SM se couber <strong>inteiro</strong>: os seus threads podem chamar <code>__syncthreads()</code>, e então precisam estar todos vivos ao mesmo tempo</li>
+        <li class="fragment">por isso, com 80 registradores, cabem 25 warps e lançamos <strong>24</strong>: um bloco de 24 warps, inteiro (a conta vem na parte 8)</li>
+        <li class="fragment">os blocos rodam em <strong>qualquer ordem</strong>: um bloco nunca pode esperar outro</li>
+      </ul>
+      <p class="question fragment">o bloco 0 escreve uma flag; o bloco 1 espera por ela. Funciona?</p>
+    </div>
+  </div>
+  <aside class="notes">Resposta: depende da ordem. Se o bloco 1 ocupar o único lugar e ficar esperando, o bloco 0 nunca entra: a GPU trava. CUDA não garante ordem nem simultaneidade entre blocos. No EP3 e no EP4 os blocos só se comunicam por atômicos que nunca esperam (a fila, as somas). Ideia do exemplo: Stanford CS149, aula "GPU architecture and CUDA programming" (Fatahalian, 2023).</aside>
+</section>
+
+<section>
+  <h2>Rodando o nosso kernel: um bloco por SM, todos juntos</h2>
+  <div class="columns top">
+    <div class="side"><svg id="sm-grid" class="d" viewBox="0 0 740 500" width="640"></svg></div>
+    <div class="main">
+      <ul>
+        <li>FP64: <strong>36 blocos × 768 threads</strong> = 27 648 threads, um bloco em cada SM</li>
+        <li class="fragment">lançamento cooperativo: os 36 entram juntos, ou o lançamento falha</li>
+        <li class="fragment">com <code>--sms 12</code>, os blocos dos outros 24 SMs leem <code>%smid</code> e <strong>voltam na hora</strong></li>
+        <li class="fragment">os 12 que ficam pegam todos os pedaços da fila: assim medimos Amdahl em 1, 2, …, 36 SMs</li>
+      </ul>
+    </div>
+  </div>
+  <p class="source">engine --sms n (main.py measure, escala forte); EP4/engine/gpu/gpu.cu, gpu_sms.cuh</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Threads persistentes: o padrão do EP3 e do EP4</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="1-3|4|6-8|9">
+cudaOccupancyMaxPotentialBlockSize(&amp;grid, &amp;threads_per_block, trace_photons, 0, 0);
+cudaOccupancyMaxActiveBlocksPerMultiprocessor(&amp;blocks_per_sm, trace_photons, threads_per_block, 0);
+blocks = blocks_per_sm * sms;                          // exatamente o que cabe na GPU
+cudaLaunchCooperativeKernel(trace_photons, blocks, threads_per_block, args, 0, 0);
+
+__global__ void trace_photons(...) {
+    if (!is_allowed(sm_id(), sm_work)) return;         // a máscara: só os n SMs escolhidos trabalham
+    take_chunks_until_none_left(...);                  // a fila: atomicAdd(&amp;next_chunk, 1)
+}
+  </code></pre>
+  <ul class="note">
+    <li class="fragment"><strong>o padrão</strong>: lançar só os blocos que cabem; o trabalho vem de uma fila, não do número de blocos (em Stanford, CS149, "persistent threads")</li>
+    <li class="fragment"><strong>o risco</strong>: o código supõe que todos os blocos rodam ao mesmo tempo, e CUDA não promete isso</li>
+    <li class="fragment"><strong>a garantia</strong>: o lançamento cooperativo falha, em vez de rodar, se os blocos não couberem todos juntos; então cada SM recebe exatamente os seus blocos, uma vez</li>
+    <li class="fragment"><strong>a medida</strong>: blocos num SM fora dos n escolhidos voltam na hora (<code>%smid</code>); é assim que o EP3 e o EP4 medem Amdahl em 1, 2, …, 36 SMs</li>
+  </ul>
+  <p class="source">EP4/engine/gpu/gpu.cu (choose_launch, run_kernel, trace_photons)</p>
+  <aside class="notes">O grid-stride loop da parte 5, levado ao limite: um grid do tamanho da GPU e a divisão do trabalho decidida em tempo de execução. A fila em si nunca espera ninguém, então não trava; o lançamento cooperativo é o que garante uma única leva de blocos, e com ela a máscara de SMs mede de fato n SMs.</aside>
+</section>

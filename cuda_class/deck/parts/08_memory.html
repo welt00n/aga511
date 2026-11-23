@@ -1,0 +1,119 @@
+<section class="divider" data-part="7">
+  <p class="promise">O guia, com o nosso código: onde mora cada dado, e o que acontece quando todos escrevem na mesma imagem.</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>O modelo de memória</h2>
+  <svg class="d" viewBox="0 0 1180 440" width="1180">
+    <rect class="line" x="20" y="10" width="760" height="420" rx="6"/><text class="small muted" x="34" y="32">grid</text>
+    <rect class="line-muted" x="40" y="42" width="340" height="236" rx="4"/><text class="small muted" x="52" y="62">bloco</text>
+    <rect class="good" x="55" y="72" width="310" height="40"/><text class="small mid" x="210" y="98">memória compartilhada (do bloco)</text>
+    <rect class="device" x="55" y="128" width="145" height="135"/><text class="small mid" x="127" y="152">thread</text><rect class="gray" x="68" y="172" width="119" height="70"/><text class="small mid" x="127" y="212">registradores</text>
+    <rect class="device" x="220" y="128" width="145" height="135"/><text class="small mid" x="292" y="152">thread</text><rect class="gray" x="233" y="172" width="119" height="70"/><text class="small mid" x="292" y="212">registradores</text>
+    <rect class="line-muted" x="420" y="42" width="340" height="236" rx="4"/><text class="small muted" x="432" y="62">bloco</text>
+    <rect class="good" x="435" y="72" width="310" height="40"/><text class="small mid" x="590" y="98">memória compartilhada (do bloco)</text>
+    <rect class="device" x="435" y="128" width="145" height="135"/><text class="small mid" x="507" y="152">thread</text><rect class="gray" x="448" y="172" width="119" height="70"/><text class="small mid" x="507" y="212">registradores</text>
+    <rect class="device" x="600" y="128" width="145" height="135"/><text class="small mid" x="672" y="152">thread</text><rect class="gray" x="613" y="172" width="119" height="70"/><text class="small mid" x="672" y="212">registradores</text>
+    <line class="line-muted" x1="127" y1="263" x2="127" y2="300"/><line class="line-muted" x1="292" y1="263" x2="292" y2="300"/><line class="line-muted" x1="507" y1="263" x2="507" y2="300"/><line class="line-muted" x1="672" y1="263" x2="672" y2="300"/>
+    <rect class="host" x="40" y="300" width="720" height="52"/><text class="mid" x="400" y="332">memória global: todos os threads, GBs</text>
+    <rect class="gray" x="40" y="364" width="720" height="50"/><text class="mid" x="400" y="395">memória constante: todos leem, ninguém escreve, 64 KB</text>
+
+    <text class="bold" x="810" y="40">quem vê, quanto, quão rápido</text>
+    <text x="810" y="82">registradores</text><text class="small muted" x="810" y="104">um thread · 65 536 por SM · o mais rápido</text>
+    <text x="810" y="146">compartilhada</text><text class="small muted" x="810" y="168">um bloco · ~100 KB por SM · rápida</text>
+    <text x="810" y="210">constante</text><text class="small muted" x="810" y="232">todos · 64 KB · rápida se todos leem o mesmo</text>
+    <text x="810" y="274">global</text><text class="small muted" x="810" y="296">todos · GBs · centenas de ciclos</text>
+    <g class="fragment">
+      <line class="line-thin" x1="810" y1="320" x2="1170" y2="320"/>
+      <text class="bold" x="810" y="352">no EP4</text>
+      <text class="small" x="810" y="378">o fóton → registradores</text>
+      <text class="small" x="810" y="400">a estrela → constante (18 048 B)</text>
+      <text class="small" x="810" y="422">a imagem → global (5 GB a 1024²)</text>
+    </g>
+  </svg>
+  <p class="source">main.py measure → parts/kernel.json (resources: constant_bytes)</p>
+  <aside class="notes">Quanto mais perto do thread, mais rápida e menor. O EP4 usa três: o fóton vive em registradores, a estrela em memória constante (todos os threads leem os mesmos números), a imagem em memória global.</aside>
+</section>
+
+<section>
+  <h2>A tabela do guia, com uma coluna nossa</h2>
+  <table class="compact">
+    <thead><tr><th>espaço</th><th>quem vê</th><th>dura</th><th>onde fica</th><th>no EP4</th></tr></thead>
+    <tbody>
+      <tr><td>registradores</td><td>um thread</td><td>o kernel</td><td>no SM</td><td><strong>o fóton</strong>: 80 registradores por thread (FP64)</td></tr>
+      <tr><td>local</td><td>um thread</td><td>o kernel</td><td>na memória do device</td><td>40 bytes de pilha; 0 derramados</td></tr>
+      <tr><td>compartilhada</td><td>um bloco</td><td>o kernel</td><td>no SM</td><td>não usamos: a imagem não cabe</td></tr>
+      <tr><td>global</td><td>o grid</td><td>a aplicação</td><td>na memória do device</td><td><strong>a imagem</strong> (5 GB), a fila, as somas</td></tr>
+      <tr><td>constante</td><td>o grid, só leitura</td><td>a aplicação</td><td>memória do device, com cache de 8 KB por SM</td><td><strong>a estrela</strong>: 18 048 bytes</td></tr>
+    </tbody>
+  </table>
+  <ul class="note">
+    <li class="fragment">"local" é o escopo, não o lugar: mora na memória do device, com a latência da global (guia 2.3.3.4)</li>
+    <li class="fragment">é para lá que vão os valores quando faltam registradores: os derramamentos da parte 8</li>
+  </ul>
+  <p class="source">guia CUDA 2.3.3, tabela 1; main.py measure → parts/kernel.json (resources: registers, local_bytes, constant_bytes)</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Constante ou global? O guia sugere, nós medimos</h2>
+  <svg class="d" viewBox="0 0 1180 230" width="1180">
+    <text class="bold" x="20" y="28">constante: um endereço, 32 threads</text>
+    <rect class="gray" x="20" y="44" width="200" height="50"/><text class="small mid" x="120" y="74">estrela[k]</text>
+    <path class="line-muted" d="M220 69L300 40M220 69L300 55M220 69L300 70M220 69L300 85M220 69L300 100" marker-end="url(#arrow-muted)"/>
+    <path d="M305 34h6v12h-6zM305 49h6v12h-6zM305 64h6v12h-6zM305 79h6v12h-6zM305 94h6v12h-6z" fill="#2a78d6"/>
+    <text class="small" x="330" y="74">uma leitura, entregue ao warp inteiro (broadcast)</text>
+    <text class="bold" x="20" y="152">global: o mesmo dado, pela cache L1</text>
+    <rect class="host" x="20" y="168" width="200" height="50"/><text class="small mid" x="120" y="198">estrela[k]</text>
+    <line class="line-muted" x1="220" y1="193" x2="300" y2="193" marker-end="url(#arrow-muted)"/>
+    <rect class="gray" x="305" y="170" width="90" height="46"/><text class="small mid" x="350" y="198">L1</text>
+    <line class="line-muted" x1="395" y1="193" x2="455" y2="193" marker-end="url(#arrow-muted)"/>
+    <text class="small" x="465" y="198">também uma leitura, se todos querem o mesmo</text>
+  </svg>
+  <table class="compact">
+    <thead><tr><th>a estrela em memória global</th><th>registradores</th><th>ciclos</th><th>imagem</th></tr></thead>
+    <tbody>
+      <tr><td>FP64</td><td>80 → 88</td><td>0,996×</td><td>a mesma</td></tr>
+      <tr><td>FP32</td><td>67 → 68</td><td>1,007×</td><td>a mesma</td></tr>
+    </tbody>
+  </table>
+  <p class="concept fragment">Diferença dentro do ruído: a estrela tem 18 KB e cabe nas caches. Mantemos a constante porque ela <strong>diz</strong> o que o dado é: só leitura, igual para todos.</p>
+  <p class="source">main.py measure → parts/kernel.json (variante scene_in_global)</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>A imagem é um histograma de fótons</h2>
+  <div class="columns top">
+    <div class="half">
+      <h3>o jeito do guia (histogramas pequenos)</h3>
+      <svg class="d" viewBox="0 0 540 250" width="540">
+        <rect class="device" x="10" y="10" width="150" height="60"/><text class="small mid" x="85" y="45">bloco 0</text>
+        <rect class="device" x="190" y="10" width="150" height="60"/><text class="small mid" x="265" y="45">bloco 1</text>
+        <rect class="good" x="10" y="100" width="150" height="50"/><text class="small mid" x="85" y="130">hist. compartilhado</text>
+        <rect class="good" x="190" y="100" width="150" height="50"/><text class="small mid" x="265" y="130">hist. compartilhado</text>
+        <line class="line-muted" x1="85" y1="70" x2="85" y2="96" marker-end="url(#arrow-muted)"/><line class="line-muted" x1="265" y1="70" x2="265" y2="96" marker-end="url(#arrow-muted)"/>
+        <rect class="host" x="60" y="190" width="230" height="50"/><text class="small mid" x="175" y="220">histograma global</text>
+        <path class="line" d="M85 150L150 186M265 150L210 186" marker-end="url(#arrow)"/>
+        <text class="small muted" x="360" y="130">atômicos no SM,</text><text class="small muted" x="360" y="150">poucos na global</text>
+      </svg>
+    </div>
+    <div class="half">
+      <h3>o nosso (1,26 bilhão de pixels)</h3>
+      <pre><code class="language-cpp" data-trim data-noescape>
+__device__ void count_photon_atomic(
+        PixelCount *counts, unsigned long long pixel) {
+    atomicAdd(&amp;counts[pixel], 1u);   // direto na global
+}
+      </code></pre>
+      <ul class="note">
+        <li>1024² × 300 quadros × 4 observadores = 1,26·10⁹ contagens: 5 GB não cabem em 100 KB</li>
+        <li>com bilhões de endereços, dois fótons quase nunca disputam o mesmo pixel</li>
+      </ul>
+    </div>
+  </div>
+  <p class="concept fragment">E as contagens são <strong>inteiras</strong>: somadas em qualquer ordem, dão o mesmo número. Atômicos em ponto flutuante dependem da ordem (guia 5.6.8). É uma das razões de a imagem sair <strong>bit a bit</strong>.</p>
+  <p class="source">EP4/engine/gpu/gpu_image.cuh; guia CUDA 2.3.3.8 (histogramas), 5.6.8 (ordem dos atômicos)</p>
+  <aside class="notes"></aside>
+</section>

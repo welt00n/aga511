@@ -1,0 +1,117 @@
+<section class="divider" data-part="2">
+  <p class="promise">Por que uma GPU tem milhares de núcleos simples, e o que há dentro de um SM.</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>CPU e GPU: latência contra vazão</h2>
+  <svg class="d" viewBox="0 0 1180 440" width="1180">
+    <rect class="paper" x="40" y="20" width="480" height="320" rx="6"/>
+    <rect class="gray" x="60" y="40" width="200" height="120"/><text class="mid" x="160" y="106">controle</text>
+    <rect class="host" x="280" y="40" width="105" height="55"/><text class="mid" x="332" y="74">núcleo</text>
+    <rect class="host" x="395" y="40" width="105" height="55"/><text class="mid" x="447" y="74">núcleo</text>
+    <rect class="host" x="280" y="105" width="105" height="55"/><text class="mid" x="332" y="139">núcleo</text>
+    <rect class="host" x="395" y="105" width="105" height="55"/><text class="mid" x="447" y="139">núcleo</text>
+    <rect class="gray" x="60" y="180" width="440" height="140"/><text class="mid" x="280" y="256">cache</text>
+    <text class="bold mid" x="280" y="378">CPU: poucos núcleos rápidos</text>
+    <text class="muted mid" x="280" y="405">feita para a latência: cada tarefa termina logo</text>
+
+    <rect class="paper" x="660" y="20" width="480" height="320" rx="6"/>
+    <g>
+      <rect class="line-muted" x="676" y="36" width="140" height="72" rx="3"/><rect class="line-muted" x="820" y="36" width="140" height="72" rx="3"/><rect class="line-muted" x="964" y="36" width="140" height="72" rx="3"/>
+      <rect class="line-muted" x="676" y="112" width="140" height="72" rx="3"/><rect class="line-muted" x="820" y="112" width="140" height="72" rx="3"/><rect class="line-muted" x="964" y="112" width="140" height="72" rx="3"/>
+      <rect class="line-muted" x="676" y="188" width="140" height="72" rx="3"/><rect class="line-muted" x="820" y="188" width="140" height="72" rx="3"/><rect class="line-muted" x="964" y="188" width="140" height="72" rx="3"/>
+    </g>
+    <g class="device-cores">
+      <path d="M684 44h24v24h-24zM714 44h24v24h-24zM744 44h24v24h-24zM774 44h24v24h-24zM684 76h24v24h-24zM714 76h24v24h-24zM744 76h24v24h-24zM774 76h24v24h-24z
+               M828 44h24v24h-24zM858 44h24v24h-24zM888 44h24v24h-24zM918 44h24v24h-24zM828 76h24v24h-24zM858 76h24v24h-24zM888 76h24v24h-24zM918 76h24v24h-24z
+               M972 44h24v24h-24zM1002 44h24v24h-24zM1032 44h24v24h-24zM1062 44h24v24h-24zM972 76h24v24h-24zM1002 76h24v24h-24zM1032 76h24v24h-24zM1062 76h24v24h-24z
+               M684 120h24v24h-24zM714 120h24v24h-24zM744 120h24v24h-24zM774 120h24v24h-24zM684 152h24v24h-24zM714 152h24v24h-24zM744 152h24v24h-24zM774 152h24v24h-24z
+               M828 120h24v24h-24zM858 120h24v24h-24zM888 120h24v24h-24zM918 120h24v24h-24zM828 152h24v24h-24zM858 152h24v24h-24zM888 152h24v24h-24zM918 152h24v24h-24z
+               M972 120h24v24h-24zM1002 120h24v24h-24zM1032 120h24v24h-24zM1062 120h24v24h-24zM972 152h24v24h-24zM1002 152h24v24h-24zM1032 152h24v24h-24zM1062 152h24v24h-24z
+               M684 196h24v24h-24zM714 196h24v24h-24zM744 196h24v24h-24zM774 196h24v24h-24zM684 228h24v24h-24zM714 228h24v24h-24zM744 228h24v24h-24zM774 228h24v24h-24z
+               M828 196h24v24h-24zM858 196h24v24h-24zM888 196h24v24h-24zM918 196h24v24h-24zM828 228h24v24h-24zM858 228h24v24h-24zM888 228h24v24h-24zM918 228h24v24h-24z
+               M972 196h24v24h-24zM1002 196h24v24h-24zM1032 196h24v24h-24zM1062 196h24v24h-24zM972 228h24v24h-24zM1002 228h24v24h-24zM1032 228h24v24h-24zM1062 228h24v24h-24z"
+            fill="#e3eefb" stroke="#2a78d6" stroke-width="1.5"/>
+    </g>
+    <rect class="gray" x="676" y="276" width="428" height="48"/><text class="mid" x="890" y="306">cache L2 (pequena para tantos núcleos)</text>
+    <text class="bold mid" x="900" y="378">GPU: milhares de núcleos simples</text>
+    <text class="muted mid" x="900" y="405">feita para a vazão: muitas tarefas por segundo</text>
+    <text class="small muted mid" x="900" y="432">cada caixa: um SM (aqui 9 de 36); o nosso laptop: 36 × 128 = 4 608 faixas FP32</text>
+  </svg>
+  <aside class="notes">A CPU gasta transistores em controle e cache para que UMA tarefa termine rápido. A GPU gasta em unidades de cálculo; uma tarefa individual é lenta, mas milhares andam juntas. Monte Carlo é o caso perfeito: milhões de tarefas iguais e independentes.</aside>
+</section>
+
+<section>
+  <h2>O que há dentro de um SM</h2>
+  <svg class="d" viewBox="0 0 1180 500" width="1180">
+    <rect class="paper" x="20" y="10" width="760" height="480" rx="6"/>
+    <text class="bold" x="40" y="42">um SM do nosso laptop (Blackwell, cc 12.0)</text>
+    <g>
+      <rect class="line-muted" x="35" y="60" width="360" height="170" rx="4"/>
+      <rect class="gray" x="45" y="70" width="340" height="30"/><text class="small mid" x="215" y="91">escalonador de warps</text>
+      <rect class="device" x="45" y="110" width="200" height="72"/><text class="mid" x="145" y="140">32 faixas</text><text class="small mid" x="145" y="164">FP32 / INT32</text>
+      <rect class="good" x="255" y="110" width="130" height="32"/><text class="small mid" x="320" y="131">tensor</text>
+      <rect class="gray" x="255" y="150" width="130" height="32"/><text class="small mid" x="320" y="171">LD/ST · SFU</text>
+      <rect class="gray" x="45" y="190" width="340" height="32"/><text class="small mid" x="215" y="211">16 384 registradores</text>
+    </g>
+    <g>
+      <rect class="line-muted" x="405" y="60" width="360" height="170" rx="4"/>
+      <rect class="gray" x="415" y="70" width="340" height="30"/><text class="small mid" x="585" y="91">escalonador de warps</text>
+      <rect class="device" x="415" y="110" width="200" height="72"/><text class="mid" x="515" y="140">32 faixas</text><text class="small mid" x="515" y="164">FP32 / INT32</text>
+      <rect class="good" x="625" y="110" width="130" height="32"/><text class="small mid" x="690" y="131">tensor</text>
+      <rect class="gray" x="625" y="150" width="130" height="32"/><text class="small mid" x="690" y="171">LD/ST · SFU</text>
+      <rect class="gray" x="415" y="190" width="340" height="32"/><text class="small mid" x="585" y="211">16 384 registradores</text>
+    </g>
+    <g>
+      <rect class="line-muted" x="35" y="240" width="360" height="170" rx="4"/>
+      <rect class="gray" x="45" y="250" width="340" height="30"/><text class="small mid" x="215" y="271">escalonador de warps</text>
+      <rect class="device" x="45" y="290" width="200" height="72"/><text class="mid" x="145" y="320">32 faixas</text><text class="small mid" x="145" y="344">FP32 / INT32</text>
+      <rect class="good" x="255" y="290" width="130" height="32"/><text class="small mid" x="320" y="311">tensor</text>
+      <rect class="gray" x="255" y="330" width="130" height="32"/><text class="small mid" x="320" y="351">LD/ST · SFU</text>
+      <rect class="gray" x="45" y="370" width="340" height="32"/><text class="small mid" x="215" y="391">16 384 registradores</text>
+    </g>
+    <g>
+      <rect class="line-muted" x="405" y="240" width="360" height="170" rx="4"/>
+      <rect class="gray" x="415" y="250" width="340" height="30"/><text class="small mid" x="585" y="271">escalonador de warps</text>
+      <rect class="device" x="415" y="290" width="200" height="72"/><text class="mid" x="515" y="320">32 faixas</text><text class="small mid" x="515" y="344">FP32 / INT32</text>
+      <rect class="good" x="625" y="290" width="130" height="32"/><text class="small mid" x="690" y="311">tensor</text>
+      <rect class="gray" x="625" y="330" width="130" height="32"/><text class="small mid" x="690" y="351">LD/ST · SFU</text>
+      <rect class="gray" x="415" y="370" width="340" height="32"/><text class="small mid" x="585" y="391">16 384 registradores</text>
+    </g>
+    <rect class="host" x="35" y="422" width="360" height="56"/><text class="mid bold" x="215" y="446">2 unidades FP64</text><text class="small mid" x="215" y="467">para o SM inteiro</text>
+    <rect class="gray" x="405" y="422" width="360" height="56"/><text class="mid" x="585" y="446">L1 / memória compartilhada</text><text class="small mid" x="585" y="467">até 100 KB para os blocos</text>
+
+    <text class="bold" x="820" y="60">por SM</text><text class="bold end" x="1050" y="60">laptop</text><text class="bold end" x="1160" y="60">A30</text>
+    <line class="line-thin" x1="820" y1="72" x2="1165" y2="72"/>
+    <text x="820" y="104">FP32</text><text class="end" x="1050" y="104">128</text><text class="end" x="1160" y="104">64</text>
+    <text x="820" y="140">INT32</text><text class="end small" x="1050" y="140">(as mesmas)</text><text class="end" x="1160" y="140">64</text>
+    <text x="820" y="176">FP64</text><text class="end bold host-ink" x="1050" y="176">2</text><text class="end bold host-ink" x="1160" y="176">32</text>
+    <text x="820" y="212">registradores</text><text class="end" x="1050" y="212">65 536</text><text class="end" x="1160" y="212">65 536</text>
+    <text x="820" y="248">warps, no máximo</text><text class="end" x="1050" y="248">48</text><text class="end" x="1160" y="248">64</text>
+    <text x="820" y="284">SMs</text><text class="end" x="1050" y="284">36</text><text class="end" x="1160" y="284">56</text>
+    <line class="line-thin" x1="820" y1="300" x2="1165" y2="300"/>
+    <text class="small muted" x="820" y="332">FP64 : FP32 = 1 : 64 no laptop,</text>
+    <text class="small muted" x="820" y="354">1 : 2 na A30</text>
+  </svg>
+  <p class="source">main.py measure → parts/occupancy.json (device), e os dados técnicos da NVIDIA</p>
+  <aside class="notes">Quatro partições, cada uma com o seu escalonador e 32 faixas. FP64: só 2 unidades para o SM inteiro no laptop (placa de jogos); 32 na A30 (placa de ciência). Registradores: 65 536 por SM nas duas.</aside>
+</section>
+
+<section>
+  <h2>As nossas duas GPUs</h2>
+  <table>
+    <thead><tr><th></th><th>RTX 5070 Laptop</th><th>A30 (IAG)</th></tr></thead>
+    <tbody>
+      <tr><td>arquitetura</td><td>Blackwell (cc 12.0)</td><td>Ampere (cc 8.0)</td></tr>
+      <tr><td>SMs</td><td>36</td><td>56</td></tr>
+      <tr><td>por SM</td><td>128 FP32/INT32, 2 FP64</td><td>64 FP32 + 64 INT32, 32 FP64</td></tr>
+      <tr><td>registradores por SM</td><td>65 536</td><td>65 536</td></tr>
+      <tr><td>warps por SM, no máximo</td><td>48 (1536 threads)</td><td>64 (2048 threads)</td></tr>
+      <tr><td>FP64 : FP32</td><td>1 : 64</td><td>1 : 2</td></tr>
+      <tr><td>memória</td><td>8 GB</td><td>24 GB</td></tr>
+    </tbody>
+  </table>
+  <p class="question fragment">qual das duas ganha em FP64? E em FP32?</p>
+  <aside class="notes">Deixar a turma apostar. Resposta na parte 10, com a medida da A30.</aside>
+</section>

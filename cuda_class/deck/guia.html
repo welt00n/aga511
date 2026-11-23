@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>O guia CUDA, com o nosso código</title>
+  <style>
+    :root { --ink: #1b1b1b; --muted: #5f5f5f; --rule: #d6d6d6; --accent: #1f4e8c; --code: #f4f4f2; --note: #fdebe2; }
+    body { margin: 0; background: white; color: var(--ink); font: 17px/1.55 "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+    main { max-width: 860px; margin: 0 auto; padding: 32px 16px 80px; }
+    h1 { font-size: 1.9em; margin: 0 0 0.2em; }
+    h2 { font-size: 1.35em; margin: 2.2em 0 0.4em; padding-top: 0.6em; border-top: 2px solid var(--rule); }
+    h3 { font-size: 1em; margin: 1.4em 0 0.3em; color: var(--accent); }
+    p.lead { color: var(--muted); }
+    pre { background: var(--code); padding: 12px 14px; border-radius: 6px; overflow-x: auto; font-size: 0.85em; line-height: 1.4; }
+    code { font-family: Consolas, "Courier New", monospace; font-size: 0.92em; }
+    table { border-collapse: collapse; margin: 0.6em 0; font-size: 0.92em; }
+    th, td { text-align: left; padding: 4px 12px 4px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+    th { border-bottom: 2px solid var(--ink); }
+    blockquote { margin: 0.6em 0; padding: 6px 14px; border-left: 4px solid var(--accent); color: var(--muted); }
+    .run { background: var(--note); padding: 8px 12px; border-radius: 6px; }
+    .a30 { color: #c25e00; font-weight: 700; }
+    nav a { margin-right: 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>O guia CUDA, com o nosso código</h1>
+  <p class="lead">Quatro capítulos do <a href="https://docs.nvidia.com/cuda/cuda-programming-guide/">CUDA Programming Guide</a> (NVIDIA, v13.5), cada um com o nosso código como exemplo e as nossas medidas. Material da aula de CUDA de AGA 511 (IAG/USP, 24/11/2026): EP3, a agulha de Buffon, e EP4, a estrela manchada. Código: <a href="https://github.com/welt00n/aga511">github.com/welt00n/aga511</a>.</p>
+  <nav><a href="#execucao">I. execução</a><a href="#flutuante">II. ponto flutuante</a><a href="#memoria">III. memória</a><a href="#ocupacao">IV. ocupação</a></nav>
+
+  <h2 id="execucao">I. O modelo de execução</h2>
+  <h3>O que o guia diz</h3>
+  <ul>
+    <li>Threads formam blocos (até 1024 threads), blocos formam o grid; um warp são 32 threads que executam uma instrução comum de cada vez (1.2.2, 3.2.2.1).</li>
+    <li>Todos os threads de um bloco rodam num único SM; os blocos rodam em qualquer ordem, sem garantia de escalonamento entre eles (1.2.2.1, 2.3.7).</li>
+    <li>O lançamento é assíncrono; <code>cudaMemcpy</code> é síncrono (2.1.3, 2.1.4). Não há mecanismo para sincronizar blocos dentro de um kernel comum (2.3.6).</li>
+    <li>O lançamento cooperativo é atômico: se a chamada funciona, todos os blocos entram juntos (4.4.8).</li>
+  </ul>
+  <h3>No nosso código</h3>
+  <pre><code>// EP4/engine/gpu/gpu.cu: lançar exatamente o que cabe, todos juntos
+cudaOccupancyMaxPotentialBlockSize(&amp;grid, &amp;threads_per_block, trace_photons, 0, 0);
+cudaOccupancyMaxActiveBlocksPerMultiprocessor(&amp;blocks_per_sm, trace_photons, threads_per_block, 0);
+blocks = blocks_per_sm * sms;
+cudaLaunchCooperativeKernel(trace_photons, blocks, threads_per_block, args, 0, 0);
+
+__global__ void trace_photons(...) {
+    if (!is_allowed(sm_id(), sm_work)) return;   // só os n SMs escolhidos trabalham (%smid)
+    take_chunks_until_none_left(...);            // a fila: atomicAdd(&amp;next_chunk, 1)
+}</code></pre>
+  <p>Threads persistentes (o nome é de Stanford, CS149): em vez de um thread por fóton, um thread por vaga nos SMs, e uma fila de pedaços de 1024 fótons. É o grid-stride loop do guia (2.3.3.8) com a divisão decidida em tempo de execução: quem termina antes pega mais.</p>
+  <h3>O que medimos</h3>
+  <table>
+    <tr><th></th><th>RTX 5070 Laptop</th></tr>
+    <tr><td>FP64</td><td>80 registradores → 768 threads por bloco × 1 bloco por SM × 36 SMs = 27 648 threads</td></tr>
+    <tr><td>FP32</td><td>67 registradores → 896 × 1 × 36 = 32 256 threads</td></tr>
+    <tr><td>Buffon (EP3), FP64, N = 3,2·10¹⁰</td><td>34,3× em 36 SMs contra 1; a parte serial é 0,15 s (criar o contexto CUDA)</td></tr>
+    <tr><td>a estrela (EP4), FP64, fótons</td><td>36,3× em 36 SMs contra 1</td></tr>
+  </table>
+  <p class="run">Reproduzir: <code>python main.py measure</code> (a linha de lançamento é impressa no início; a escala em <code>parts/scaling.json</code>). EP3: <code>python buffon.py</code>.</p>
+
+  <h2 id="flutuante">II. Ponto flutuante</h2>
+  <h3>O que o guia diz</h3>
+  <ul>
+    <li>As GPUs seguem o IEEE 754-2019, sem modo de arredondamento dinâmico e sem exceções (5.6.3).</li>
+    <li>Multiplicações e somas são fundidas (FMA) por padrão; <code>--fmad=false</code> desliga (5.6.3).</li>
+    <li>As funções matemáticas da CPU e da GPU são implementações independentes; diferenças não significam que a GPU esteja errada (5.6.1.8, 5.6.4). Erro máximo: <code>sin</code>, <code>cos</code> 2 ULP; <code>atan2f</code> 3; <code>cbrt</code> 1; <code>sqrt</code> e as operações básicas 0 (5.6.7).</li>
+    <li>FP32 : FP64 é 2 : 1 na compute capability 8.0 (A30) e 64 : 1 na 12.0 (o laptop) (5.1).</li>
+  </ul>
+  <h3>No nosso código</h3>
+  <pre><code>// EP4/engine/physics/real.cuh: a mesma conta, sem cancelamento perto do polo
+static inline HD real sine_from_cosine(real cosine) {
+    real sine_squared = (1 - cosine) * (1 + cosine);   // não 1 - cosine * cosine
+    return sine_squared &gt; 0 ? real_sqrt(sine_squared) : 0;
+}</code></pre>
+  <h3>O que medimos</h3>
+  <table>
+    <tr><th>Buffon</th><th>agulhas/s</th><th>6 casas de π</th><th>casas alcançáveis</th></tr>
+    <tr><td>FP64</td><td>6,6·10⁹</td><td>14 min</td><td>14, em 2,7·10¹¹ anos</td></tr>
+    <tr><td>FP32</td><td>1,07·10¹¹</td><td>51 s</td><td>6 (viés de ~10⁻⁷ na comparação)</td></tr>
+    <tr><td>FP16</td><td>1,03·10¹¹</td><td>nunca</td><td>3</td></tr>
+  </table>
+  <table>
+    <tr><th>a estrela</th><th>resultado</th></tr>
+    <tr><td>GPU contra CPU, FP64, mesmos fótons</td><td>imagens idênticas, bit a bit (10⁸ fótons)</td></tr>
+    <tr><td>GPU contra CPU, FP32</td><td>2,98·10⁻⁴ dos fótons mudam de pixel</td></tr>
+    <tr><td>FP32 contra FP64</td><td>7,2·10⁻⁴ dos fótons mudam de pixel (ruído: 0,14 por pixel); FP32 16,2× mais rápido</td></tr>
+    <tr><td>sem FMA</td><td>FP64: a mesma imagem, 7,5% mais ciclos; FP32: outra imagem</td></tr>
+  </table>
+  <p class="run">Reproduzir: <code>python main.py test</code> (GPU = CPU), <code>python main.py measure</code> (<code>parts/validation.json</code>, variante <code>no_fma</code> em <code>parts/kernel.json</code>). EP3: <code>python buffon.py --precision 32</code>, <code>--precision 16</code>, <code>--report</code>.</p>
+
+  <h2 id="memoria">III. A memória</h2>
+  <h3>O que o guia diz (2.3.3, tabela 1), com a coluna do EP4</h3>
+  <table>
+    <tr><th>espaço</th><th>quem vê</th><th>dura</th><th>onde fica</th><th>no EP4</th></tr>
+    <tr><td>registradores</td><td>thread</td><td>kernel</td><td>SM</td><td>o fóton: 80 por thread (FP64)</td></tr>
+    <tr><td>local</td><td>thread</td><td>kernel</td><td>memória do device</td><td>40 bytes de pilha, 0 derramados</td></tr>
+    <tr><td>compartilhada</td><td>bloco</td><td>kernel</td><td>SM</td><td>não usada</td></tr>
+    <tr><td>global</td><td>grid</td><td>aplicação</td><td>memória do device</td><td>a imagem (5 GB a 1024²), a fila, as somas</td></tr>
+    <tr><td>constante</td><td>grid, só leitura</td><td>aplicação</td><td>memória do device, cache de 8 KB por SM</td><td>a estrela, 18 048 bytes</td></tr>
+  </table>
+  <p>"Local" é o escopo, não o lugar: fica na memória do device, com a latência da global (2.3.3.4). O guia ensina histogramas na memória compartilhada de cada bloco, somados depois na global com atômicos (2.3.3.8); a ordem dos atômicos em ponto flutuante varia entre execuções (5.6.8).</p>
+  <h3>No nosso código</h3>
+  <pre><code>// EP4/engine/gpu/gpu_image.cuh: a imagem é um histograma de fótons
+static inline __device__ void count_photon_atomic(PixelCount *counts, unsigned long long pixel) {
+    atomicAdd(&amp;counts[pixel], 1u);    // 1,26·10⁹ contagens: direto na memória global
+}</code></pre>
+  <p>1024² pixels × 300 quadros × 4 observadores = 1,26·10⁹ contagens: 5 GB, que não cabem em 100 KB de memória compartilhada. Com bilhões de endereços, dois fótons quase nunca disputam o mesmo pixel. E as contagens são inteiras: somadas em qualquer ordem, dão o mesmo número, uma das razões de a imagem sair bit a bit.</p>
+  <h3>O que medimos</h3>
+  <table>
+    <tr><th>a estrela em memória global, em vez de constante</th><th>registradores</th><th>ciclos</th></tr>
+    <tr><td>FP64</td><td>80 → 88</td><td>0,996×</td></tr>
+    <tr><td>FP32</td><td>67 → 68</td><td>1,007×</td></tr>
+  </table>
+  <p>Diferença dentro do ruído: a estrela cabe nas caches. Fica em memória constante porque é o que ela é: só leitura, igual para todos.</p>
+  <p class="run">Reproduzir: <code>python main.py measure</code> → <code>parts/kernel.json</code> (<code>resources</code>, variante <code>scene_in_global</code>).</p>
+
+  <h2 id="ocupacao">IV. A ocupação</h2>
+  <h3>O que o guia diz (2.3.7)</h3>
+  <blockquote>A ocupação é a razão entre os warps ativos e o máximo de warps de um SM. "É uma boa prática ter a ocupação tão alta quanto possível"; limitar os registradores "pode resultar num ganho líquido de desempenho".</blockquote>
+  <h3>No nosso código</h3>
+  <p>Os registradores por thread decidem quantos warps cabem: 65 536 / (⌈r/8⌉ · 8 · 32), no máximo 48 no laptop e 64 na A30. Para testar o guia, compilamos o kernel com <code>-maxrregcount</code> de 80 até 32 e medimos em ciclos, que não dependem do <em>clock</em>.</p>
+  <h3>O que medimos</h3>
+  <table>
+    <tr><th>FP64, registradores</th><th>80</th><th>72</th><th>64</th><th>56</th><th>48</th><th>40</th></tr>
+    <tr><td>ocupação</td><td>0,50</td><td>0,58</td><td>0,67</td><td>0,75</td><td>0,83</td><td>1,00</td></tr>
+    <tr><td>bytes derramados</td><td>0</td><td>0</td><td>24</td><td>84</td><td>164</td><td>344</td></tr>
+    <tr><td>instruções</td><td>1,000</td><td>1,015</td><td>1,035</td><td>1,070</td><td>1,090</td><td>1,131</td></tr>
+    <tr><td>ciclos</td><td>1,000</td><td>0,999</td><td>1,001</td><td>1,049</td><td>1,072</td><td>1,097</td></tr>
+  </table>
+  <p>No laptop, mais ocupação não foi mais rápida. Tirar registradores custa instruções antes mesmo de derramar (FP32 a 55 registradores, nada derramado: 4,7% mais instruções, 1,1% mais ciclos), e depois cada derramamento é uma escrita e uma leitura na memória local. Mais warps só pagariam se o SM ficasse parado esperando latência; aqui ele espera as 2 unidades FP64 (FP64 é 16,2× mais lento que FP32, e o código FP64 tem 1 063 <code>NOP</code>s de espera em 2 744 instruções). Na A30, com FP64 rápido e 96 registradores (ocupação ≤ 0,33), a resposta pode ser outra: <span class="a30">[A30: a medida]</span>.</p>
+  <p class="run">Reproduzir: <code>python main.py measure</code> → <code>parts/occupancy.json</code>, <code>figures/registers_and_occupancy.png</code>.</p>
+</main>
+</body>
+</html>

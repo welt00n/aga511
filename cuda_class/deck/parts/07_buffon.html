@@ -1,0 +1,158 @@
+<section class="divider" data-part="6">
+  <p class="promise">O EP3 como foi entregue: a premissa, o código serial, a paralelização e os resultados.</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>Ponte para o EP3</h2>
+  <p class="statement" style="margin-top: 2.5em">O Buffon conta quantas agulhas cruzam uma linha.<small>Que operação é essa?</small></p>
+  <p class="concept fragment" style="text-align:center">Uma <strong>redução</strong>: cada thread soma as suas agulhas em registrador, e um atômico junta tudo no fim.</p>
+  <aside class="notes">Checkpoint do bloco. A resposta leva direto ao EP3. Mas antes: de onde vêm os números aleatórios de cada thread?</aside>
+</section>
+
+<section>
+  <h2>EP3: a agulha de Buffon</h2>
+  <div class="columns">
+    <div class="side">
+      <svg class="d" viewBox="0 0 700 400" width="640">
+        <line class="line" x1="20" y1="60" x2="680" y2="60"/><line class="line" x1="20" y1="200" x2="680" y2="200"/><line class="line" x1="20" y1="340" x2="680" y2="340"/>
+        <line class="line-muted" x1="68.3" y1="138.8" x2="171.7" y2="101.2" stroke-width="5"/>
+        <line class="line-device" x1="492.5" y1="137.6" x2="547.5" y2="42.4" stroke-width="5"/>
+        <line class="line-muted" x1="152.4" y1="272.5" x2="247.6" y2="327.5" stroke-width="5"/>
+        <line class="line-device" x1="561.1" y1="358.9" x2="638.9" y2="281.1" stroke-width="5"/>
+        <line class="line-muted" x1="395.8" y1="159.6" x2="504.2" y2="140.4" stroke-width="5"/>
+        <line class="line-device" x1="331.2" y1="301.7" x2="368.8" y2="198.3" stroke-width="5"/>
+        <circle class="dot-ink" cx="350" cy="250" r="5"/>
+        <line class="line-thin dashed" x1="350" y1="250" x2="350" y2="200"/><text class="small" x="358" y="232">x</text>
+        <line class="line-thin dashed" x1="350" y1="250" x2="420" y2="250"/>
+        <path class="line-thin" d="M385 250 A35 35 0 0 0 362 217"/><text class="small" x="392" y="236">θ</text>
+        <line class="line-thin" x1="650" y1="205" x2="650" y2="335" marker-start="url(#arrow)" marker-end="url(#arrow)"/><text x="660" y="275">D</text>
+        <text class="small device-ink" x="300" y="330">L</text>
+      </svg>
+    </div>
+    <div class="main">
+      <ul>
+        <li>agulhas de comprimento \(L\) caem sobre linhas a distância \(D\)</li>
+        <li>cruza se \(x \le \tfrac{L}{2}\sin\theta\)</li>
+        <li>\(P(\text{cruzar}) = \dfrac{2L}{\pi D}\)</li>
+      </ul>
+      <p class="formula">\(\pi \approx \dfrac{2 L\, n}{D \cdot \text{cruzamentos}}\)</p>
+    </div>
+  </div>
+  <aside class="notes">Azul: cruzam. Dois números aleatórios por agulha: x (distância do centro à linha mais próxima) e θ (ângulo).</aside>
+</section>
+
+<section>
+  <h2>EP3: o código serial</h2>
+  <pre><code class="language-cpp" data-trim data-noescape>
+for (long long i = 0; i &lt; n; i++) {
+    double x     = uniform() * (D / 2);       // centro → linha mais próxima
+    double theta = uniform() * (PI / 2);
+    if (x &lt;= (L / 2) * sin(theta))
+        crossings++;                          // uma redução: contar
+}
+pi = 2 * L * n / (D * crossings);
+  </code></pre>
+  <p class="concept">Cada agulha é independente das outras: <strong>paralelismo de dados</strong>, como os pixels de 1999. Contar é uma <strong>redução</strong>.</p>
+  <aside class="notes">As pontes: paralelismo de dados (parte 1) e redução (parte 5).</aside>
+</section>
+
+<section>
+  <h2>EP3: paralelizar com threads persistentes e uma fila</h2>
+  <svg class="d" viewBox="0 0 1180 380" width="1180">
+    <text class="small muted" x="40" y="22">pedaços de agulhas (cada um com o seu fluxo Philox)</text>
+    <g>
+      <rect class="device" x="40" y="34" width="70" height="44"/><text class="small mid" x="75" y="62">0 · T0</text>
+      <rect class="device" x="118" y="34" width="70" height="44"/><text class="small mid" x="153" y="62">1 · T1</text>
+      <rect class="device" x="196" y="34" width="70" height="44"/><text class="small mid" x="231" y="62">2 · T2</text>
+      <rect class="device" x="274" y="34" width="70" height="44"/><text class="small mid" x="309" y="62">3 · T3</text>
+      <rect class="device" x="352" y="34" width="70" height="44"/><text class="small mid" x="387" y="62">4 · T1</text>
+      <rect class="device" x="430" y="34" width="70" height="44"/><text class="small mid" x="465" y="62">5 · T0</text>
+      <rect class="device" x="508" y="34" width="70" height="44"/><text class="small mid" x="543" y="62">6 · T3</text>
+      <rect class="gray" x="586" y="34" width="70" height="44"/><text class="small mid" x="621" y="62">7</text>
+      <rect class="gray" x="664" y="34" width="70" height="44"/><text class="small mid" x="699" y="62">8</text>
+      <rect class="gray" x="742" y="34" width="70" height="44"/><text class="small mid" x="777" y="62">⋯</text>
+    </g>
+    <rect class="host" x="880" y="30" width="270" height="52"/><text class="mid" x="1015" y="54">próximo pedaço = 7</text><text class="small mid mono" x="1015" y="74">atomicAdd(&amp;próximo, 1)</text>
+    <g>
+      <rect class="device" x="60" y="160" width="220" height="70"/><text class="mid bold" x="170" y="188">thread 0</text><text class="small mid" x="170" y="212">soma em registrador</text>
+      <rect class="device" x="340" y="160" width="220" height="70"/><text class="mid bold" x="450" y="188">thread 1</text><text class="small mid" x="450" y="212">soma em registrador</text>
+      <rect class="device" x="620" y="160" width="220" height="70"/><text class="mid bold" x="730" y="188">thread 2</text><text class="small mid" x="730" y="212">soma em registrador</text>
+      <rect class="device" x="900" y="160" width="220" height="70"/><text class="mid bold" x="1010" y="188">thread 3</text><text class="small mid" x="1010" y="212">soma em registrador</text>
+    </g>
+    <path class="line-muted" d="M75 78L150 160M465 78L190 160M153 78L430 160M387 78L470 160M231 78L730 160M309 78L990 160M543 78L1030 160" marker-end="url(#arrow-muted)"/>
+    <line class="line-host" x1="1015" y1="82" x2="1015" y2="150" marker-end="url(#arrow-host)"/><text class="small host-ink" x="1025" y="130">cada thread pega o próximo</text>
+    <rect class="host" x="440" y="300" width="300" height="56"/><text class="mid" x="590" y="334">cruzamentos (memória global)</text>
+    <path class="line" d="M170 230L520 300M450 230L560 300M730 230L620 300M1010 230L660 300" marker-end="url(#arrow)"/>
+    <text class="small" x="760" y="290">1 atomicAdd por thread, no fim</text>
+  </svg>
+  <p class="note">Tantos threads quanto cabem nos SMs, lançados uma vez; cada um pega pedaços até acabar a fila. Quem acaba antes pega mais: o trabalho se equilibra sozinho.</p>
+  <aside class="notes">Threads persistentes: em vez de um thread por agulha, um thread por vaga no SM, e uma fila. É a mesma estrutura do EP4. A soma em registrador e o único atômico são a redução da parte 5.</aside>
+</section>
+
+<section>
+  <h2>EP3: o mesmo laço na GPU</h2>
+  <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2|3-6|10-11">
+__device__ unsigned long long count_crossings_in_chunk(long long chunk, ...) {
+    curand_init(seed, chunk, 0, &amp;rng);            // um fluxo Philox por pedaço
+    for (long long i = first; i &lt; last; i++)
+        if (gpu_needle_crosses(precision, &amp;rng))
+            crossings++;                          // resultado parcial, em registrador
+    return crossings;
+}
+
+__global__ void throw_needles(...) {
+    atomicAdd(counters.crossings,                 // combinação: um atômico por thread
+              take_chunks_until_none_left(...));  // pega pedaços da fila até acabar
+}
+  </code></pre>
+  <p class="source">EP3/buffon.cu</p>
+  <aside class="notes">Três ideias das partes anteriores num só kernel: o fluxo por pedaço (6), a redução em registrador e o atômico (5), a fila (slide anterior).</aside>
+</section>
+
+<section>
+  <h2>EP3: o erro cai como \(1/\sqrt{N}\)</h2>
+  <div class="figure"><img src="figures/ep3_error.png" style="max-height: 440px" alt="EP3: erro real e experimental contra N; tempo contra N"></div>
+  <p class="caption">ajuste do erro real: \(\propto N^{-0{,}499\pm0{,}009}\) (teoria \(2{,}37/\sqrt{N}\)); tempo: \(T = 0{,}15\ \text{s} + 1{,}5\times10^{-10}\ \text{s}\times N\)</p>
+  <p class="source">EP3/buffon.py → runs/…-gpu-fp64/error.png, summary.txt</p>
+  <aside class="notes">Esta também é uma validação do gerador: se os números tivessem correlação, o erro não cairia com o expoente −1/2. À direita: o tempo é 0,15 s (o contexto CUDA) mais uma parte proporcional a N. Para N pequeno, o tempo é só o contexto.</aside>
+</section>
+
+<section>
+  <h2>EP3: os resultados</h2>
+  <table>
+    <thead><tr><th></th><th>resultado</th><th>de onde</th></tr></thead>
+    <tbody>
+      <tr><td>todas as agulhas juntas</td><td>\(\pi = 3{,}1415942 \pm 0{,}0000024\) (o verdadeiro está a 0,6σ), \(9{,}7\times10^{11}\) agulhas</td><td>FP64</td></tr>
+      <tr><td>o erro</td><td>\(\propto N^{-0{,}499\pm0{,}009}\); \(k = 2{,}38 \pm 0{,}10\) (teoria 2,374)</td><td>294 execuções</td></tr>
+      <tr><td>o tempo</td><td>\(T = 0{,}15\ \text{s} + 1{,}5\times10^{-10}\ \text{s}\times N\)</td><td>36 SMs</td></tr>
+      <tr><td>velocidade</td><td>FP64 \(6{,}6\times10^{9}\)/s; FP32 \(1{,}07\times10^{11}\)/s</td><td>36 SMs</td></tr>
+      <tr><td>14 casas de π</td><td>\(5{,}6\times10^{28}\) agulhas: \(2{,}7\times10^{11}\) anos nesta GPU</td><td>extrapolado</td></tr>
+    </tbody>
+  </table>
+  <p class="question fragment">e se dividirmos o trabalho entre 1, 2, … 36 SMs?</p>
+  <p class="source">EP3/buffon.py → runs/2026-11-08_20-36-22-gpu-fp64/summary.txt</p>
+  <aside class="notes"></aside>
+</section>
+
+<section>
+  <h2>A lei de Amdahl, com SMs</h2>
+  <svg class="d" viewBox="0 0 1180 300" width="1180">
+    <text class="bold" x="10" y="62">n = 1</text><rect class="host-solid" x="110" y="38" width="80" height="38"/><rect class="device-solid" x="190" y="38" width="720" height="38"/><text class="end" x="1150" y="64">S = 1</text>
+    <text class="bold" x="10" y="122">n = 2</text><rect class="host-solid" x="110" y="98" width="80" height="38"/><rect class="device-solid" x="190" y="98" width="360" height="38"/><text class="end" x="1150" y="124">S = 1,8</text>
+    <text class="bold" x="10" y="182">n = 4</text><rect class="host-solid" x="110" y="158" width="80" height="38"/><rect class="device-solid" x="190" y="158" width="180" height="38"/><text class="end" x="1150" y="184">S = 3,1</text>
+    <text class="bold" x="10" y="242">n → ∞</text><rect class="host-solid" x="110" y="218" width="80" height="38"/><text class="end" x="1150" y="244">S → 1/s = 10</text>
+    <text class="small host-ink" x="110" y="285">serial: s = 0,1</text><text class="small device-ink" x="300" y="285">paralela: p = 0,9, dividida entre n SMs</text>
+  </svg>
+  <p class="formula">\(S(n) = \dfrac{T(1)}{T(n)} = \dfrac{1}{s + p/n}\qquad\text{teto: } \dfrac{1}{s}\)</p>
+  <aside class="notes">A turma já conhece Amdahl. O que muda aqui: n são SMs (o EP3 e o EP4 conseguem rodar em 1, 2, … 36 SMs), e a pergunta é: o que é a parte serial de um programa de GPU?</aside>
+</section>
+
+<section>
+  <h2>EP3: Amdahl nos SMs</h2>
+  <div class="figure"><img src="figures/ep3_amdahl.png" style="max-height: 370px" alt="EP3: aceleração em função do número de SMs"></div>
+  <p class="question fragment">em 36 SMs, quanto mais rápido?</p>
+  <p class="caption fragment">\(N = 3{,}2\times10^{10}\) (FP64): <strong>34,3× em 36 SMs</strong>, \(p = 0{,}9986\); a parte serial é 0,15 s: criar o contexto CUDA. \(p\) cresce com \(N\): 0,07 em 10⁶, 0,78 em 10⁸, 0,997 em 10¹⁰.</p>
+  <p class="source">EP3/buffon.py → runs/…-gpu-fp64/amdahl.png, summary.txt</p>
+  <aside class="notes">Prever antes de mostrar. p não é propriedade só do programa: depende de N, porque a parte serial é fixa e a paralela cresce. Guardar o 0,15 s: o EP4 vai ter outra parte serial.</aside>
+</section>

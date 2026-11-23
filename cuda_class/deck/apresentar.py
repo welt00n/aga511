@@ -61,8 +61,8 @@ def handler_for(presentation):
                 return self.reply_json(presentation.take_commands())
             if self.path == "/estado":
                 return self.reply_json(presentation.current())
-            if self.path in ("/", "/celular"):
-                self.path = "/celular.html"
+            if self.path in ("/", "/tablet", "/celular"):
+                self.path = "/tablet.html"
             if self.headers.get("Range") and self.send_part_of_file():
                 return
             super().do_GET()
@@ -159,7 +159,7 @@ def show_addresses(port):
     if not addresses:
         print("Nenhuma rede encontrada: ligue o hotspot do celular e conecte o laptop a ele.")
     for address in addresses:
-        print("No celular, na mesma rede: http://%s:%d/" % (address, port))
+        print("No tablet, na mesma rede:  http://%s:%d/" % (address, port))
     print("Teclado: F tela cheia, S notas, Esc visão geral, B tela preta. Ctrl+C encerra.", flush=True)
 
 
