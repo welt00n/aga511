@@ -161,7 +161,8 @@ speed = load("speed")
 table(speed["rows"], [("precision", lambda r: f"FP{r['precision']}", None), ("SMs", "sms", None), ("N", "photons", ".1e"),
                       ("photons/s (median)", lambda r: r["photons_per_second"]["median"], ".3g"),
                       ("min – max", lambda r: f"{r['photons_per_second']['min']:.3g} – {r['photons_per_second']['max']:.3g}", None),
-                      ("SM clock (MHz)", "sm_clock_mhz", ".0f"), ("power (W)", "power_w", ".0f"),
+                      ("SM clock during the photons (MHz)", "clock_during_photons_mhz", ".0f"),
+                      ("power (W)", "power_w", ".0f"),
                       ("power cap", "power_cap_share", ".0%"), ("repeats", lambda r: r["photons_per_second"]["repeats"], None)])
 figure("figures/speed.png")
 """), markdown(f"""
@@ -266,6 +267,16 @@ def best_and_full(rows):
     return best, full[0] if full else None
 
 
+def instructions_sentence(rows):
+    unspilled = [row for row in rows[1:] if not row["spill_bytes"] and row.get("instructions_vs_uncapped")]
+    if not unspilled:
+        return ""
+    row = unspilled[-1]
+    return (f" Before any spill, the cap already changes the code: at {row['registers']} registers (0 B spilled) the "
+            f"kernel has {row['instructions_vs_uncapped']:.3f}× the instructions, for "
+            f"{row['cycles_vs_baseline']:.3f}× the cycles.")
+
+
 def occupancy(data):
     limits, here = data["device"], data["this_gpu"]
     meaning = []
@@ -281,6 +292,7 @@ def occupancy(data):
         if full:
             line += (f" Full occupancy needs {full['registers']} registers: {full['cycles_vs_baseline']:.3f}× the "
                      f"cycles, with {full['spill_bytes']} bytes spilled to local memory.")
+        line += instructions_sentence(data["rows"][precision])
         meaning.append(line)
     targets = "\n".join(
         f"- {target['device']['NAME']} ({target['target']}): FP64 {target['precisions']['fp64']['registers']} registers "
@@ -315,8 +327,10 @@ for precision, rows in occupancy["rows"].items():
     print(f"The caps, {precision}")
     table(rows, [("cap", "cap", None), ("registers", "registers", None), ("warps allowed", "warps_allowed_by_registers", None),
                  ("occupancy", "occupancy", ".2f"), ("spills (B)", "spill_bytes", None),
+                 ("instructions vs uncapped", "instructions_vs_uncapped", ".3f"),
+                 ("local stores / loads", lambda r: f"{r.get('local_stores')} / {r.get('local_loads')}", None),
                  ("cycles vs uncapped", "cycles_vs_baseline", ".3f"), ("time vs uncapped", "time_vs_baseline", ".3f"),
-                 ("MHz", "sm_clock_mhz", ".0f"), ("power cap", "power_cap_share", ".0%"),
+                 ("MHz (photons)", "effective_mhz", ".0f"), ("power cap", "power_cap_share", ".0%"),
                  ("same image", "image_equals_baseline", lambda v: "yes" if v else "no")])
 figure(occupancy["figure"])
 """), markdown("**What it means.**\n" + "\n".join(meaning) + f"""
@@ -337,11 +351,23 @@ def strong_rows_code(label):
 strong = load("scaling")["{label}"]
 table([{{"sms": n, "photons": strong["photon_time"][str(n)], "whole": strong["whole_run_time"][str(n)],
          "s_photons": strong["speedup_photon_phase"][str(n)], "s_whole": strong["speedup_whole_run"][str(n)],
-         "s_cycles": strong["speedup_cycles"].get(str(n)), "mhz": strong["sm_clock_mhz"].get(str(n))}}
+         "s_cycles": strong["speedup_cycles"].get(str(n)), "mhz": strong["sm_clock_during_photons_mhz"].get(str(n))}}
        for n in strong["sms"]],
       [("SMs", "sms", None), ("photon phase (s)", "photons", ".3f"), ("whole run (s)", "whole", ".3f"),
        ("speedup, photons", "s_photons", ".2f"), ("speedup, whole run", "s_whole", ".2f"),
-       ("speedup, cycles", "s_cycles", ".2f"), ("SM clock (MHz)", "mhz", ".0f")])
+       ("speedup, cycles", "s_cycles", ".2f"), ("SM clock during the photons (MHz)", "mhz", ".0f")])
+"""
+
+
+PHASES_CODE = """
+for precision in (64, 32):
+    phases = load("scaling")[f"strong-fp{precision}"]["phases"]
+    print(f"Where the whole run goes, FP{precision} (median seconds)")
+    table([dict(phases[n], sms=n) for n in phases],
+          [("SMs", "sms", None), ("setup", "setup", ".2f"), ("zeroing", "zeroing", ".2f"), ("photons", "photons", ".2f"),
+           ("copy back", "copy back", ".2f"), ("save", "save", ".2f"), ("other", "other", ".2f"),
+           ("whole run", "whole", ".2f")])
+    figure(f"figures/phases_fp{precision}.png")
 """
 
 
@@ -389,6 +415,7 @@ T(n) = T(1)·(s + p/n) is fitted by least squares; Gustafson's scaled speedup is
 ### 5.1 Strong scaling
 """), code(strong_rows_code("strong-fp64") + '\nfigure("figures/strong_fp64.png")'),
         code(strong_rows_code("strong-fp32") + '\nfigure("figures/strong_fp32.png")'),
+        code(PHASES_CODE),
         markdown("**What it means.**\n" + strong_meaning(data["strong-fp64"], 64) + "\n" +
                  strong_meaning(data["strong-fp32"], 32)),
         markdown("### 5.2 Weak scaling"),

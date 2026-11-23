@@ -57,7 +57,11 @@
         "image_equals_baseline": true,
         "cap": "none",
         "spill_bytes": 0,
-        "warps_allowed_by_registers": 25
+        "warps_allowed_by_registers": 25,
+        "instructions": 2744,
+        "local_stores": 2,
+        "local_loads": 3,
+        "instructions_vs_uncapped": 1.0
       },
       {
         "photons": 4000000000,
@@ -85,7 +89,11 @@
         "image_equals_baseline": true,
         "cap": 72,
         "spill_bytes": 0,
-        "warps_allowed_by_registers": 28
+        "warps_allowed_by_registers": 28,
+        "instructions": 2784,
+        "local_stores": 2,
+        "local_loads": 3,
+        "instructions_vs_uncapped": 1.0145772594752187
       },
       {
         "photons": 4000000000,
@@ -113,7 +121,11 @@
         "image_equals_baseline": true,
         "cap": 64,
         "spill_bytes": 24,
-        "warps_allowed_by_registers": 32
+        "warps_allowed_by_registers": 32,
+        "instructions": 2840,
+        "local_stores": 5,
+        "local_loads": 5,
+        "instructions_vs_uncapped": 1.0349854227405249
       },
       {
         "photons": 4000000000,
@@ -141,7 +153,11 @@
         "image_equals_baseline": true,
         "cap": 56,
         "spill_bytes": 84,
-        "warps_allowed_by_registers": 36
+        "warps_allowed_by_registers": 36,
+        "instructions": 2936,
+        "local_stores": 13,
+        "local_loads": 12,
+        "instructions_vs_uncapped": 1.0699708454810495
       },
       {
         "photons": 4000000000,
@@ -169,7 +185,11 @@
         "image_equals_baseline": true,
         "cap": 48,
         "spill_bytes": 164,
-        "warps_allowed_by_registers": 42
+        "warps_allowed_by_registers": 42,
+        "instructions": 2992,
+        "local_stores": 25,
+        "local_loads": 20,
+        "instructions_vs_uncapped": 1.0903790087463556
       },
       {
         "photons": 4000000000,
@@ -197,7 +217,11 @@
         "image_equals_baseline": true,
         "cap": 40,
         "spill_bytes": 344,
-        "warps_allowed_by_registers": 51
+        "warps_allowed_by_registers": 51,
+        "instructions": 3104,
+        "local_stores": 68,
+        "local_loads": 48,
+        "instructions_vs_uncapped": 1.131195335276968
       },
       {
         "photons": 4000000000,
@@ -225,7 +249,11 @@
         "image_equals_baseline": true,
         "cap": 32,
         "spill_bytes": 444,
-        "warps_allowed_by_registers": 64
+        "warps_allowed_by_registers": 64,
+        "instructions": 3136,
+        "local_stores": 89,
+        "local_loads": 66,
+        "instructions_vs_uncapped": 1.1428571428571428
       }
     ],
     "fp32": [
@@ -255,7 +283,11 @@
         "image_equals_baseline": true,
         "cap": "none",
         "spill_bytes": 0,
-        "warps_allowed_by_registers": 28
+        "warps_allowed_by_registers": 28,
+        "instructions": 1520,
+        "local_stores": 8,
+        "local_loads": 12,
+        "instructions_vs_uncapped": 1.0
       },
       {
         "photons": 50000000000,
@@ -283,7 +315,11 @@
         "image_equals_baseline": true,
         "cap": 64,
         "spill_bytes": 0,
-        "warps_allowed_by_registers": 36
+        "warps_allowed_by_registers": 36,
+        "instructions": 1592,
+        "local_stores": 8,
+        "local_loads": 12,
+        "instructions_vs_uncapped": 1.0473684210526315
       },
       {
         "photons": 50000000000,
@@ -311,7 +347,11 @@
         "image_equals_baseline": true,
         "cap": 56,
         "spill_bytes": 0,
-        "warps_allowed_by_registers": 36
+        "warps_allowed_by_registers": 36,
+        "instructions": 1624,
+        "local_stores": 8,
+        "local_loads": 12,
+        "instructions_vs_uncapped": 1.068421052631579
       },
       {
         "photons": 50000000000,
@@ -339,7 +379,11 @@
         "image_equals_baseline": true,
         "cap": 48,
         "spill_bytes": 24,
-        "warps_allowed_by_registers": 42
+        "warps_allowed_by_registers": 42,
+        "instructions": 1640,
+        "local_stores": 11,
+        "local_loads": 14,
+        "instructions_vs_uncapped": 1.0789473684210527
       },
       {
         "photons": 50000000000,
@@ -367,7 +411,11 @@
         "image_equals_baseline": true,
         "cap": 40,
         "spill_bytes": 80,
-        "warps_allowed_by_registers": 51
+        "warps_allowed_by_registers": 51,
+        "instructions": 1664,
+        "local_stores": 18,
+        "local_loads": 20,
+        "instructions_vs_uncapped": 1.0947368421052632
       },
       {
         "photons": 50000000000,
@@ -395,7 +443,11 @@
         "image_equals_baseline": true,
         "cap": 32,
         "spill_bytes": 156,
-        "warps_allowed_by_registers": 64
+        "warps_allowed_by_registers": 64,
+        "instructions": 1680,
+        "local_stores": 28,
+        "local_loads": 28,
+        "instructions_vs_uncapped": 1.105263157894737
       }
     ]
   },

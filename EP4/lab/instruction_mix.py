@@ -5,7 +5,7 @@ import subprocess
 
 from lab import engine
 
-CUOBJDUMP = "/usr/local/cuda/bin/cuobjdump"
+CUOBJDUMP = engine.cuda_tool("cuobjdump")
 KERNEL = "trace_photons"
 INSTRUCTION = re.compile(r"^\s*/\*[0-9a-f]{4,}\*/\s+(?:@!?U?P[0-9T]\s+)?([A-Z][A-Z0-9_]*)")
 USER_CONSTANT_BANK = "c[0x3]"
@@ -54,6 +54,12 @@ def instruction_mix(binary):
     for opcode, count in opcodes.items():
         units[unit_of(opcode)] += count
     return units, opcodes, constant_operands
+
+
+def instruction_count(binary):
+    _, opcodes, _ = instruction_mix(binary)
+    return {"instructions": sum(opcodes.values()), "local_stores": opcodes.get("STL", 0),
+            "local_loads": opcodes.get("LDL", 0)}
 
 
 def mixes_of_the_kernel(variants=()):

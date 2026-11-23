@@ -20,17 +20,17 @@
     {
       "status": "ok",
       "name": "disk",
-      "detail": "1002 GB free under runs/"
+      "detail": "1001 GB free under runs/"
     },
     {
-      "status": "warn",
+      "status": "ok",
       "name": "engine code",
-      "detail": "31 uncommitted change(s): code 72b86b63cbf7 matches no commit"
+      "detail": "committed (code 72b86b63cbf7)"
     },
     {
       "status": "ok",
       "name": "GPU",
-      "detail": "NVIDIA GeForce RTX 5070 Laptop GPU, driver 621.14, 5.0 GiB free"
+      "detail": "NVIDIA GeForce RTX 5070 Laptop GPU, driver 621.14, 5.1 GiB free"
     },
     {
       "status": "warn",
@@ -40,7 +40,7 @@
     {
       "status": "ok",
       "name": "GPU power",
-      "detail": "now 277 MHz, 5.18 W of a 91.00 W limit, 55.30 \u00b0C (read only: clocks and limits are not changed)"
+      "detail": "now 307 MHz, 5.77 W of a 103.54 W limit, 53.70 \u00b0C (read only: clocks and limits are not changed)"
     },
     {
       "status": "ok",

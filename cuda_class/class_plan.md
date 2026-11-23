@@ -49,36 +49,55 @@ The projects drive the class; the foundations come first (the syllabus' 2–5), 
 | 10 | 6 | Result and closing | — | the SNR ladder; three takeaways |
 | | 5 | Questions | | |
 
+## The deck's sequence (2026-11-23, replaces the table above)
+
+The slides are [`deck/aula.html`](deck/aula.html) (reveal.js, presented with [`deck/apresentar.py`](deck/README.md)). Every data point in them comes from the orchestrator; the map is [class_points.md](class_points.md). 77 slides, 11 parts, each opened by a divider with the agenda.
+
+| Part | min | Content | New since the first draft |
+|---|---|---|---|
+| opening | 3 | title; agenda; **the thread** (concept → history → foundation → project) | the thread table |
+| 1. History | 10 | science → industry → together (timeline); one era per slide, each leaving its concept | the timeline diagram, the era strip |
+| hook | 2 | the star's video, "how?" | |
+| 2. Architecture | 8 | CPU vs GPU (latency vs throughput); inside an SM; our two GPUs; FP32 vs FP64 bits | three diagrams |
+| 3. Terminology and memory | 8 | host and device; a minimal kernel and its index; thread → warp → block → grid → SMs; the memory model | four diagrams |
+| 4. Execution flow | 6 | the four arrows; what each costs (`phases_fp64.png`) | the phases figure from `measure` |
+| 5. Programming model | 13 | SIMT and divergence; the reduction tree and its code; races and atomics; bridge to EP3 | three diagrams |
+| 6. Random numbers | 12 | how many numbers; stateful (LCG) vs counter-based (Philox); a Philox round; a stream per chunk; **the six levels of validation**; the real `--test-rng` output; uniforms in (0, 1]; the χ² figure | **the whole part** |
+| 7. EP3 | 13 | the geometry; the serial code; the error falls as 1/√N; persistent threads and a queue; the GPU code; Amdahl explained; Amdahl over SMs | the geometry, queue and Amdahl diagrams |
+| 8. Deeper | 12 | latency hiding; registers → warps (drawn); the launch line as printed; the register sweep; why (instructions per cap); FP64 16× not 64×; the A30 | instructions per cap from `measure` |
+| 9. EP4 | 14 | the star; the life of a photon (with each step's share of the time); the skeleton; where each thing lives; validation back to the pyramid; the two axes of cost | four diagrams |
+| 10. EP4 Amdahl | 12 | where the time goes; the ceiling (linear, cycles, clock); large N; EP3 vs EP4; the laptop vs the A30; fair comparison | |
+| 11. Closing | 5 | the SNR ladder; the thread, back; three lessons; the four commands | |
+| questions | 2 | | |
+
 ## Block by block
 
 For each block: the **message** (what the room must leave with, also the slide titles' voice), the **board**, the **slides** (only what can't be drawn), the **numbers**, and a **checkpoint** (a question to the room). **⟨A30⟩** marks a space filled after the IAG run on Monday: the class is written with the comparison in it. Figures: `M/` = `EP4/runs/measure/2026-11-22_20-25-24-Welton-all/figures/`, `S/` = `EP4/runs/make/2026-11-22_20-07-02-1024-f300-gpu32-snr10/`, `E3/` = `EP3/runs/2026-11-08_20-36-22-gpu-fp64/`. The class notes (a text to study from, one section per block) come after this plan.
 
-### 0. Prelude: history (7 min)
-- **Message:** GPUs were built to draw pixels; science found that "many independent small jobs" is the same problem.
-- **Board:** a timeline, filled while talking.
-- **Points (to verify before the class):** 1999 GeForce 256, sold as "the first GPU"; ~2001 programmable shaders; 2003–2006 scientists computing through graphics APIs (GPGPU); 2006–2007 unified shaders and CUDA; ~2010 FP64, ECC and caches (Fermi): GPUs for science; 2012 AlexNet trained on two gaming GPUs; 2017 tensor cores; today the largest supercomputers are GPU machines, and AI training is the industry's GPU market. Science: Monte Carlo radiative transfer (the professor's field), N-body, climate, molecular dynamics, lattice QCD.
-- **Slides:** 2–3 photos (an old card, a supercomputer), a Top500 share chart.
-- **Checkpoint:** "What does drawing a frame have in common with throwing 10¹⁰ needles?"
+### 0. History and usage → the concepts (18 min) *(replaces the separate history and architecture blocks, 2026-11-23)*
+- **Message:** every part of a GPU answers a problem someone had; the history explains the architecture.
+- **Board:** a timeline; at each era, the concept it left is written under it, and the SM grows on the side of the board as the eras add units.
+
+  | Era | The problem, the users | The concept it leaves |
+  |---|---|---|
+  | late 1990s, fixed pipelines (GeForce 256, 1999) | games: millions of independent pixels per frame | data parallelism; throughput vs latency; many simple units |
+  | early 2000s, programmable shaders (GeForce 3, 2001) | a small program per pixel | the kernel |
+  | 2003–2006, GPGPU through graphics (BrookGPU, 2004) | scientists disguising matrices as textures | why a general programming model was needed |
+  | 2006–2007, unified shaders and CUDA (G80) | general-purpose computing in C | host/device, the launch, the SM of identical cores |
+  | ~2008–2010, FP64, ECC, caches (Tesla, Fermi) | science: double precision, reliable memory | numerical precision (FP32 vs FP64 units, 1:2 vs 1:64); the memory hierarchy |
+  | 2012, deep learning (AlexNet, two GTX 580) | neural networks are matrix products | throughput computing beyond graphics |
+  | 2017, tensor cores (Volta) | AI training | specialized units: FP32, INT32, FP64, tensor in one SM |
+  | 2020s, exascale and AI (Frontier, 2022) | energy per flop | power limits: why the clock falls (our laptop's power cap) |
+- **Usage:** graphics; astronomy (Monte Carlo radiative transfer, N-body); climate; molecular dynamics; AI.
+- **Slides:** one per era at most (a picture, a number); then our two GPUs side by side (36 SMs, 128 FP32/INT32 lanes and 2 FP64 per SM, 1:64 | 56 SMs, 64 FP32 + 64 INT32 + 32 FP64 per SM, 1:2).
+- **Precision:** FP32 has 24 bits of mantissa, FP64 53; in the star FP32 moves 7·10⁻⁴ of the photons, below the noise.
+- **Checkpoint:** "What does drawing a frame have in common with throwing 10¹⁰ needles?"; "Which of our two GPUs wins in FP64?" (answered in block 9 with ⟨A30⟩).
 
 ### 1. The hook (3 min)
 - **Message:** a picture made of 3.9·10¹² photons, in 6 minutes on a laptop.
 - **Slides:** `S/observers_around.mp4` (7 observers, both hemispheres, 1k): play one loop.
 - **Numbers:** N = 3.9·10¹² for SNR 10; 6.3 min on the GPU's 36 SMs, 3.5 h on one of them. ⟨A30: the 2k version, N = 1.6·10¹³, time⟩.
 - **Checkpoint:** "How?" (left open; answered by block 9.)
-
-### 2. Architecture (10 min)
-- **Message:** a CPU spends its transistors on finishing one thing fast (latency), a GPU on finishing many things at once (throughput).
-- **Board:** the two chips side by side (a few big cores + caches vs many small lanes); then one SM: its units (FP32, INT32, FP64, special functions, tensor), warp schedulers, the register file, L1/shared.
-- **Slides:** our two GPUs side by side:
-
-  | | RTX 5070 Laptop (Blackwell, cc 12.0) | A30 (Ampere, cc 8.0) |
-  |---|---|---|
-  | SMs | 36 | 56 |
-  | per SM | 128 FP32/INT32 lanes, 2 FP64 units | 64 FP32 + 64 INT32 lanes, 32 FP64 units |
-  | FP64 : FP32 | 1 : 64 | 1 : 2 |
-  | memory | 8 GB | 24 GB HBM2 |
-- **Precision:** FP32 has 24 bits of mantissa, FP64 53. In the star, FP32 moves 7·10⁻⁴ of the photons to a neighbouring pixel, below the noise.
-- **Checkpoint:** "Which GPU wins in FP64? In FP32?" (answered in block 9 with ⟨A30⟩.)
 
 ### 3. Terminology and memory (10 min)
 - **Message:** host and device are two computers with two memories; the work is a grid of blocks of threads, run 32 at a time (a warp).
@@ -184,4 +203,5 @@ The broad idea: **history → foundations → programming model → Buffon → t
 - 2026-11-21: Buffon profiled with `nsys`; `ncu` waits for the GPU performance counters to be enabled on Windows.
 - 2026-11-21: all docs kept in English; only the class and slides will be translated.
 - 2026-11-23: the professor's syllabus transcribed; the sequence drafted around it (foundations, EP3 as delivered, the harder concepts, the star); presenting alone. The A30 enters as a prediction, measured at IAG on Monday.
+- 2026-11-23: the slides move to HTML (reveal.js) with the phone as the remote; then rebuilt: 77 slides in 11 parts, ~25 diagrams, a new part on random numbers and their validation, and the thread history → foundations → projects. Every data point is produced by the orchestrator ([class_points.md](class_points.md)); the two gaps found (the phases of a run, instructions per register cap) were added to `measure`.
 - 2026-11-21: date set: Tuesday 2026-11-24, 2 hours, CUDA + EP3 + EP4. The build plan up to it: [roadmap.md §0](../docs/roadmap.md#0-today-all-of-ep4-saturday-2026-11-21-to-review). EP4 is built on Saturday, the class prepared on Sunday, from [ep4_concepts.md](ep4_concepts.md).

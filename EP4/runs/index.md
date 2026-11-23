@@ -4,6 +4,9 @@ Newest first. Each run's page is its `summary.md`.
 
 | started | kind | run | result | headline |
 |---|---|---|---|---|
+| 2026-11-23 08:58:09 | test | [Welton](test/2026-11-23_08-58-09-Welton/summary.md) | passed | all 12 tests passed |
+| 2026-11-23 04:02:09 | make | [ladder-1024-f300-gpu32-n1e09-n1e13](make/2026-11-23_04-02-09-ladder-1024-f300-gpu32-n1e09-n1e13/summary.md) | done | 5 rungs, N = 1e+09 … 1e+13: SNR at the limb 0.19 … 18.7 |
+| 2026-11-23 02:19:28 | make | [2048-f300-gpu32-snr10](make/2026-11-23_02-19-28-2048-f300-gpu32-snr10/summary.md) | done | N = 1.56e+13 photons in 5.59e+03 s (1.1e+10 photons/s); SNR center 14.0 (predicted 14.1), limb 11.7 (predicted 11.7) |
 | 2026-11-22 22:03:09 | test | [Welton](test/2026-11-22_22-03-09-Welton/summary.md) | passed | all 12 tests passed |
 | 2026-11-22 20:25:24 | measure | [Welton-all](measure/2026-11-22_20-25-24-Welton-all/summary.md) | passed | GPU 6.7e+08/s FP64 (36.3× one SM), 1.1e+10/s FP32 (35.3× one SM); strong FP64 36.3× on 36 SMs; FP64 fastest at 72 registers (occupancy 0.58); validation passed |
 | 2026-11-22 20:23:46 | make | [ladder-256-f300-gpu32-n1e08-n1e11](make/2026-11-22_20-23-46-ladder-256-f300-gpu32-n1e08-n1e11/summary.md) | done | 4 rungs, N = 1e+08 … 1e+11: SNR at the limb 0.23 … 7.5 |

@@ -1,0 +1,71 @@
+start Mon Nov 23 02:19:27 -03 2026
+
+The environment:
+  [  ok] nvcc: Build cuda_13.3.r13.3/compiler.38244171_0
+  [  ok] disk: 1001 GB free under runs/
+  [  ok] engine code: committed (code 72b86b63cbf7)
+  [  ok] GPU: NVIDIA GeForce RTX 5070 Laptop GPU, driver 621.14, 5.1 GiB free
+  [warn] other GPU work: 2 other process(es) on the GPU: they would skew the times (9, /python3.10, [N/A]; 14208, /python3.10, [N/A])
+  [  ok] GPU power: now 547 MHz, 9.20 W of a 100.50 W limit, 54.00 °C (read only: clocks and limits are not changed)
+  [  ok] Python packages: numpy, matplotlib
+  [  ok] video: ffmpeg: mp4
+  [  ok] speeds: measured on this machine
+
+The GPU and the launch (the occupancy API sizes the blocks from the registers; one grid fills every SM once):
+  NVIDIA GeForce RTX 5070 Laptop GPU, cc 12.0, 36 SMs; per SM: 1536 threads (48 warps of 32), 65536 registers, at most 24 blocks
+  FP64: 80 registers per thread (they allow 25 warps per SM) → 768 threads per block × 1 block(s) per SM = 24 warps per SM (blocks fit only whole), occupancy 0.50; 27 648 threads in all
+  FP32: 67 registers per thread (they allow 28 warps per SM) → 896 threads per block × 1 block(s) per SM = 28 warps per SM, occupancy 0.58; 32 256 threads in all
+
+The pictures: N = 1.56e+13, 2048² pixels, 300 frames, nmu = odd nearest frames/π, observers at 1.5708, 1.0472, 0.5236, 0 rad, 3 spots, nmu 95, on gpu32
+  N = 1.565e+13 → SNR at the limb ring ≈ 10.0
+  predicted: 1.6 h (1.1e+10 photons/s, measured here); 4 pass(es), 5.03 GB on the device
+  videos: one rotation = 300 frames = 10 s at 30 fps, repeated 5× = 50 s each; one per observer, then all of them side by side, then around the star
+    each observer: 2048×2048
+    observers_grid.mp4: 1024×1024
+    observers_around.mp4: 1526×1514
+  disk: 20.13 GB of raw images while it runs (deleted after), ~4531 MB of mp4 kept
+  pictures aren't measurements: no minimum N applies
+  observer_mu0047_i1.5708.mp4
+  observer_mu0071_i1.0411.mp4
+  observer_mu0088_i0.5293.mp4
+  observer_mu0094_i0.1452.mp4
+  observers_grid.mp4
+  observers_around.mp4
+
+N = 1.56e+13 photons in 5.59e+03 s (1.1e+10 photons/s); SNR center 14.0 (predicted 14.1), limb 11.7 (predicted 11.7)
+  runs/make/2026-11-23_02-19-28-2048-f300-gpu32-snr10/summary.md
+2k done Mon Nov 23 04:02:06 -03 2026, exit 0
+
+The environment:
+  [  ok] nvcc: Build cuda_13.3.r13.3/compiler.38244171_0
+  [  ok] disk: 997 GB free under runs/
+  [  ok] engine code: committed (code 72b86b63cbf7)
+  [  ok] GPU: NVIDIA GeForce RTX 5070 Laptop GPU, driver 621.14, 5.1 GiB free
+  [warn] other GPU work: 2 other process(es) on the GPU: they would skew the times (9, /python3.10, [N/A]; 14208, /python3.10, [N/A])
+  [  ok] GPU power: now 825 MHz, 6.56 W of a 115.00 W limit, 48.70 °C (read only: clocks and limits are not changed)
+  [  ok] Python packages: numpy, matplotlib
+  [  ok] video: ffmpeg: mp4
+  [  ok] speeds: measured on this machine
+
+The GPU and the launch (the occupancy API sizes the blocks from the registers; one grid fills every SM once):
+  NVIDIA GeForce RTX 5070 Laptop GPU, cc 12.0, 36 SMs; per SM: 1536 threads (48 warps of 32), 65536 registers, at most 24 blocks
+  FP64: 80 registers per thread (they allow 25 warps per SM) → 768 threads per block × 1 block(s) per SM = 24 warps per SM (blocks fit only whole), occupancy 0.50; 27 648 threads in all
+  FP32: 67 registers per thread (they allow 28 warps per SM) → 896 threads per block × 1 block(s) per SM = 28 warps per SM, occupancy 0.58; 32 256 threads in all
+
+The SNR ladder: N = 1e+13, 1024² pixels, 300 frames, nmu = odd nearest frames/π, observers at 0, 0.5236, 1.0472, 1.5708, 2.0944, 2.618, 3.1416 rad, 3 spots, on gpu32
+  N = 1e+09: SNR at the limb ≈ 0.19, 10 s, 2 pass(es)
+  N = 1e+10: SNR at the limb ≈ 0.59, 11 s, 2 pass(es)
+  N = 1e+11: SNR at the limb ≈ 1.88, 27 s, 2 pass(es)
+  N = 1e+12: SNR at the limb ≈ 5.94, 3 min, 2 pass(es)
+  N = 1e+13: SNR at the limb ≈ 18.78, 30 min, 2 pass(es)
+  total: 34 min of runs, then the videos; at most 15.1 GB of raw images on disk (deleted after)
+  videos: per N the around video (1526×2558); the ladder (1920×452), the observer nearest i = 60° at every N; ~4587 MB, each repeated 5×
+  N = 1e+09: 0.197 s, SNR at the limb 0.19
+  N = 1e+10: 1.76 s, SNR at the limb 0.59
+  N = 1e+11: 17.7 s, SNR at the limb 1.87
+  N = 1e+12: 182 s, SNR at the limb 5.90
+  N = 1e+13: 1.87e+03 s, SNR at the limb 18.67
+
+5 rungs, N = 1e+09 … 1e+13: SNR at the limb 0.19 … 18.7
+  runs/make/2026-11-23_04-02-09-ladder-1024-f300-gpu32-n1e09-n1e13/summary.md
+ladder done Mon Nov 23 04:42:47 -03 2026, exit 0

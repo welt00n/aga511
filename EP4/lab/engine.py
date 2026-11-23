@@ -12,7 +12,17 @@ from lab import analysis, speeds
 EP4_FOLDER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENGINE_FOLDER = os.path.join(EP4_FOLDER, "engine")
 BUILD_FOLDER = os.path.join(ENGINE_FOLDER, "build")
-NVCC = "/usr/local/cuda/bin/nvcc"
+DEFAULT_CUDA = "/usr/local/cuda"
+
+
+def cuda_tool(name):
+    for home in (DEFAULT_CUDA, os.environ.get("CUDA_HOME"), os.environ.get("CUDA_PATH")):
+        if home and os.path.exists(os.path.join(home, "bin", name)):
+            return os.path.join(home, "bin", name)
+    return shutil.which(name) or os.path.join(DEFAULT_CUDA, "bin", name)
+
+
+NVCC = cuda_tool("nvcc")
 SHARED_SOURCES = ["main.cu", "run/options.cu", "physics/scene.cu", "physics/observers.cu", "run/image.cu",
                   "run/report.cu", "random/rng_test.cu"]
 PROCESSOR_SOURCES = {"cpu": ["cpu/cpu.cu"],

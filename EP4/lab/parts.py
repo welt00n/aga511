@@ -274,6 +274,15 @@ def occupancy_figure(rows_by_precision, limits, path):
     plt.close(fig)
 
 
+def add_instruction_counts(rows, precision):
+    for row in rows:
+        cap = None if row["cap"] == "none" else row["cap"]
+        row.update(instruction_mix.instruction_count(engine.binary_path("gpu", precision, register_variant(cap))))
+    uncapped = rows[0]["instructions"]
+    for row in rows:
+        row["instructions_vs_uncapped"] = row["instructions"] / uncapped
+
+
 def analyse_occupancy(folder, settings, results):
     limits = device.limits()
     rows = {}
@@ -285,6 +294,7 @@ def analyse_occupancy(folder, settings, results):
             for cap in caps]
         for row in rows[f"fp{precision}"]:
             row["warps_allowed_by_registers"] = device.warps_allowed_by_registers(row["registers"], limits)
+        add_instruction_counts(rows[f"fp{precision}"], precision)
     occupancy_figure(rows, limits, os.path.join(folder, "figures", "registers_and_occupancy.png"))
     targets = [device.target_occupancy(target) for target in settings["targets"]]
     here = {f"fp{p}": device.occupancy_row(rows[f"fp{p}"][0]["registers"], rows[f"fp{p}"][0]["spill_bytes"], limits)
@@ -313,9 +323,12 @@ def speed_figure(rows, path):
 
 def speed_row(group, precision):
     cycles = [kernel_cycles(result) for result in group if kernel_cycles(result)]
+    photon_times = [result["SUMMARY"]["PHOTONS_TIME"] for result in group]
     return {"precision": precision, "sms": group[0]["SUMMARY"]["COMPUTE_UNITS"], "photons": group[0]["photons"],
             "photons_per_second": spread([result["SUMMARY"]["PHOTONS_PER_SECOND"] for result in group]),
             "cycles": statistics.median(cycles) if cycles else None,
+            "clock_during_photons_mhz": statistics.median(cycles) / statistics.median(photon_times) / 1e6
+            if cycles else None,
             "sm_clock_mhz": monitor(group, "SM_CLOCK_MHZ_MEDIAN"), "power_w": monitor(group, "POWER_W_MEDIAN"),
             "power_cap_share": monitor(group, "POWER_CAP_SHARE")}
 

@@ -36,6 +36,8 @@
 ![costs_compute.png](figures/costs_compute.png)
 ![costs_large_n.png](figures/costs_large_n.png)
 ![costs_memory.png](figures/costs_memory.png)
+![phases_fp32.png](figures/phases_fp32.png)
+![phases_fp64.png](figures/phases_fp64.png)
 ![problem_size.png](figures/problem_size.png)
 ![registers_and_occupancy.png](figures/registers_and_occupancy.png)
 ![speed.png](figures/speed.png)
